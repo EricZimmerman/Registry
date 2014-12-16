@@ -12,7 +12,15 @@ namespace ExampleApp
         // private methods...
         private static void Main(string[] args)
         {
-            var fName1 = @"..\..\UsrClass.dat";//27758 hbin cells
+            var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SOFTWARE";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\COMPONENTS";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\NTUSER.DAT";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DRIVERS";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DEFAULT";
+            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SAM";
+           //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SECURITY";
 
 
             //This is a testing harness for now. once parser is complete it will do a lot more

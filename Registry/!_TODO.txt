@@ -1,1 +1,5 @@
-﻿- Check the vk exceptions in hbin loop. break down hex and verify
+﻿- usrclass.dat Check the vk exceptions in hbin loop. break down hex and verify
+- SOFTWARE vkRecord in ASCII on line 223?
+- SYSTEM Check the vk exceptions in hbin loop. break down hex and verify
+
+

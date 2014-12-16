@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+// namespaces...
 namespace Registry.Lists
 {
+    // public interfaces...
     public interface IListTemplate
     {
         // properties...
-        int Size { get; }
+        bool IsFree { get; }
         int NumberOfEntries { get; }
         byte[] RawBytes { get; }
         string Signature { get; }
-        bool IsFree { get; }
+        // properties...
+        int Size { get; }
     }
 }

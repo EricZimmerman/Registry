@@ -1,14 +1,13 @@
-﻿using System;
+﻿using NFluent;
+using Registry.Cells;
+using Registry.Lists;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using NFluent;
-using Registry.Cells;
-using Registry.Lists;
 
 // namespaces...
-
 namespace Registry
 {
     // public classes...
@@ -16,8 +15,8 @@ namespace Registry
     {
         // protected internal constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
-        ///   <remarks>Represents a Hive Bin Record</remarks>
+        /// Initializes a new instance of the <see cref="HBinRecord"/> class.
+        /// <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
         protected internal HBinRecord(byte[] rawBytes)
         {
@@ -46,7 +45,7 @@ namespace Registry
 
             var recordSize = BitConverter.ToUInt32(rawBytes, 0x20);
 
-            var readSize = (int) recordSize;
+            int readSize;
 
             var offset = 0x20;
 
@@ -57,10 +56,10 @@ namespace Registry
             {
                 recordSize = BitConverter.ToUInt32(rawBytes, offset);
 
-                readSize = (int) recordSize;
+                readSize = (int)recordSize;
 
                 readSize = Math.Abs(readSize);
-                    // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
+                // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
 
                 var rawRecord = rawBytes.Skip(offset).Take(readSize).ToArray();
 
@@ -77,26 +76,26 @@ namespace Registry
                         case "lh":
                             listRecord = new LxListRecord(rawRecord);
 
-                          //  Debug.WriteLine(listRecord);
+                            //  Debug.WriteLine(listRecord);
 
                             break;
 
 
                         case "li":
-                                           listRecord = new LIListRecord(rawRecord);
+                            listRecord = new LIListRecord(rawRecord);
 
-                           Debug.WriteLine(listRecord);
+                            //   Debug.WriteLine(listRecord);
 
                             break;
 
-                            case "ri":
-                            
+                        case "ri":
+                            listRecord = new RIListRecord(rawRecord);
 
-                            //    Debug.WriteLine(cellRecord);
+                            //  Debug.WriteLine(listRecord);
                             break;
 
 
-                            case "lk":
+                        case "lk":
 
 
                             //    Debug.WriteLine(cellRecord);
@@ -117,22 +116,24 @@ namespace Registry
                         case "vk":
                             cellRecord = new VKCellRecord(rawRecord);
 
-                          //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
 
-                            
+
+                            //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
+
+
 
                             break;
 
                         default:
-                         
-                       //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
-               
+
+                            //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
+
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.Message);
+                    Debug.WriteLine(string.Format( "Error: {0},  Cell signature: {1}", ex.Message, cellSignature));
                 }
 
 
@@ -154,19 +155,18 @@ namespace Registry
 
         // public properties...
         public List<ICellTemplate> CellRecords { get; private set; }
-        public List<IListTemplate> ListRecords { get; private set; }
         public uint FileOffset { get; private set; }
         public DateTimeOffset? LastWriteTimestamp { get; private set; }
+        public List<IListTemplate> ListRecords { get; private set; }
         public uint Reserved { get; private set; }
-
         /// <summary>
-        ///     The signature of the hbin record. Should always be "hbin"
+        /// The signature of the hbin record. Should always be "hbin"
         /// </summary>
         public string Signature { get; private set; }
-
         public uint Size { get; private set; }
         public uint Spare { get; private set; }
 
+        // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -27,13 +26,13 @@ namespace Registry
             SaclOffset = BitConverter.ToUInt32(rawBytes, 0x0c);
             DaclOffset = BitConverter.ToUInt32(rawBytes, 0x10);
 
-            var sizeSACL = DaclOffset - SaclOffset;
-            var sizeDACL = OwnerOffset - DaclOffset;
-            var sizeOwnerSID = GroupOffset - OwnerOffset;
-            var sizeGroupSID = rawBytes.Length - GroupOffset;
+            var sizeSacl = DaclOffset - SaclOffset;
+            var sizeDacl = OwnerOffset - DaclOffset;
+            var sizeOwnerSid = GroupOffset - OwnerOffset;
+            var sizeGroupSid = rawBytes.Length - GroupOffset;
 
-            var rawOwner = rawBytes.Skip((int)OwnerOffset).Take((int)sizeOwnerSID).ToArray();
-            var rawGroup = rawBytes.Skip((int)GroupOffset).Take((int)sizeGroupSID).ToArray();
+            var rawOwner = rawBytes.Skip((int)OwnerOffset).Take((int)sizeOwnerSid).ToArray();
+            var rawGroup = rawBytes.Skip((int)GroupOffset).Take((int)sizeGroupSid).ToArray();
 
             OwnerSID = Helpers.ConvertHexStringToSidString(rawOwner);
             GroupSID = Helpers.ConvertHexStringToSidString(rawGroup);
@@ -45,13 +44,13 @@ namespace Registry
             //((myProperties.AllowedColors & MyColor.Yellow) == MyColor.Yellow)
             if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
             {
-                var rawDacl = rawBytes.Skip((int)DaclOffset).Take((int)sizeDACL).ToArray();
+                var rawDacl = rawBytes.Skip((int)DaclOffset).Take((int)sizeDacl).ToArray();
                 DACL = new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
             }
 
             if ((Control & ControlEnum.SeSaclPresent) == ControlEnum.SeSaclPresent)
             {
-                var rawSacl = rawBytes.Skip((int)SaclOffset).Take((int)sizeSACL).ToArray();
+                var rawSacl = rawBytes.Skip((int)SaclOffset).Take((int)sizeSacl).ToArray();
                 SACL = new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
             }
 

@@ -1,8 +1,6 @@
-﻿using NFluent;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Text;
+using NFluent;
 
 // namespaces...
 namespace Registry.Cells
@@ -86,9 +84,9 @@ namespace Registry.Cells
 
             MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
 
-            var rawFlags = Convert.ToString(rawBytes[0x3a], 2) ;
+            var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
 
-            rawFlags = string.Format("{0:X8}", rawBytes[0x3a]);
+            //  rawFlags = string.Format("{0:X8}", rawBytes[0x3a]);
 
 
             var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); //TODO is this a flag enum somewhere?
@@ -124,8 +122,6 @@ namespace Registry.Cells
             {
                 Padding = string.Empty;
             }
-
-                
         }
 
         // public enums...

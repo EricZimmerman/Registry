@@ -22,7 +22,9 @@ namespace Registry
 
             AclRevision = rawBytes[0];
 
-            Check.That((int)AclRevision).IsEqualTo(2);
+            var rev = (int)AclRevision;
+
+            Check.That(rev.ToString()).IsOneOfThese("2", "4");
 
             Sbz1 = rawBytes[1];
 

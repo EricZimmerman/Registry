@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using NFluent;
 
 // namespaces...
 namespace Registry
 {
     // public classes...
-    public class Registry:IDisposable
+    public class Registry : IDisposable
     {
         // private fields...
-        private string _filename = null;
-        private static BinaryReader binaryReader;
-        private static FileStream fileStream;
+        private readonly string _filename;
+        private static BinaryReader _binaryReader;
+        private static FileStream _fileStream;
 
         // public constructors...
         /// <summary>
@@ -37,8 +34,8 @@ namespace Registry
 
 
 
-            fileStream = new FileStream(_filename, FileMode.Open);
-            binaryReader = new BinaryReader(fileStream);
+            _fileStream = new FileStream(_filename, FileMode.Open);
+            _binaryReader = new BinaryReader(_fileStream);
 
             if (autoParse)
             {
@@ -58,9 +55,22 @@ namespace Registry
         public RegistryHeader Header { get; private set; }
 
         // public methods...
+        public void Dispose()
+        {
+            if (_binaryReader != null)
+            {
+                _binaryReader.Close();
+            }
+            if (_fileStream != null)
+            {
+                _fileStream.Close();
+            }
+        }
+
+        // public methods...
         public static long HiveLength()
         {
-            return binaryReader.BaseStream.Length;
+            return _binaryReader.BaseStream.Length;
         }
 
         // public methods...
@@ -80,14 +90,15 @@ namespace Registry
 
             Header = new RegistryHeader(header);
 
-            #region Temporarily disabled
+
+
             ////Look at first hbin, get its size, then read that many bytes to create hbin record
             //var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
 
             //var rawhbin = ReadBytesFromHive(4096, (int)hbBlockSize);
 
             //var h = new HBinRecord(rawhbin);
-            #endregion
+
 
             // for initial testing we just walk down the file looking at everything
             long offset = 4096;
@@ -96,23 +107,24 @@ namespace Registry
 
             while (offset < HiveLength())
             {
-                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
-
-                Check.That(hbinSig).IsEqualTo(hbinHeader);
-
                 var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offset + 8, 4), 0);
 
                 if (hbinSize == 0)
                 {
                     // Go to end if we find a 0 size block (padding?)
                     offset = HiveLength();
+                    continue;
                 }
+
+                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
+
+                Check.That(hbinSig).IsEqualTo(hbinHeader);
 
                 var rawhbin = ReadBytesFromHive(offset, (int)hbinSize);
 
-             var   h = new HBinRecord(rawhbin);
+                var   h = new HBinRecord(rawhbin);
 
-                System.IO.File.AppendAllText(@"C:\temp\hbins.txt",h.ToString());
+                File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
 
 
                 offset += hbinSize;
@@ -126,15 +138,14 @@ namespace Registry
 
         public static byte[] ReadBytesFromHive(long offset, int length)
         {
-            binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
+            _binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
 
-            return binaryReader.ReadBytes(Math.Abs(length));
+            return _binaryReader.ReadBytes(Math.Abs(length));
         }
 
         /// <summary>
         /// Given a file, confirm it is a registry hive and that hbin headers are found every 4096 * (size of hbin) bytes.
         /// </summary>
-        /// <param name="hiveName"></param>
         /// <returns></returns>
         public HiveMetadata Verify()
         {
@@ -187,19 +198,6 @@ namespace Registry
 
 
             return hiveMetadata;
-        }
-
-        public void Dispose()
-        {
-            if (binaryReader != null)
-            {
-                binaryReader.Close();
-            }
-
-            if (fileStream != null)
-            {
-                fileStream.Close();
-            }
         }
     }
 }

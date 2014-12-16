@@ -1,24 +1,25 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Lists
 {
     // internal classes...
-    internal class LIListRecord : IListTemplate
+    internal class RIListRecord : IListTemplate
     {
         // private fields...
-        private readonly List<uint> _offsets;
+        private List<uint> _offsets;
         private readonly int _size;
 
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
+        /// Initializes a new instance of the <see cref="RIListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LIListRecord(byte[] rawBytes)
+        public RIListRecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -33,24 +34,17 @@ namespace Registry.Lists
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
-            Check.That(Signature).IsEqualTo("li");
+            Check.That(Signature).IsEqualTo("ri");
 
             _offsets = new List<uint>();
 
             var index = 0x8;
             var counter = 0;
 
-
             while (counter < NumberOfEntries)
             {
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
-
-                if (os == 0x0)
-                {
-                    //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
-                    break;
-                }
 
 
                 _offsets.Add(os);
