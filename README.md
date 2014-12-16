@@ -12,7 +12,7 @@ Full featured, offline registry parser in C#
 
 ### Example data ###
 
-Below is the kind of data that will be exposed. Of course, you dont have to deal with any of this if you just want the normal key, subkey and values.
+Below is the kind of data that will be exposed. Of course, you dont have to deal with any of this if you just want the normal key, subkey and values. The output below is what ToString() generates. All offsets are resolved and the entire hive is accessible via traditional object oriented methods using collections, linq, etc.
 
 **Security Cell Record**
 
