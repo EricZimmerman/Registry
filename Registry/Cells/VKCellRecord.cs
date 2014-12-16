@@ -212,9 +212,9 @@ namespace Registry.Cells
 
                     case DataTypeEnum.RegSz:
 
-                        if (DataLength <= 4) // | DataLength == 0x80000004
+                        if (DataLength <= 4 | DataLength > 0x80000000)
                         {
-                            var dl = DataLength & 0x00000004;
+                            var dl = DataLength - 0x80000000;
                             ValueData = Encoding.Unicode.GetString(datablockRaw, 0, (int)dl).Replace("\0", "");
 
                         }

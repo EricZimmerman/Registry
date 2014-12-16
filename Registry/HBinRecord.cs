@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using NFluent;
 using Registry.Cells;
+using Registry.Lists;
 
 // namespaces...
 
@@ -50,6 +51,7 @@ namespace Registry
             var offset = 0x20;
 
             CellRecords = new List<ICellTemplate>();
+            ListRecords = new List<IListTemplate>();
 
             while (offset < Size)
             {
@@ -65,11 +67,40 @@ namespace Registry
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
 
                 ICellTemplate cellRecord = null;
+                IListTemplate listRecord = null;
 
                 try
                 {
                     switch (cellSignature)
                     {
+                        case "lf":
+                        case "lh":
+                            listRecord = new LxListRecord(rawRecord);
+
+                            Debug.WriteLine(listRecord);
+
+                            break;
+
+
+                        case "li":
+                           
+
+                            //    Debug.WriteLine(cellRecord);
+                            break;
+
+                            case "ri":
+                            
+
+                            //    Debug.WriteLine(cellRecord);
+                            break;
+
+
+                            case "lk":
+
+
+                            //    Debug.WriteLine(cellRecord);
+                            break;
+
                         case "nk":
                             cellRecord = new NKCellRecord(rawRecord);
 
@@ -85,14 +116,16 @@ namespace Registry
                         case "vk":
                             cellRecord = new VKCellRecord(rawRecord);
 
-                            System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
+                          //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
 
                             
 
                             break;
 
                         default:
-                            Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
+                         
+                       //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
+               
                             break;
                     }
                 }
@@ -107,6 +140,12 @@ namespace Registry
                     CellRecords.Add(cellRecord);
                 }
 
+                if (listRecord != null)
+                {
+                    ListRecords.Add(listRecord);
+                }
+
+
 
                 offset += readSize;
             }
@@ -114,6 +153,7 @@ namespace Registry
 
         // public properties...
         public List<ICellTemplate> CellRecords { get; private set; }
+        public List<IListTemplate> ListRecords { get; private set; }
         public uint FileOffset { get; private set; }
         public DateTimeOffset? LastWriteTimestamp { get; private set; }
         public uint Reserved { get; private set; }
