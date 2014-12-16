@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using NFluent;
 
 // namespaces...
 namespace Registry
 {
     // public classes...
-    public class Registry
+    public class Registry:IDisposable
     {
         // private fields...
         private string _filename = null;
@@ -74,22 +76,49 @@ namespace Registry
                 throw new FileNotFoundException();
             }
 
-
-
             var header = ReadBytesFromHive(0, 4096);
-            //br.ReadBytes(4096);
 
             Header = new RegistryHeader(header);
 
-            //Look at first hbin, get its size, then read that many bytes to create hbin record
+            #region Temporarily disabled
+            ////Look at first hbin, get its size, then read that many bytes to create hbin record
+            //var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
 
-            var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
-            //br.ReadUInt32();
+            //var rawhbin = ReadBytesFromHive(4096, (int)hbBlockSize);
+
+            //var h = new HBinRecord(rawhbin);
+            #endregion
+
+            // for initial testing we just walk down the file looking at everything
+            long offset = 4096;
+
+            const uint hbinHeader = 0x6e696268;
+
+            while (offset < HiveLength())
+            {
+                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
+
+                Check.That(hbinSig).IsEqualTo(hbinHeader);
+
+                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offset + 8, 4), 0);
+
+                if (hbinSize == 0)
+                {
+                    // Go to end if we find a 0 size block (padding?)
+                    offset = HiveLength();
+                }
+
+                var rawhbin = ReadBytesFromHive(offset, (int)hbinSize);
+
+             var   h = new HBinRecord(rawhbin);
+
+                System.IO.File.AppendAllText(@"C:\temp\hbins.txt",h.ToString());
 
 
-            //    br.BaseStream.Seek(4096, SeekOrigin.Begin); // get back to where we started for reading full hbin record
+                offset += hbinSize;
+            }
 
-            ReadBytesFromHive(4096, (int)hbBlockSize);
+
 
 
             return true;
@@ -158,6 +187,19 @@ namespace Registry
 
 
             return hiveMetadata;
+        }
+
+        public void Dispose()
+        {
+            if (binaryReader != null)
+            {
+                binaryReader.Close();
+            }
+
+            if (fileStream != null)
+            {
+                fileStream.Close();
+            }
         }
     }
 }

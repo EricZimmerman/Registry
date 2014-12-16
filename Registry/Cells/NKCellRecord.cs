@@ -17,6 +17,7 @@ namespace Registry.Cells
         // protected internal constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
+        /// <remarks>Represents a Key Node Record</remarks>
         /// </summary>
         protected internal NKCellRecord(byte[] rawBytes)
         {
@@ -115,7 +116,16 @@ namespace Registry.Cells
             var paddingOffset = 0x50 + NameLength;
             var paddingLength = Math.Abs(Size) - paddingOffset;
 
-            Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+            if (paddingLength > 0)
+            {
+                Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+            }
+            else
+            {
+                Padding = string.Empty;
+            }
+
+                
         }
 
         // public enums...
@@ -181,7 +191,7 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Flags: {0}", Flags));
             sb.AppendLine();

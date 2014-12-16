@@ -15,7 +15,8 @@ namespace Registry.Cells
 
         // protected internal constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
+        /// Initializes a new instance of the <see cref="SKCellRecord"/> class.
+        /// <remarks>Represents a Key Security Record</remarks>
         /// </summary>
         protected internal SKCellRecord(byte[] rawBytes)
         {
@@ -67,7 +68,7 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             sb.AppendLine(string.Format("IsFree: {0}", IsFree));

@@ -12,7 +12,7 @@ namespace Registry
         //http://msdn.microsoft.com/en-us/library/cc980032.aspx
         public enum SidTypeEnum
         {
-            [Description("SID does not map to a common SID or a user SID")]
+            [Description("SID does not map to a common SID or this is a user SID")]
             UnknownOrUserSID,
             [Description("S-1-0-0: No Security principal.")]
             Null,
