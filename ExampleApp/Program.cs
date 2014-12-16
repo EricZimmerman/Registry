@@ -15,6 +15,8 @@ namespace ExampleApp
             var fName3 = @"..\..\SOFTWARE";//27758 hbin cells
 
 
+            //This is a testing harness for now. once parser is complete it will do a lot more
+
             // a few tests to make sure the hive isnt damaged at a basic level
             var fName1Test = new Registry.Registry(fName1,true);
             var meta1 =   fName1Test.Verify();

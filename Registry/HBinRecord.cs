@@ -70,13 +70,15 @@ namespace Registry
                 {
                     case "nk":
                         cellRecord = new NKCellRecord(rawRecord);
+
+                        Debug.WriteLine(cellRecord);
                         break;
                     case "sk":
                         //http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Main%20V4.pdf
                         //4.18.2 Permissions Settings 
                         cellRecord = new SKCellRecord(rawRecord);
 
-                        Debug.WriteLine(cellRecord);
+                     //   Debug.WriteLine(cellRecord);
 
                         break;
 

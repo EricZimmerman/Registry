@@ -11,7 +11,86 @@ namespace Registry.Cells
     // public classes...
     public class NKCellRecord : ICellTemplate
     {
+        [Flags]
+        public enum FlagEnum
+        {
+            Unused = 0x0001,
+            HiveExit = 0x0002,
+            HiveEntryRootKey = 0x0004,
+            NoDelete = 0x0008,
+            SymbolicLink = 0x0010,
+            CompressedName = 0x0020,
+            PredefinedHandle = 0x0040,
+            VirtMirrored = 0x0080,
+            VirtTarget = 0x0100,
+            VirtualStore = 0x0200,
+            Unused0400 = 0x0400,
+            Unused0800 = 0x0800,
+            Unused1000 = 0x1000,
+            Unused2000 = 0x2000,
+            Unused4000 = 0x4000,
+            Unused8000 = 0x8000 
+        }
+
+        private readonly int _size;
         // protected internal constructors...
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
+            sb.AppendLine(string.Format("Signature: {0}", Signature));
+            sb.AppendLine(string.Format("Flags: {0}", Flags));
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
+            sb.AppendLine();
+
+
+            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Debug: 0x{0:X}", Debug));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("MaximumClassLength: 0x{0:X}", MaximumClassLength));
+            sb.AppendLine(string.Format("ClassCellIndex: 0x{0:X}", ClassCellIndex));
+            sb.AppendLine(string.Format("ClassLength: 0x{0:X}", ClassLength));
+            
+            sb.AppendLine();
+            
+            sb.AppendLine(string.Format("MaximumValueDataLength: 0x{0:X}", MaximumValueDataLength));
+            sb.AppendLine(string.Format("MaximumValueDataLength: 0x{0:X}", MaximumValueDataLength));
+            sb.AppendLine(string.Format("MaximumValueNameLength: 0x{0:X}", MaximumValueNameLength));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("NameLength: 0x{0:X}", NameLength));
+            sb.AppendLine(string.Format("MaximumNameLength: 0x{0:X}", MaximumNameLength));
+            sb.AppendLine(string.Format("Name: {0}", Name));
+            sb.AppendLine(string.Format("Padding: {0}", Padding));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("ParentCellIndex: 0x{0:X}", ParentCellIndex));
+            sb.AppendLine(string.Format("SecurityCellIndex: 0x{0:X}", SecurityCellIndex));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("SubkeyCountsStable: 0x{0:X}", SubkeyCountsStable));
+            sb.AppendLine(string.Format("SubkeyListsStableCellIndex: 0x{0:X}", SubkeyListsStableCellIndex));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("SubkeyCountsVolatile: 0x{0:X}", SubkeyCountsVolatile));
+            
+            sb.AppendLine();
+            sb.AppendLine(string.Format("UserFlags: 0x{0:X}", UserFlags));
+            sb.AppendLine(string.Format("VirtualControlFlags: 0x{0:X}", VirtualControlFlags));
+            sb.AppendLine(string.Format("WorkVar: 0x{0:X}", WorkVar));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("ValueListCellIndex: 0x{0:X}", ValueListCellIndex));
+
+
+            return sb.ToString();
+        }
         /// <summary>
         /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
         /// </summary>
@@ -19,15 +98,15 @@ namespace Registry.Cells
         {
             RawBytes = rawBytes;
 
-            Size = BitConverter.ToInt32(rawBytes, 0);
+            _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = Size > 0;
+            IsFree = _size > 0;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("nk");
 
-            Flags = BitConverter.ToUInt32(rawBytes, 6); //TODO 4.20 Key Node flag values do an enum or something
+            Flags =(FlagEnum) BitConverter.ToUInt16(rawBytes, 6);
 
             var ts = BitConverter.ToInt64(rawBytes, 0x8);
 
@@ -87,10 +166,10 @@ namespace Registry.Cells
             rawFlags = string.Format("{0:X8}", rawBytes[0x3a]);
 
 
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 ));
+            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); //TODO is this a flag enum somewhere?
 
 
-            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));
+            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));//TODO is this a flag enum somewhere?
 
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
@@ -119,7 +198,7 @@ namespace Registry.Cells
         public uint ClassCellIndex { get; private set; }
         public ushort ClassLength { get; private set; }
         public byte Debug { get; private set; }
-        public uint Flags { get; private set; }
+        public FlagEnum Flags { get; private set; }
         public bool IsFree { get; private set; }
         public DateTimeOffset LastWriteTimestamp { get; private set; }
         public uint MaximumClassLength { get; private set; }
@@ -133,7 +212,12 @@ namespace Registry.Cells
         public byte[] RawBytes { get; private set; }
         public uint SecurityCellIndex { get; private set; }
         public string Signature { get; private set; }
-        public int Size { get; private set; }
+
+        public int Size
+        {
+            get { return Math.Abs(_size); }
+        }
+
         public uint SubkeyCountsStable { get; private set; }
         public uint SubkeyCountsVolatile { get; private set; }
         public uint SubkeyListsStableCellIndex { get; private set; }

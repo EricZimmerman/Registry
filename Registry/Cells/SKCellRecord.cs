@@ -11,6 +11,7 @@ namespace Registry.Cells
     // public classes...
     public class SKCellRecord : ICellTemplate
     {
+        private readonly int _size;
 
         public override string ToString()
         {
@@ -47,9 +48,9 @@ namespace Registry.Cells
         {
             RawBytes = rawBytes;
 
-            Size = BitConverter.ToInt32(rawBytes, 0);
+            _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = Size > 0;
+            IsFree = _size > 0;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
@@ -77,7 +78,11 @@ namespace Registry.Cells
 
         // public properties...
 
-        public int Size { get; private set; }
+        public int Size
+        {
+            get { return Math.Abs(_size); }
+        }
+
         public string Signature { get; private set; }
         public uint FLink { get; private set; }
         public uint BLink { get; private set; }
