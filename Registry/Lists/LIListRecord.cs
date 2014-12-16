@@ -7,14 +7,14 @@ using NFluent;
 
 namespace Registry.Lists
 {
-    
-    class LxListRecord : IListTemplate
+
+    class LIListRecord : IListTemplate
     {
-        private Dictionary<uint, string> _offsets;
+        private List<uint> _offsets;
 
         private readonly int _size;
 
-        public Dictionary<uint, string> Offsets
+        public List<uint> Offsets
         {
             get
             {
@@ -64,7 +64,7 @@ namespace Registry.Lists
             foreach (var offset in _offsets)
             {
                 sb.AppendLine(string.Format("------------ Offset/hash record #{0} ------------", i));
-                sb.AppendLine(string.Format("Offset: 0x{0:X}, Hash: {1}",offset.Key,offset.Value));
+                sb.AppendLine(string.Format("Offset: 0x{0:X}", offset));
                 i += 1;
             }
             sb.AppendLine();
@@ -76,11 +76,10 @@ namespace Registry.Lists
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LFListRecord"/> or <see cref="LHListRecord"/>  class.
-        /// <remarks>The signature determines how the hash is calculated/verified</remarks>
+        /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LxListRecord(byte[] rawBytes)
+        public LIListRecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -90,9 +89,9 @@ namespace Registry.Lists
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
-            Check.That(Signature).IsOneOfThese("lh", "lf");
+            Check.That(Signature).IsEqualTo("li");
 
-             _offsets = new Dictionary<uint, string>();
+            _offsets = new List<uint>();
 
             var index = 0x8;
             var counter = 0;
@@ -102,23 +101,8 @@ namespace Registry.Lists
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
 
-                string hash = "";
 
-                if (Signature == "lf")
-                {
-                    //first 4 chars of string
-                    hash = Encoding.ASCII.GetString(rawBytes, index, 4);
-                }
-                else
-                {
-                    //numerical hash
-                    hash = BitConverter.ToUInt32(rawBytes, index).ToString();
-                }
-
-
-                index += 4;
-
-                _offsets.Add(os, hash);
+                _offsets.Add(os);
 
                 counter += 1;
             }

@@ -1,0 +1,1 @@
+﻿- Check the vk exceptions in hbin loop. break down hex and verify

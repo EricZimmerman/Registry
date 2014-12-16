@@ -77,15 +77,16 @@ namespace Registry
                         case "lh":
                             listRecord = new LxListRecord(rawRecord);
 
-                            Debug.WriteLine(listRecord);
+                          //  Debug.WriteLine(listRecord);
 
                             break;
 
 
                         case "li":
-                           
+                                           listRecord = new LIListRecord(rawRecord);
 
-                            //    Debug.WriteLine(cellRecord);
+                           Debug.WriteLine(listRecord);
+
                             break;
 
                             case "ri":
