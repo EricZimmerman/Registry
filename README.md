@@ -1,5 +1,5 @@
 ## Registry  ##
-========
+
 
 Full featured, offline registry parser in C#
 
