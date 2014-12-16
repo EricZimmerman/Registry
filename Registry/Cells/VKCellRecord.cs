@@ -37,13 +37,7 @@ namespace Registry.Cells
             DataType = (DataTypeEnum) BitConverter.ToUInt32(rawBytes, 0x10);
             NamePresentFlag = BitConverter.ToUInt16(rawBytes, 0x14);
             Unknown = BitConverter.ToUInt16(rawBytes, 0x16);
-
-            //            Value data is either stored internally in the value cell, if the value length does not exceed
-            //four bytes, or in a separate data cell, in which case the value cell contains an offset to a
-            //data cell. The data type field tells whether data is stored internally or externally: if the data
-            //type equals 0x80, the field at offset 0x0c contains value data, otherwise the field contains
-            //offset to a data cell where value data is stored. 
-
+            
             if (NamePresentFlag == 0)
             {
                 ValueName = "(Default)";
