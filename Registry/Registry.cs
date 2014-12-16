@@ -11,6 +11,8 @@ namespace Registry
     {
         // private fields...
         private string _filename = null;
+        private static BinaryReader binaryReader;
+        private static FileStream fileStream;
 
         // public constructors...
         /// <summary>
@@ -19,6 +21,22 @@ namespace Registry
         public Registry(string fileName, bool autoParse = false)
         {
             _filename = fileName;
+
+            if (_filename == null)
+            {
+                throw new ArgumentNullException("Filename cannot be null");
+            }
+
+            if (!File.Exists(_filename))
+            {
+                throw new FileNotFoundException();
+            }
+
+
+
+
+            fileStream = new FileStream(_filename, FileMode.Open);
+            binaryReader = new BinaryReader(fileStream);
 
             if (autoParse)
             {
@@ -38,6 +56,12 @@ namespace Registry
         public RegistryHeader Header { get; private set; }
 
         // public methods...
+        public static long HiveLength()
+        {
+            return binaryReader.BaseStream.Length;
+        }
+
+        // public methods...
         public bool ParseHive()
         {
             if (_filename == null)
@@ -50,33 +74,32 @@ namespace Registry
                 throw new FileNotFoundException();
             }
 
-            using (var fs = new FileStream(_filename, FileMode.Open))
-            {
-                using (var br = new BinaryReader(fs))
-                {
-                    var header = br.ReadBytes(4096);
-
-                    Header = new RegistryHeader(header);
-
-                    //Look at first hbin, get its size, then read that many bytes to create hbin record
-                    var hbHeader = br.ReadBytes(4);
-                    var hbOffset = br.ReadBytes(4);
-                    var hbBlockSize = br.ReadUInt32();
 
 
-                    br.BaseStream.Seek(4096, SeekOrigin.Begin); // get back to where we started for reading full hbin record
+            var header = ReadBytesFromHive(0, 4096);
+            //br.ReadBytes(4096);
 
-                    var hbin = br.ReadBytes((int)hbBlockSize);
+            Header = new RegistryHeader(header);
 
-                    var h = new HBinRecord(hbin);
+            //Look at first hbin, get its size, then read that many bytes to create hbin record
+
+            var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
+            //br.ReadUInt32();
 
 
+            //    br.BaseStream.Seek(4096, SeekOrigin.Begin); // get back to where we started for reading full hbin record
 
+            ReadBytesFromHive(4096, (int)hbBlockSize);
 
-                }
-            }
 
             return true;
+        }
+
+        public static byte[] ReadBytesFromHive(long offset, int length)
+        {
+            binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
+
+            return binaryReader.ReadBytes(Math.Abs(length));
         }
 
         /// <summary>
@@ -101,45 +124,38 @@ namespace Registry
 
             var hiveMetadata = new HiveMetadata();
 
-            using (var fs = new FileStream(_filename, FileMode.Open))
+
+            var fileHeaderSig = BitConverter.ToUInt32(ReadBytesFromHive(0, 4), 0);
+
+            if (fileHeaderSig != regfHeader)
             {
-                using (var br = new BinaryReader(fs))
-                {
-                    var fileHeaderSig = br.ReadUInt32();
-
-                    if (fileHeaderSig != regfHeader)
-                    {
-                        return hiveMetadata;
-                    }
-
-                    hiveMetadata.HasValidHeader = true;
-
-                    //look for hbin headers every 4096 bytes
-                    br.BaseStream.Seek(4096, SeekOrigin.Begin);
-
-                    while (br.BaseStream.Position < br.BaseStream.Length)
-                    {
-                        var hbinSig = br.ReadUInt32();
-
-                        if (hbinSig == hbinHeader)
-                        {
-                            hiveMetadata.NumberofHBins += 1;
-                        }
-
-                        br.ReadUInt32(); //skip offset to first hbin
-                        var hbinSize = br.ReadUInt32();
-
-                        if (hbinSize == 0)
-                        {
-                            // Go to end if we find a 0 size block (padding?)
-                            br.BaseStream.Seek(0 + 12, SeekOrigin.End);
-                        }
-
-                        // Account  for 12 bytes from the previous reads, then jump hbinSize to get to where next header should be
-                        br.BaseStream.Seek((long)hbinSize - 12, SeekOrigin.Current);
-                    }
-                }
+                return hiveMetadata;
             }
+
+            hiveMetadata.HasValidHeader = true;
+
+            long offset = 4096;
+
+            while (offset < HiveLength())
+            {
+                var hbinSig =  BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
+
+                if (hbinSig == hbinHeader)
+                {
+                    hiveMetadata.NumberofHBins += 1;
+                }
+
+                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offset + 8, 4), 0);
+
+                if (hbinSize == 0)
+                {
+                    // Go to end if we find a 0 size block (padding?)
+                    offset = HiveLength();
+                }
+
+                offset += hbinSize;
+            }
+
 
             return hiveMetadata;
         }

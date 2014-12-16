@@ -37,6 +37,7 @@
       <HintPath>..\packages\NFluent.1.3.1.0\lib\net40\NFluent.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -48,6 +49,8 @@
     <Compile Include="ACERecord.cs" />
     <Compile Include="Cells\NKCellRecord.cs" />
     <Compile Include="Cells\SKCellRecord.cs" />
+    <Compile Include="Cells\VKCellRecord.cs" />
+    <Compile Include="DataNode.cs" />
     <Compile Include="HBinRecord.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="HiveMetadata.cs" />

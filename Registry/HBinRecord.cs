@@ -1,26 +1,17 @@
-﻿using System;
+﻿using NFluent;
+using Registry.Cells;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using NFluent;
-using Registry.Cells;
 
+// namespaces...
 namespace Registry
 {
+    // public classes...
     public class HBinRecord
     {
-        /// <summary>
-        /// The signature of the hbin record. Should always be "hbin"
-        /// </summary>
-        public string Signature { get; private set; }
-
-        public uint FileOffset { get; private set; }
-        public uint Size { get; private set; }
-        public uint Reserved { get; private set; }
-        public DateTimeOffset LastWriteTimestamp { get; private set; }
-        public uint Spare { get; private set; }
+        // protected internal constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="HBinRecord"/> class.
         /// </summary>
@@ -29,13 +20,13 @@ namespace Registry
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
             Check.That(Signature).IsEqualTo("hbin");
-            
+
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
             Size = BitConverter.ToUInt32(rawBytes, 0x8);
 
             Reserved = BitConverter.ToUInt32(rawBytes, 0xc);
-            
+
             var ts = BitConverter.ToInt64(rawBytes, 0x14);
 
             LastWriteTimestamp = DateTimeOffset.FromFileTime(ts);
@@ -71,42 +62,47 @@ namespace Registry
                     case "nk":
                         cellRecord = new NKCellRecord(rawRecord);
 
-                        Debug.WriteLine(cellRecord);
+                        //    Debug.WriteLine(cellRecord);
                         break;
                     case "sk":
                         //http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Main%20V4.pdf
                         //4.18.2 Permissions Settings 
                         cellRecord = new SKCellRecord(rawRecord);
 
-                     //   Debug.WriteLine(cellRecord);
+                        //   Debug.WriteLine(cellRecord);
 
                         break;
 
                     case "vk":
-
+                        cellRecord = new VKCellRecord(rawRecord);
                         break;
 
                     default:
-                        Debug.WriteLine("Unknown signature: {0}",Signature);
+                        //Debug.WriteLine("Unknown cell signature: {0}", cellSignature);
                         break;
                 }
 
                 if (cellRecord != null)
                 {
                     CellRecords.Add(cellRecord);
-
                 }
 
 
 
-                    offset += readSize;
+                offset += readSize;
             }
-
-            
         }
 
+        // public properties...
         public List<ICellTemplate> CellRecords { get; private set; }
-
-
+        public uint FileOffset { get; private set; }
+        public DateTimeOffset LastWriteTimestamp { get; private set; }
+        public uint Reserved { get; private set; }
+        /// <summary>
+        /// The signature of the hbin record. Should always be "hbin"
+        /// </summary>
+        public string Signature { get; private set; }
+        public uint Size { get; private set; }
+        public uint Spare { get; private set; }
     }
 }

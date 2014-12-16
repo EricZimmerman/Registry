@@ -1,61 +1,16 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
+// namespaces...
 namespace Registry
 {
+    // public classes...
     public class ACERecord
     {
-        [Flags]
-        public enum AceFlagsEnum
-        {
-            None = 0x0,
-            ObjectInheritAce = 0x01,
-            ContainerInheritAce = 0x02,
-            NoPropagateInheritAce = 0x04,
-            InheritOnlyAce = 0x08,
-            InheritedAce = 0x10,
-
-            SuccessfulAccessAceFlag = 0x40,
-            FailedAccessAceFlag = 0x80
-        }
-
-        public enum AceTypeEnum
-        {
-            AccessAllowedAceType = 0x0,
-            AccessDeniedAceType = 0x1,
-            SystemAuditAceType = 0x2,
-            SystemAlarmAceType = 0x3,
-            AccessAllowedCompoundAceType = 0x4,
-            AccessAllowedObjectAceType = 0x5,
-            AccessDeniedObjectAceType = 0x6,
-            SystemAuditObjectAceType = 0x7,
-            SystemAlarmObjectAceType = 0x8
-        }
-
-        [Flags]
-        public enum MasksEnum
-        {
-            QueryValue = 0x00000001,
-            SetValue = 0x00000002,
-            CreateSubkey = 0x00000004,
-            EnumerateSubkeys = 0x00000008,
-            Notify = 0x00000010,
-            CreateLink = 0x00000020,
-            Delete = 0x00010000,
-            WriteDAC = 0x00040000,
-            WriteOwner = 0x00080000,
-            ReadControl = 0x00020000,
-            FullControl = 0x000F003F
-        }
-
-      
-
-
-
+        // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ACERecord" /> class.
+        /// Initializes a new instance of the <see cref="ACERecord"/> class.
         /// </summary>
         public ACERecord(byte[] rawBytes)
         {
@@ -103,17 +58,61 @@ namespace Registry
             SID = Helpers.ConvertHexStringToSidString(rawSid);
 
             SIDType = Helpers.GetSIDTypeFromSIDString(SID);
-
         }
 
-        public AceTypeEnum ACEType { get; private set; }
+        // public enums...
+        [Flags]
+        public enum AceFlagsEnum
+        {
+            ContainerInheritAce = 0x02,
+            FailedAccessAceFlag = 0x80,
+            InheritedAce = 0x10,
+            InheritOnlyAce = 0x08,
+            None = 0x0,
+            NoPropagateInheritAce = 0x04,
+            ObjectInheritAce = 0x01,
+            SuccessfulAccessAceFlag = 0x40
+        }
+
+        public enum AceTypeEnum
+        {
+            AccessAllowedAceType = 0x0,
+            AccessAllowedCompoundAceType = 0x4,
+            AccessAllowedObjectAceType = 0x5,
+            AccessDeniedAceType = 0x1,
+            AccessDeniedObjectAceType = 0x6,
+            SystemAlarmAceType = 0x3,
+            SystemAlarmObjectAceType = 0x8,
+            SystemAuditAceType = 0x2,
+            SystemAuditObjectAceType = 0x7
+        }
+
+        [Flags]
+        public enum MasksEnum
+        {
+            CreateLink = 0x00000020,
+            CreateSubkey = 0x00000004,
+            Delete = 0x00010000,
+            EnumerateSubkeys = 0x00000008,
+            FullControl = 0x000F003F,
+            Notify = 0x00000010,
+            QueryValue = 0x00000001,
+            ReadControl = 0x00020000,
+            SetValue = 0x00000002,
+            WriteDAC = 0x00040000,
+            WriteOwner = 0x00080000
+        }
+
+        // public properties...
         public AceFlagsEnum ACEFlags { get; private set; }
         public ushort ACESize { get; private set; }
+        public AceTypeEnum ACEType { get; private set; }
         public MasksEnum Mask { get; private set; }
-        public string SID { get; private set; }
         public byte[] RawBytes { get; private set; }
+        public string SID { get; private set; }
         public Helpers.SidTypeEnum SIDType { get; private set; }
 
+        // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();

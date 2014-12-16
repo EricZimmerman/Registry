@@ -1,8 +1,8 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry
@@ -58,26 +58,23 @@ namespace Registry
         /// </summary>
         public string FileName { get; private set; }
         public uint Format { get; private set; }
-        public uint Length { get; private set; }
-        public uint MajorVersion { get; private set; }
-        public uint MinorVersion { get; private set; }
-
-        /// <summary>
-        /// The offset in the first hbin record where root key is found
-        /// </summary>
-        public uint RootCellOffset { get; private set; }
-
-        public uint Sequence1 { get; private set; }
-        public uint Sequence2 { get; private set; }
-
-        /// <summary>
-        /// Signature of the registry hive. Should always be "regf"
-        /// </summary>
-        public string Signature { get; private set; }
         /// <summary>
         /// The last write timestamp of the registry hive
         /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; private set; }
+        public uint Length { get; private set; }
+        public uint MajorVersion { get; private set; }
+        public uint MinorVersion { get; private set; }
+        /// <summary>
+        /// The offset in the first hbin record where root key is found
+        /// </summary>
+        public uint RootCellOffset { get; private set; }
+        public uint Sequence1 { get; private set; }
+        public uint Sequence2 { get; private set; }
+        /// <summary>
+        /// Signature of the registry hive. Should always be "regf"
+        /// </summary>
+        public string Signature { get; private set; }
         public uint Type { get; private set; }
     }
 }
