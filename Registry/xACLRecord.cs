@@ -24,7 +24,7 @@ namespace Registry
 
             var rev = (int)AclRevision;
 
-            Check.That(rev.ToString()).IsOneOfThese("2", "4");
+            Check.That(rev.ToString()).IsOneOfThese("1","2", "4");
 
             Sbz1 = rawBytes[1];
 

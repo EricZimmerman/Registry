@@ -80,7 +80,6 @@ namespace Registry
 
                             break;
 
-
                         case "li":
                             listRecord = new LIListRecord(rawRecord);
 
@@ -94,9 +93,13 @@ namespace Registry
                             //  Debug.WriteLine(listRecord);
                             break;
 
+                        case "db":
+                            listRecord = new DBListRecord(rawRecord);
+
+                          //    Debug.WriteLine(listRecord);
+                            break;
 
                         case "lk":
-
 
                             //    Debug.WriteLine(cellRecord);
                             break;
@@ -116,11 +119,7 @@ namespace Registry
                         case "vk":
                             cellRecord = new VKCellRecord(rawRecord);
 
-
-
                             //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
-
-
 
                             break;
 

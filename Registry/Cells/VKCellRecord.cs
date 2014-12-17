@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NFluent;
+using Registry.Lists;
 
 // namespaces...
 
@@ -63,10 +65,12 @@ namespace Registry.Cells
 
             Check.That(Signature).IsEqualTo("vk");
 
-            if (IsFree)
-            {
-                return;
-            }
+            //there is still data in there, so get it if possible
+            //TODO whats the minimum where this works? look for exceptions when free and support this better
+            //if (IsFree)
+            //{
+            //    return;
+            //}
 
             NameLength = BitConverter.ToUInt16(rawBytes, 0x06);
             DataLength = BitConverter.ToUInt32(rawBytes, 0x08);
@@ -76,16 +80,16 @@ namespace Registry.Cells
             //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
             var dataIsResident = Convert.ToString(dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
 
+            //this is used later to pull the data from the raw bytes. By setting this here we do not need a bunch of if/then stuff later
+            var internalDataOffset = 4;
+
             if (dataIsResident)
             {
                 //normalize the data for future use
                 dataLengthInternal = dataLengthInternal - 0x80000000;
+                internalDataOffset = 0;
             }
 
-            if (dataLengthInternal == 0x7A78)
-            {
-                Debug.WriteLine("dataLengthInternal: 0x{0:X}", dataLengthInternal);
-            }
             
             OffsetToData = BitConverter.ToUInt32(rawBytes, 0x0c);
             
@@ -127,15 +131,68 @@ namespace Registry.Cells
             }
             else
             {
-                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
-                var datablockSizeRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, 4);
+                //We have to go look at the OffsetToData to see what we have so we can do the right thing
 
+                //The first operations are always the same. Go get the length of the data cell, then see how big it is.
+                var datablockSizeRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, 4);
                 dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
 
-                datablockRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
+                //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
 
+                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
+                datablockRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
+                
                 //datablockRaw now has our value AND slack space!
                 //value is dataLengthInternal long. rest is slack
+
+
+                //Some values are huge, so look for them and, if found, get the data into dataBlockRaw
+                if (dataLengthInternal > 16344)
+                {
+                    // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType
+
+                    datablockRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
+
+                    var db = new DBListRecord(datablockRaw);
+
+                    // db now contains a pointer to where we can get db.NumberOfEntries offsets to our data and reassemble it
+
+                    datablockSizeRaw = Registry.ReadBytesFromHive(4096 + db.OffsetToOffsets, 4);
+                    dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+
+                    datablockRaw = Registry.ReadBytesFromHive(4096 + db.OffsetToOffsets, Math.Abs(dataBlockSize));
+
+                    //datablockRaw now contains our list of pointers to fragmented Data
+
+                    //make a place to reassemble things
+                    var bigDataRaw = new ArrayList((int) dataLengthInternal);
+
+                    for (int i = 1; i <= db.NumberOfEntries; i++)
+                    {
+                        // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
+                        var os = BitConverter.ToUInt32(datablockRaw, i * 4);
+
+                        var tempDataBlockSizeRaw = Registry.ReadBytesFromHive(4096 + os, 4);
+                        var tempdataBlockSize = BitConverter.ToInt32(tempDataBlockSizeRaw, 0);
+
+                      //get our data block
+                        var tempDataRaw = Registry.ReadBytesFromHive(4096 + os, Math.Abs(tempdataBlockSize));
+                        
+                        // since the data is prefixed with its length (4 bytes), skip that so we do not include it in the final data 
+                        //we read 16344 bytes as the rest is padding and jacks things up if you use the whole range of bytes
+                        bigDataRaw.AddRange(tempDataRaw.Skip(4).Take(16344).ToArray());
+                    }
+
+                    datablockRaw = (byte[]) bigDataRaw.ToArray(typeof(byte)) ;
+
+                    //reset this so slack calculation works
+                    dataBlockSize = datablockRaw.Length;
+
+                    //since dataBlockRaw doesnt have the size on it in this case, adjust internalDataOffset accordingly
+                    internalDataOffset = 0;
+                }
+
+                //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
             }
 
             //TODO DO I NEED TO USE DataNode here?
@@ -144,105 +201,79 @@ namespace Registry.Cells
 
             ValueDataRaw = datablockRaw;
 
-            switch (DataType)
+            ValueDataSlack =
+                    datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
+                        .Take((int)(Math.Abs(dataBlockSize) - internalDataOffset - dataLengthInternal))
+                        .ToArray();
+
+            if (IsFree)
             {
-                case DataTypeEnum.RegFileTime:
-
-                      var ts = BitConverter.ToUInt64(datablockRaw, 4);
-
-                    ValueData = DateTimeOffset.FromFileTime((long) ts);
-
-                    ValueDataSlack =
-                        datablockRaw.Skip((int) (dataLengthInternal + 4))
-                            .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
-                            .ToArray();
-
-                    break;
-
-                case DataTypeEnum.RegExpandSz:
-                case DataTypeEnum.RegMultiSz:
-
-                    ValueData =
-                        Encoding.Unicode.GetString(datablockRaw, 4, (int) dataLengthInternal).Replace("\0", " ").Trim();
-                    ValueDataSlack =
-                        datablockRaw.Skip((int) (dataLengthInternal + 4))
-                            .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
-                            .ToArray();
-                    break;
-
-                case DataTypeEnum.RegNone:
-                case DataTypeEnum.RegBinary:
-                case DataTypeEnum.RegResourceRequirementsList:
-                case DataTypeEnum.RegResourceList:
-
-                    ValueData = datablockRaw.Skip(4).Take(Math.Abs(dataBlockSize)).ToArray();
-
-                    ValueDataSlack =
-                        datablockRaw.Skip((int) (dataLengthInternal + 4))
-                            .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
-                            .ToArray();
-
-                    break;
-                case DataTypeEnum.RegDword:
-                    ValueData = BitConverter.ToUInt32(datablockRaw, 0);
-
-                    break;
-                case DataTypeEnum.RegDwordBigEndian:
-
-                    
-                    
-                    break;
-
-
-                case DataTypeEnum.RegFullResourceDescription:
-                    break;
-
-                case DataTypeEnum.RegQword:
-
-                    ValueData = BitConverter.ToUInt64(datablockRaw, 4);
-
-                    ValueDataSlack =
-                        datablockRaw.Skip((int) (dataLengthInternal + 4))
-                            .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
-                            .ToArray();
-
-                    break;
-
-                case DataTypeEnum.RegSz:
-
-                    if (dataIsResident)
-                    {
-                        ValueData = Encoding.Unicode.GetString(datablockRaw, 0, (int) dataLengthInternal)
-                            .Replace("\0", "");
-                    }
-                    else
-                    {
-                        ValueData = Encoding.Unicode.GetString(datablockRaw, 4, (int) dataLengthInternal)
-                            .Replace("\0", "");
-                        ValueDataSlack =
-                            datablockRaw.Skip((int) (dataLengthInternal + 4))
-                                .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
-                                .ToArray();
-                    }
-
-                    //test 
-                    // Debug.WriteLine("Value name: {0}, Value: {1}: Slack: {2}", ValueName, ValueData, ValueDataSlack);
-
-                    break;
-
-                case DataTypeEnum.RegUnknown:
-
+                // since its free but the data length is less than what we have, take what we do have and live with it
+                if (datablockRaw.Length < dataLengthInternal)
+                {
                     ValueData = datablockRaw;
-                    ValueDataSlack = new byte[0];
+                    return;
+                }
                     
-                    
-
-                    break;
-
-                default:
-
-                    break;
             }
+
+                switch (DataType)
+                {
+                    case DataTypeEnum.RegFileTime:
+                        var ts = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
+
+                        ValueData = DateTimeOffset.FromFileTime((long)ts);
+
+                        break;
+
+                    case DataTypeEnum.RegExpandSz:
+                    case DataTypeEnum.RegMultiSz:
+                        ValueData =
+                        Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
+
+                        break;
+
+                    case DataTypeEnum.RegNone:
+                    case DataTypeEnum.RegBinary:
+                    case DataTypeEnum.RegResourceRequirementsList:
+                    case DataTypeEnum.RegResourceList:
+                        ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
+
+                        break;
+
+                    case DataTypeEnum.RegDword:
+                        ValueData = BitConverter.ToUInt32(datablockRaw, 0);
+
+                        break;
+
+                    case DataTypeEnum.RegDwordBigEndian:
+                        break;
+
+                    case DataTypeEnum.RegFullResourceDescription:
+                        break;
+
+                    case DataTypeEnum.RegQword:
+                        ValueData = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
+
+                        break;
+
+                    case DataTypeEnum.RegSz:
+                        ValueData = Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal)
+                        .Replace("\0", "");
+
+                        break;
+
+                    case DataTypeEnum.RegUnknown:
+                        ValueData = datablockRaw;
+
+                        ValueDataSlack = new byte[0];
+
+                        break;
+
+                    default:
+
+                        break;
+                }
         }
 
         // public properties...

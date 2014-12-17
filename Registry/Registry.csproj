@@ -55,6 +55,7 @@
     <Compile Include="Helpers.cs" />
     <Compile Include="HiveMetadata.cs" />
     <Compile Include="Cells\ICellTemplate.cs" />
+    <Compile Include="Lists\DBListRecord.cs" />
     <Compile Include="Lists\IListTemplate.cs" />
     <Compile Include="Lists\LIListRecord.cs" />
     <Compile Include="Lists\LxListRecord.cs" />

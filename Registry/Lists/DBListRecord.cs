@@ -1,24 +1,25 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Lists
 {
     // internal classes...
-    internal class LIListRecord : IListTemplate
+    internal class DBListRecord : IListTemplate
     {
         // private fields...
-        private readonly List<uint> _offsets;
+   
         private readonly int _size;
 
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
+        /// Initializes a new instance of the <see cref="DBListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LIListRecord(byte[] rawBytes)
+        public DBListRecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -33,42 +34,21 @@ namespace Registry.Lists
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
-            Check.That(Signature).IsEqualTo("li");
+            Check.That(Signature).IsEqualTo("db");
 
-            _offsets = new List<uint>();
+           
 
-            var index = 0x8;
-            var counter = 0;
+            OffsetToOffsets = BitConverter.ToUInt32(rawBytes, 0x8);
 
+            //TODO add slack support here (or is it always 00 00 00 00)
 
-            while (counter < NumberOfEntries)
-            {
-                var os = BitConverter.ToUInt32(rawBytes, index);
-                index += 4;
-
-                if (os == 0x0)
-                {
-                    //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
-                    break;
-                }
-
-
-                _offsets.Add(os);
-
-                counter += 1;
-            }
         }
 
         // public properties...
         public bool IsFree { get; private set; }
         public int NumberOfEntries { get; private set; }
-        public List<uint> Offsets
-        {
-            get
-            {
-                return _offsets;
-            }
-        }
+        public uint OffsetToOffsets { get; private set; }
+      
 
         public byte[] RawBytes { get; private set; }
         public string Signature { get; private set; }
@@ -101,16 +81,9 @@ namespace Registry.Lists
             sb.AppendLine(string.Format("NumberOfEntries: {0:N0}", NumberOfEntries));
             sb.AppendLine();
 
-            var i = 0;
+            sb.AppendLine(string.Format("OffsetToOffsets: 0x{0:X}", OffsetToOffsets));
 
-            foreach (var offset in _offsets)
-            {
-                sb.AppendLine(string.Format("------------ Offset #{0} ------------", i));
-                sb.AppendLine(string.Format("Offset: 0x{0:X}", offset));
-                i += 1;
-            }
-            sb.AppendLine();
-            sb.AppendLine("------------ End of offsets ------------");
+           
             sb.AppendLine();
 
 
