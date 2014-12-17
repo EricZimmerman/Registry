@@ -134,7 +134,7 @@ namespace Registry.Cells
             NoDelete = 0x0008,
             PredefinedHandle = 0x0040,
             SymbolicLink = 0x0010,
-            Unused = 0x0001,
+            UnusedVolatileKey = 0x0001,
             Unused0400 = 0x0400,
             Unused0800 = 0x0800,
             Unused1000 = 0x1000,

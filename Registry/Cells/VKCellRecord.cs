@@ -73,10 +73,12 @@ namespace Registry.Cells
 
             var dataLengthInternal = DataLength;
 
+            //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
             var dataIsResident = Convert.ToString(dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
 
             if (dataIsResident)
             {
+                //normalize the data for future use
                 dataLengthInternal = dataLengthInternal - 0x80000000;
             }
 
@@ -117,7 +119,7 @@ namespace Registry.Cells
 
             if (dataIsResident)
             {
-                //When less than or equal to 4, the data lives in the OffsetToData
+                //Since its resident, the data lives in the OffsetToData.
                 datablockRaw = new byte[4];
 
                 Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4);
@@ -137,12 +139,25 @@ namespace Registry.Cells
 
             //TODO DO I NEED TO USE DataNode here?
             //http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Main%20V4.pdf
-            // TODO page 64 data node?
+            // TODO page 64 data node? it would encapsulate ValueData, ValueSlack, and ValueDataRaw
 
             ValueDataRaw = datablockRaw;
 
             switch (DataType)
             {
+                case DataTypeEnum.RegFileTime:
+
+                      var ts = BitConverter.ToUInt64(datablockRaw, 4);
+
+                    ValueData = DateTimeOffset.FromFileTime((long) ts);
+
+                    ValueDataSlack =
+                        datablockRaw.Skip((int) (dataLengthInternal + 4))
+                            .Take((int) (Math.Abs(dataBlockSize) - 4 - dataLengthInternal))
+                            .ToArray();
+
+                    break;
+
                 case DataTypeEnum.RegExpandSz:
                 case DataTypeEnum.RegMultiSz:
 
