@@ -15,8 +15,8 @@ namespace ExampleApp
             var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SOFTWARE";
             //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\COMPONENTS";
             //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM";
-            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\NTUSER.DAT";
-            //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat";
+           // var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\NTUSER.DAT";
+           //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat";
             //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DRIVERS";
             //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DEFAULT";
             //var fName1 = @"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SAM";
