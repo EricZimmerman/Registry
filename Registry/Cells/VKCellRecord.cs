@@ -122,11 +122,12 @@ namespace Registry.Cells
                 //Since its resident, the data lives in the OffsetToData.
                 datablockRaw = new byte[4];
 
+                //make a copy for processing below
                 Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4);
             }
             else
             {
-                //we know the offset, so grab some bytes in order to get the size of the data block vs the size of the data in it
+                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
                 var datablockSizeRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, 4);
 
                 dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
