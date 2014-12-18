@@ -10,6 +10,20 @@ Full featured, offline registry parser in C#
 3. Deleted key support
 4. ???
 
+
+
+**Testing metrics**
+
+Total hives processed: 106<br />
+total hbins processed: 120,494<br />
+Total records processed OK: 5,552,415<br />
+total records with errors: 647<br />
+
+Success rate: 5552415 / 5553062 = 99.98834877046213 %<br />
+Fail rate: 647 / 5553062 = 0.0116512295378658 %<br />
+
+(many of the errors are vk records that are free and do not contain all necessary data)
+
 ### Example data ###
 
 Find below examples of the kinds of data that will be exposed. Of course, you dont have to deal with any of this if you just want the normal key, subkey and values. The output below is what ToString() generates for each object. All offsets are resolved and the entire hive is accessible via traditional object oriented methods using collections, linq, etc.
