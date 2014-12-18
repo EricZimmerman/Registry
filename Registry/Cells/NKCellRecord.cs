@@ -17,8 +17,9 @@ namespace Registry.Cells
         /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
         /// <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal NKCellRecord(byte[] rawBytes)
+        protected internal NKCellRecord(byte[] rawBytes, long absoluteOffset)
         {
+            AbsoluteOffset = absoluteOffset;
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -172,6 +173,8 @@ namespace Registry.Cells
             }
         }
 
+        public long AbsoluteOffset { get; private set; }
+
         public uint SubkeyCountsStable { get; private set; }
         public uint SubkeyCountsVolatile { get; private set; }
         public uint SubkeyListsStableCellIndex { get; private set; }
@@ -188,6 +191,7 @@ namespace Registry.Cells
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Flags: {0}", Flags));
             sb.AppendLine();

@@ -20,8 +20,10 @@ namespace Registry.Lists
         /// <remarks>The signature determines how the hash is calculated/verified</remarks>
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LxListRecord(byte[] rawBytes)
+        public LxListRecord(byte[] rawBytes, long absoluteOffset)
         {
+            AbsoluteOffset = absoluteOffset;
+
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
             IsFree = _size > 0;
@@ -85,22 +87,25 @@ namespace Registry.Lists
             }
         }
 
+        public long AbsoluteOffset { get; private set; }
+
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             sb.AppendLine();
 
             sb.AppendLine(string.Format("IsFree: {0}", IsFree));
 
-            if (IsFree)
-            {
-                return sb.ToString();
-            }
+            //if (IsFree)
+            //{
+            //    return sb.ToString();
+            //}
             sb.AppendLine();
 
             sb.AppendLine(string.Format("NumberOfEntries: {0:N0}", NumberOfEntries));

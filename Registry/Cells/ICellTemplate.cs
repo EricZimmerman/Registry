@@ -13,5 +13,6 @@ namespace Registry
         byte[] RawBytes { get; }
         string Signature { get; }
         int Size { get;  }
+        long AbsoluteOffset { get; }
     }
 }

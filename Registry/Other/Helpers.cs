@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 
 // namespaces...
-namespace Registry
+namespace Registry.Other
 {
     // public classes...
     public static class Helpers

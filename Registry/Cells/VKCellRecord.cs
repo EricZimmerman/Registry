@@ -48,14 +48,18 @@ namespace Registry.Cells
             [Description("Unknown data type")] RegUnknown = 999
         }
 
+        public long AbsoluteOffset { get; private set; }
+
         // private fields...
         private readonly int _size;
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="VKCellRecord" /> class.
         /// </summary>
-        public VKCellRecord(byte[] rawBytes)
+        public VKCellRecord(byte[] rawBytes, long absoluteOffset)
         {
+            AbsoluteOffset = absoluteOffset;
+
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -160,7 +164,7 @@ namespace Registry.Cells
 
                     datablockRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
 
-                    var db = new DBListRecord(datablockRaw);
+                    var db = new DBListRecord(datablockRaw, 4096 + OffsetToData);
 
                     // db now contains a pointer to where we can get db.NumberOfEntries offsets to our data and reassemble it
 
@@ -337,6 +341,7 @@ namespace Registry.Cells
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Data Type: {0}", DataType));
             sb.AppendLine();

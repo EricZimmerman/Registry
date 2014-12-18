@@ -46,14 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ACERecord.cs" />
+    <Compile Include="Other\ACERecord.cs" />
     <Compile Include="Cells\NKCellRecord.cs" />
     <Compile Include="Cells\SKCellRecord.cs" />
     <Compile Include="Cells\VKCellRecord.cs" />
-    <Compile Include="DataNode.cs" />
-    <Compile Include="HBinRecord.cs" />
-    <Compile Include="Helpers.cs" />
-    <Compile Include="HiveMetadata.cs" />
+    <Compile Include="Other\DataNode.cs" />
+    <Compile Include="Other\HBinRecord.cs" />
+    <Compile Include="Other\Helpers.cs" />
+    <Compile Include="Other\HiveMetadata.cs" />
     <Compile Include="Cells\ICellTemplate.cs" />
     <Compile Include="Lists\DBListRecord.cs" />
     <Compile Include="Lists\IListTemplate.cs" />
@@ -62,9 +62,9 @@
     <Compile Include="Lists\RIListRecord.cs" />
     <Compile Include="Registry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RegistryHeader.cs" />
-    <Compile Include="SKSecurityDescriptor.cs" />
-    <Compile Include="xACLRecord.cs" />
+    <Compile Include="Other\RegistryHeader.cs" />
+    <Compile Include="Other\SKSecurityDescriptor.cs" />
+    <Compile Include="Other\xACLRecord.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

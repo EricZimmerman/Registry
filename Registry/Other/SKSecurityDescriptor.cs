@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 
 // namespaces...
-namespace Registry
+namespace Registry.Other
 {
     // public classes...
     public class SKSecurityDescriptor

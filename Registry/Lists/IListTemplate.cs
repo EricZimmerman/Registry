@@ -15,5 +15,6 @@ namespace Registry.Lists
         string Signature { get; }
         // properties...
         int Size { get; }
+        long AbsoluteOffset { get; }
     }
 }

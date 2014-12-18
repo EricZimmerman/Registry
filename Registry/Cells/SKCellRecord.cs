@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Cells
@@ -17,8 +18,9 @@ namespace Registry.Cells
         /// Initializes a new instance of the <see cref="SKCellRecord"/> class.
         /// <remarks>Represents a Key Security Record</remarks>
         /// </summary>
-        protected internal SKCellRecord(byte[] rawBytes)
+        protected internal SKCellRecord(byte[] rawBytes, long absoluteOffset)
         {
+            AbsoluteOffset = absoluteOffset;
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -62,12 +64,15 @@ namespace Registry.Cells
             }
         }
 
+        public long AbsoluteOffset { get; private set; }
+
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             sb.AppendLine(string.Format("IsFree: {0}", IsFree));

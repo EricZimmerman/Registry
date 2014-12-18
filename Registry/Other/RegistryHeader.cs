@@ -1,11 +1,9 @@
-﻿using NFluent;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Text;
+using NFluent;
 
 // namespaces...
-namespace Registry
+namespace Registry.Other
 {
     // public classes...
     public class RegistryHeader

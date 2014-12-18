@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-// namespaces...
-namespace Registry
+﻿// namespaces...
+namespace Registry.Other
 {
     // public classes...
     public class HiveMetadata

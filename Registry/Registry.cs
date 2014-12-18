@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry
@@ -134,7 +135,7 @@ namespace Registry
 
                 try
                 {
-                    var h = new HBinRecord(rawhbin);
+                    var h = new HBinRecord(rawhbin, offsetInHive);
                 }
                 catch (Exception ex)
                 {
