@@ -289,6 +289,7 @@ namespace Registry.Cells
             }
             catch (Exception)
             {
+                //if its a free record, errors are expected, but if not, throw so the issue can be addressed
                 if (IsFree)
                 {
                     ValueData = datablockRaw;
