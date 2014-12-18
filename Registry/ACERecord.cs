@@ -16,6 +16,8 @@ namespace Registry
         {
             RawBytes = rawBytes;
 
+
+
             switch (rawBytes[0])
             {
                 case 0x0:

@@ -20,30 +20,31 @@ namespace Registry.Cells
         // public enums...
         public enum DataTypeEnum
         {
-            [Description("Binary data")]
+            [Description("Binary data (any arbitrary data)")]
             RegBinary = 0x0003,
-            [Description("32-bit number")]
+            [Description("A DWORD value, a 32-bit unsigned integer (little-endian)")]
             RegDword = 0x0004,
-            [Description("32-bit number (big endian)")]
+            [Description("A DWORD value, a 32-bit unsigned integer  (big endian)")]
             RegDwordBigEndian = 0x0005,
-            [Description("Variable length string")] RegExpandSz = 0x0002,
-            [Description("Binary data")]
+            [Description("An 'expandable' string value that can contain environment variables, normally stored and exposed in UTF-16LE")] RegExpandSz = 0x0002,
+            [Description("A resource descriptor (used by the Plug-n-Play hardware enumeration and configuration)")]
             RegFullResourceDescription = 0x0009,
-            [Description("Unicode string")]
+            [Description("A symbolic link (UNICODE) to another Registry key, specifying a root key and the path to the target key")]
             RegLink = 0x0006,
-            [Description("Multiple strings")]
+            [Description("A multi-string value, which is an ordered list of non-empty strings, normally stored and exposed in UTF-16LE, each one terminated by a NUL character")]
             RegMultiSz = 0x0007,
-            [Description("Undefined type")]
+            [Description("No type (the stored value, if any)")]
             RegNone = 0x0000,
-            [Description("64-bit number")]
+            [Description("A QWORD value, a 64-bit integer (either big- or little-endian, or unspecified)")]
             RegQword = 0x000B,
-            [Description("Binary data")]
+            [Description("A resource list (used by the Plug-n-Play hardware enumeration and configuration)")]
             RegResourceList = 0x0008,
-            [Description("Binary data")]
+            [Description("A resource requirements list (used by the Plug-n-Play hardware enumeration and configuration)")]
             RegResourceRequirementsList = 0x000A,
             [Description("FILETIME data")]
             RegFileTime = 0x0010,
-            [Description("Fixed length string")] RegSz = 0x0001,
+            [Description("A string value, normally stored and exposed in UTF-16LE")]
+            RegSz = 0x0001,
             [Description("Unknown data type")] RegUnknown = 999
         }
 
@@ -135,7 +136,13 @@ namespace Registry.Cells
 
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
                 var datablockSizeRaw = Registry.ReadBytesFromHive(4096 + OffsetToData, 4);
-                dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+
+                // in some rare cases the bytes returned from the previous line are all zeros, so make sure we get something but all zeros
+                if (datablockSizeRaw.Length == 4)
+                {
+                     dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+                }
+                   
 
                 //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
 
@@ -217,7 +224,10 @@ namespace Registry.Cells
                     
             }
 
-                switch (DataType)
+            //this is a failsafe for when IsFree == true. a lot of time the data is there, but if not, stick what we do have in the value and call it a day
+            try
+            {
+ switch (DataType)
                 {
                     case DataTypeEnum.RegFileTime:
                         var ts = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
@@ -238,6 +248,8 @@ namespace Registry.Cells
                     case DataTypeEnum.RegResourceRequirementsList:
                     case DataTypeEnum.RegResourceList:
                         ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
+
+                     
 
                         break;
 
@@ -274,6 +286,21 @@ namespace Registry.Cells
 
                         break;
                 }
+            }
+            catch (Exception)
+            {
+                if (IsFree)
+                {
+                    ValueData = datablockRaw;
+                }
+                else
+                {
+                    throw;
+                }
+                    
+                
+            }
+               
         }
 
         // public properties...
@@ -308,10 +335,10 @@ namespace Registry.Cells
             sb.AppendLine();
             sb.AppendLine(string.Format("IsFree: {0}", IsFree));
 
-            if (IsFree)
-            {
-                return sb.ToString();
-            }
+            //if (IsFree)
+            //{
+            //    return sb.ToString();
+            //}
 
             sb.AppendLine();
 

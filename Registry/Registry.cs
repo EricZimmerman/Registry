@@ -101,33 +101,37 @@ namespace Registry
 
 
             // for initial testing we just walk down the file looking at everything
-            long offset = 4096;
+            long offsetInHive = 4096;
 
             const uint hbinHeader = 0x6e696268;
 
-            while (offset < HiveLength())
+             long hivelen = HiveLength();
+
+            while (offsetInHive < HiveLength())
             {
-                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offset + 8, 4), 0);
+                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
 
                 if (hbinSize == 0)
                 {
                     // Go to end if we find a 0 size block (padding?)
-                    offset = HiveLength();
+                    offsetInHive = HiveLength();
                     continue;
                 }
 
-                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
+                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive, 4), 0);
 
                 Check.That(hbinSig).IsEqualTo(hbinHeader);
 
-                var rawhbin = ReadBytesFromHive(offset, (int)hbinSize);
+                Console.WriteLine("Pulling hbin at offset 0x{0:X}\t\tPercent done: {1:P}", offsetInHive,(double) offsetInHive / hivelen);
+
+                var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
 
                 var   h = new HBinRecord(rawhbin);
 
-                File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
+                //File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
 
 
-                offset += hbinSize;
+                offsetInHive += hbinSize;
             }
 
 
@@ -136,6 +140,12 @@ namespace Registry
             return true;
         }
 
+        /// <summary>
+        /// Reads 'length' bytes from the registry starting at 'offset' and returns a byte array
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public static byte[] ReadBytesFromHive(long offset, int length)
         {
             _binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);

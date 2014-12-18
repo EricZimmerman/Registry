@@ -39,7 +39,11 @@ namespace Registry
 
             for (var i = 0; i < AceCount; i++)
             {
-                var aceSize = rawBytes[index + 2];
+                if (index > rawBytes.Length)
+                {
+                    break;
+                }
+                    var aceSize = rawBytes[index + 2];
                 var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
 
                 chunks.Add(rawAce);
@@ -51,9 +55,13 @@ namespace Registry
 
             foreach (var chunk in chunks)
             {
-                var ace = new ACERecord(chunk);
+                if (chunk.Length > 0)
+                {
+                    var ace = new ACERecord(chunk);
 
-                ACERecords.Add(ace);
+                    ACERecords.Add(ace);   
+                }
+                    
             }
         }
 

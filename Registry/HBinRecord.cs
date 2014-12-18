@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 // namespaces...
 namespace Registry
@@ -47,23 +48,38 @@ namespace Registry
 
             int readSize;
 
-            var offset = 0x20;
+            var offsetInHbin = 0x20;
 
             CellRecords = new List<ICellTemplate>();
             ListRecords = new List<IListTemplate>();
 
-            while (offset < Size)
+            while (offsetInHbin < Size)
             {
-                recordSize = BitConverter.ToUInt32(rawBytes, offset);
+                recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
 
                 readSize = (int)recordSize;
 
                 readSize = Math.Abs(readSize);
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
 
-                var rawRecord = rawBytes.Skip(offset).Take(readSize).ToArray();
+                var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
 
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
+
+                bool foundMatch = false;
+                try
+                {
+                    foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
+                }
+                catch (ArgumentException ex)
+                {
+                    // Syntax error in the regular expression
+                }
+
+                //only process records with 2 letter signatures. this avoids wasting time on data cells
+                if (foundMatch)
+                {
+                    Console.WriteLine("\tprocessing {0} record at offset 0x{1:X}", cellSignature, offsetInHbin);
 
                 ICellTemplate cellRecord = null;
                 IListTemplate listRecord = null;
@@ -121,6 +137,9 @@ namespace Registry
 
                             //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
 
+                      
+
+
                             break;
 
                         default:
@@ -145,10 +164,13 @@ namespace Registry
                 {
                     ListRecords.Add(listRecord);
                 }
+                }
+
+                    
 
 
 
-                offset += readSize;
+                offsetInHbin += readSize;
             }
         }
 
