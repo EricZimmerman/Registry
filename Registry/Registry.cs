@@ -52,7 +52,7 @@ namespace Registry
             }
         }
 
-        public RegistryHeader Header { get; private set; }
+        public static RegistryHeader Header { get; private set; }
 
         // public methods...
         public void Dispose()

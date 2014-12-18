@@ -154,7 +154,7 @@ namespace Registry.Cells
 
 
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw
-                if (dataLengthInternal > 16344)
+                if (dataLengthInternal > 16344 && (Registry.Header.MajorVersion == 1 && Registry.Header.MinorVersion > 3))
                 {
                     // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType
 
