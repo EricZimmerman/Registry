@@ -120,13 +120,29 @@ namespace Registry
 
                 var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive, 4), 0);
 
+                if (hbinSig != hbinHeader)
+                {
+                    Console.WriteLine("hbin header incorrect at offset 0x{0:X}!!!\t\tPercent done: {1:P}", offsetInHive, (double)offsetInHive / hivelen);
+                    break;
+                }
+
                 Check.That(hbinSig).IsEqualTo(hbinHeader);
 
                 Console.WriteLine("Pulling hbin at offset 0x{0:X}\t\tPercent done: {1:P}", offsetInHive,(double) offsetInHive / hivelen);
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
 
-                var   h = new HBinRecord(rawhbin);
+                try
+                {
+                    var h = new HBinRecord(rawhbin);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error processing hbin at offset 0x{0:X}. Error: {1}, Stack: {2}", offsetInHive, ex.Message,ex.StackTrace);
+                    
+                }
+
+                
 
                 //File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
 

@@ -33,12 +33,20 @@ namespace Registry
 
             var ts = BitConverter.ToInt64(rawBytes, 0x14);
 
-            var dt = DateTimeOffset.FromFileTime(ts);
+            try
+            {
+var dt = DateTimeOffset.FromFileTime(ts);
 
             if (dt.Year > 1600)
             {
                 LastWriteTimestamp = dt;
             }
+            }
+            catch (Exception)
+            {
+                //very rarely you get a 'Not a valid Win32 FileTime' error, so trap it if thats the case
+            }
+            
 
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
 
@@ -151,7 +159,8 @@ namespace Registry
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(string.Format( "Error: {0},  Cell signature: {1}", ex.Message, cellSignature));
+                  //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                    Console.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
                 }
 
 

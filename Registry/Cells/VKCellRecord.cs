@@ -284,6 +284,12 @@ namespace Registry.Cells
 
                     default:
 
+
+         DataType = DataTypeEnum.RegUnknown;
+            ValueData = datablockRaw;
+
+                        ValueDataSlack = new byte[0];
+
                         break;
                 }
             }
