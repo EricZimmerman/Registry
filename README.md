@@ -30,7 +30,7 @@ Total records: 9,448,522<br />
 Total hard parsing errors (record marked as in use): 	152 (0.0016087172152428 % errors)<br />
 Total soft parsing errors (record marked as free):	522 (0.0055246735944521 % errors)<br />
 
-Parsing success rate: 99.99286660919031 % <br />
+***Parsing success rate: 99.99286660919031 %*** <br />
 
 
 
