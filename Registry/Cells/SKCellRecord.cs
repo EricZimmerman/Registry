@@ -4,6 +4,7 @@ using System.Text;
 using NFluent;
 using Registry.Other;
 
+
 // namespaces...
 namespace Registry.Cells
 {
@@ -42,7 +43,13 @@ namespace Registry.Cells
 
             var rawDescriptor = rawBytes.Skip(0x18).Take((int)DescriptorLength).ToArray();
 
-            SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);
+            if (rawDescriptor.Length > 0)
+            {
+                // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
+                SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);    
+            }
+
+            
         }
 
         // public properties...

@@ -32,11 +32,13 @@ namespace Registry.Lists
                 return;
             }
 
-            NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
+   
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("ri");
+
+            NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
 
             _offsets = new List<uint>();
 
@@ -45,6 +47,12 @@ namespace Registry.Lists
 
             while (counter < NumberOfEntries)
             {
+                if (index >= rawBytes.Length)
+                {
+                    // i have seen cases where there isnt enough data, so get what we can
+                    break;
+                }
+
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
 

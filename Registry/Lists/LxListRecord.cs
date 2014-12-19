@@ -41,6 +41,11 @@ namespace Registry.Lists
 
             while (counter < NumberOfEntries)
             {
+                if (index >= rawBytes.Length)
+                {
+                    // i have seen cases where there isnt enough data, so get what we can
+                    break;
+                }
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
 

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
 using Registry.Cells;
 using Registry.Lists;
+
 
 // namespaces...
 namespace Registry.Other
@@ -36,7 +38,7 @@ namespace Registry.Other
 
             try
             {
-                var dt = DateTimeOffset.FromFileTime(ts);
+                var dt = DateTimeOffset.FromFileTime(ts).ToUniversalTime(); ;
 
                 if (dt.Year > 1600)
                 {
@@ -59,9 +61,7 @@ namespace Registry.Other
 
             var offsetInHbin = 0x20;
 
-            CellRecords = new List<ICellTemplate>();
-            ListRecords = new List<IListTemplate>();
-            DataRecords = new List<DataNode>();
+   
 
             while (offsetInHbin < Size)
             {
@@ -87,7 +87,7 @@ namespace Registry.Other
                 }
 
                 //only process records with 2 letter signatures. this avoids wasting time on data cells
-                if (foundMatch)
+                if (foundMatch && RegistryHive.VerboseOutput)
                 {
                     Console.WriteLine("\tprocessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
                         cellSignature, offsetInHbin, offsetInHbin + absoluteOffset);
@@ -150,9 +150,6 @@ namespace Registry.Other
 
                                 //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
 
-
-
-
                                 break;
 
                             default:
@@ -165,24 +162,44 @@ namespace Registry.Other
                     }
                     catch (Exception ex)
                     {
-                        //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
-                        Console.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                        //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
+                        //TODO store it somewhere else
+
+                        var _size = BitConverter.ToInt32(rawRecord, 0);
+
+                        if (_size < 0)
+                        {
+                            RegistryHive._hardParsingErrors += 1;    
+                            //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                            Console.WriteLine("Cell signature: {0}, Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature,offsetInHbin + absoluteOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+
+                            Console.WriteLine();
+                            Console.WriteLine();
+                            //Console.WriteLine("Press a key to continue");
+
+                            //Console.ReadKey();
+                        }
+                        else
+                        {
+                            RegistryHive._softParsingErrors += 1;
+                        }
+
                     }
 
 
                     if (cellRecord != null)
                     {
-                        CellRecords.Add(cellRecord);
+                        RegistryHive.CellRecords.Add(cellRecord.AbsoluteOffset, cellRecord);
                     }
 
                     if (listRecord != null)
                     {
-                        ListRecords.Add(listRecord);
+                        RegistryHive.ListRecords.Add(listRecord.AbsoluteOffset, listRecord);
                     }
 
                     if (dataRecord != null)
                     {
-                        DataRecords.Add(dataRecord);
+                        RegistryHive.DataRecords.Add(dataRecord.AbsoluteOffset, dataRecord);
                     }
                
 
@@ -196,11 +213,13 @@ namespace Registry.Other
 
         public long AbsoluteOffset { get; private set; }
         // public properties...
-        public List<ICellTemplate> CellRecords { get; private set; }
-        public List<DataNode> DataRecords { get; private set; }
+        
+
         public uint FileOffset { get; private set; }
         public DateTimeOffset? LastWriteTimestamp { get; private set; }
-        public List<IListTemplate> ListRecords { get; private set; }
+        
+        
+
         public uint Reserved { get; private set; }
         /// <summary>
         /// The signature of the hbin record. Should always be "hbin"
@@ -227,7 +246,6 @@ namespace Registry.Other
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Cell records count: {0:N0}", CellRecords.Count));
             sb.AppendLine();
             sb.AppendLine(string.Format("File offset: 0x{0:X}", FileOffset));
             sb.AppendLine();

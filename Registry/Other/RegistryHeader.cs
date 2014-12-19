@@ -23,7 +23,7 @@ namespace Registry.Other
 
             var ts = BitConverter.ToInt64(rawBytes, 0xc);
 
-            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts);
+            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime(); ;
 
             MajorVersion = BitConverter.ToUInt32(rawBytes, 0x14);
             MinorVersion = BitConverter.ToUInt32(rawBytes, 0x18);

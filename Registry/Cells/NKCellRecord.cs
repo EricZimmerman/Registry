@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using NFluent;
 
@@ -8,6 +9,7 @@ namespace Registry.Cells
     // public classes...
     public class NKCellRecord : ICellTemplate
     {
+        public List<ulong> ValueOffsets;
         // private fields...
         private readonly int _size;
         // protected internal constructors...
@@ -22,6 +24,8 @@ namespace Registry.Cells
             AbsoluteOffset = absoluteOffset;
             RawBytes = rawBytes;
 
+            ValueOffsets = new List<ulong>();
+
             _size = BitConverter.ToInt32(rawBytes, 0);
 
             IsFree = _size > 0;
@@ -34,16 +38,29 @@ namespace Registry.Cells
 
             var ts = BitConverter.ToInt64(rawBytes, 0x8);
 
-            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts);
+            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
 
             ParentCellIndex = BitConverter.ToUInt32(rawBytes, 0x14);
 
             SubkeyCountsStable = BitConverter.ToUInt32(rawBytes, 0x18);
             SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
 
-            SubkeyListsStableCellIndex = BitConverter.ToUInt32(rawBytes, 0x20);
 
-            var num = BitConverter.ToUInt32(rawBytes, 0x24);
+
+            //SubkeyListsStableCellIndex
+            var num = BitConverter.ToUInt32(rawBytes, 0x20);
+
+            if (num == 0xFFFFFFFF)
+            {
+                SubkeyListsStableCellIndex = 0;
+            }
+            else
+            {
+                SubkeyListsStableCellIndex = num;
+            }
+
+            //SubkeyListsVolatileCellIndex
+            num = BitConverter.ToUInt32(rawBytes, 0x24);
 
             if (num == 0xFFFFFFFF)
             {
@@ -56,6 +73,7 @@ namespace Registry.Cells
 
             ValueListCount = BitConverter.ToUInt32(rawBytes, 0x28);
 
+            //ValueListCellIndex
             num = BitConverter.ToUInt32(rawBytes, 0x2c);
 
             if (num == 0xFFFFFFFF)
@@ -68,9 +86,42 @@ namespace Registry.Cells
             }
 
 
+            if (ValueListCellIndex > 0)
+            {
+                //there are values for this key, so get the offsets so we can pull them later
+
+                var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, 4);
+
+          
+                var dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+
+                if (Math.Abs(dataBlockSize) > 0)
+                {
+                    var datablockRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, Math.Abs(dataBlockSize));
+
+                    for (int i = 1; i <= ValueListCount; i++)
+                    {
+                        // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
+                        var os = BitConverter.ToUInt32(datablockRaw, i * 4);
+
+                        ValueOffsets.Add(os);
+
+                    }
+
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("if (Math.Abs(dataBlockSize) > 0) in nkcellrecord");
+                }
+
+                
+
+            }
+
 
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 
+            //ClassCellIndex
             num = BitConverter.ToUInt32(rawBytes, 0x34);
 
             if (num == 0xFFFFFFFF)
@@ -81,7 +132,6 @@ namespace Registry.Cells
             {
                 ClassCellIndex = num;
             }
-
 
             MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
 
@@ -110,7 +160,16 @@ namespace Registry.Cells
             NameLength = BitConverter.ToUInt16(rawBytes, 0x4c);
             ClassLength = BitConverter.ToUInt16(rawBytes, 0x4e);
 
-            Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+            if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+            {
+                Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);    
+            }
+            else
+            {
+                Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
+            }
+
+            
 
             var paddingOffset = 0x50 + NameLength;
             var paddingLength = Math.Abs(Size) - paddingOffset;
@@ -195,6 +254,8 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Flags: {0}", Flags));
             sb.AppendLine();
+            sb.AppendLine(string.Format("Name: {0}", Name));
+            sb.AppendLine();
             sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
             sb.AppendLine();
 
@@ -218,7 +279,7 @@ namespace Registry.Cells
             sb.AppendLine();
             sb.AppendLine(string.Format("NameLength: 0x{0:X}", NameLength));
             sb.AppendLine(string.Format("MaximumNameLength: 0x{0:X}", MaximumNameLength));
-            sb.AppendLine(string.Format("Name: {0}", Name));
+
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
