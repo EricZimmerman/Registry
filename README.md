@@ -14,15 +14,25 @@ Full featured, offline registry parser in C#
 
 **Testing metrics**
 
-Total hives processed: 106<br />
-total hbins processed: 120,494<br />
-Total records processed OK: 5,552,415<br />
-total records with errors: 647<br />
+108 hives processed
 
-Success rate: 5552415 / 5553062 = 99.98834877046213 %<br />
-Fail rate: 647 / 5553062 = 0.0116512295378658 %<br />
+Total cell records: 5,200,557<br />
+Total free cell records: 6,448 (0.1239867191148948 % free)<br />
+	
+Total list records: 539,904<br />
+Total free list records: 3,495 (0.6473373044096728 % free)<br />
+	
+Total data records: 3,708,061<br />
+Total free data records: 206,423 (5.566871742401217 % free)<br />
 
-(many of the errors are vk records that are free and do not contain all necessary data)
+Total records: 9,448,522<br />
+
+Total hard parsing errors (record marked as in use): 	152 (0.0016087172152428 % errors)<br />
+Total soft parsing errors (record marked as free):	522 (0.0055246735944521 % errors)<br />
+
+Parsing success rate: 99.99286660919031 % <br />
+
+
 
 ### Example data ###
 
