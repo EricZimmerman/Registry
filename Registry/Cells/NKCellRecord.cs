@@ -1,7 +1,7 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Cells
@@ -9,19 +9,21 @@ namespace Registry.Cells
     // public classes...
     public class NKCellRecord : ICellTemplate
     {
-        public List<ulong> ValueOffsets;
         // private fields...
         private readonly int _size;
         // protected internal constructors...
+
+        // public fields...
+        public List<ulong> ValueOffsets;
 
         // protected internal constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
         /// <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal NKCellRecord(byte[] rawBytes, long absoluteOffset)
+        protected internal NKCellRecord(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
             ValueOffsets = new List<ulong>();
@@ -92,30 +94,25 @@ namespace Registry.Cells
 
                 var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, 4);
 
-          
+
                 var dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
 
                 if (Math.Abs(dataBlockSize) > 0)
                 {
                     var datablockRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, Math.Abs(dataBlockSize));
 
-                    for (int i = 1; i <= ValueListCount; i++)
+                    for (var i = 1; i <= ValueListCount; i++)
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
                         var os = BitConverter.ToUInt32(datablockRaw, i * 4);
 
                         ValueOffsets.Add(os);
-
                     }
-
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("if (Math.Abs(dataBlockSize) > 0) in nkcellrecord");
                 }
-
-                
-
             }
 
 
@@ -162,14 +159,14 @@ namespace Registry.Cells
 
             if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
             {
-                Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);    
+                Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
             }
             else
             {
                 Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
             }
 
-            
+
 
             var paddingOffset = 0x50 + NameLength;
             var paddingLength = Math.Abs(Size) - paddingOffset;
@@ -194,16 +191,25 @@ namespace Registry.Cells
             NoDelete = 0x0008,
             PredefinedHandle = 0x0040,
             SymbolicLink = 0x0010,
-            UnusedVolatileKey = 0x0001,
             Unused0400 = 0x0400,
             Unused0800 = 0x0800,
             Unused1000 = 0x1000,
             Unused2000 = 0x2000,
             Unused4000 = 0x4000,
             Unused8000 = 0x8000,
+            UnusedVolatileKey = 0x0001,
             VirtMirrored = 0x0080,
             VirtTarget = 0x0100,
             VirtualStore = 0x0200
+        }
+
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
         }
 
         // public properties...
@@ -212,6 +218,7 @@ namespace Registry.Cells
         public byte Debug { get; private set; }
         public FlagEnum Flags { get; private set; }
         public bool IsFree { get; private set; }
+        public bool IsReferenceed { get; internal set; }
         public DateTimeOffset LastWriteTimestamp { get; private set; }
         public uint MaximumClassLength { get; private set; }
         public ushort MaximumNameLength { get; private set; }
@@ -222,6 +229,7 @@ namespace Registry.Cells
         public string Padding { get; private set; }
         public uint ParentCellIndex { get; private set; }
         public byte[] RawBytes { get; private set; }
+        public long RelativeOffset { get; private set; }
         public uint SecurityCellIndex { get; private set; }
         public string Signature { get; private set; }
         public int Size
@@ -231,8 +239,6 @@ namespace Registry.Cells
                 return Math.Abs(_size);
             }
         }
-
-        public long AbsoluteOffset { get; private set; }
 
         public uint SubkeyCountsStable { get; private set; }
         public uint SubkeyCountsVolatile { get; private set; }
@@ -250,6 +256,7 @@ namespace Registry.Cells
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Flags: {0}", Flags));

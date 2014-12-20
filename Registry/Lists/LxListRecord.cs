@@ -20,9 +20,9 @@ namespace Registry.Lists
         /// <remarks>The signature determines how the hash is calculated/verified</remarks>
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LxListRecord(byte[] rawBytes, long absoluteOffset)
+        public LxListRecord(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
 
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -72,7 +72,17 @@ namespace Registry.Lists
         }
 
         // public properties...
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
+        }
+
+        // public properties...
         public bool IsFree { get; private set; }
+        public bool IsReferenceed { get; internal set; }
         public int NumberOfEntries { get; private set; }
         public Dictionary<uint, string> Offsets
         {
@@ -83,6 +93,7 @@ namespace Registry.Lists
         }
 
         public byte[] RawBytes { get; private set; }
+        public long RelativeOffset { get; private set; }
         public string Signature { get; private set; }
         public int Size
         {
@@ -92,14 +103,13 @@ namespace Registry.Lists
             }
         }
 
-        public long AbsoluteOffset { get; private set; }
-
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 

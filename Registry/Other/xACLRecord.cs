@@ -1,8 +1,8 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Other
@@ -24,7 +24,7 @@ namespace Registry.Other
 
             var rev = (int)AclRevision;
 
-            Check.That(rev.ToString()).IsOneOfThese("1","2", "4");
+            Check.That(rev.ToString()).IsOneOfThese("1", "2", "4");
 
             Sbz1 = rawBytes[1];
 
@@ -43,7 +43,7 @@ namespace Registry.Other
                 {
                     break;
                 }
-                    var aceSize = rawBytes[index + 2];
+                var aceSize = rawBytes[index + 2];
                 var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
 
                 chunks.Add(rawAce);
@@ -59,9 +59,8 @@ namespace Registry.Other
                 {
                     var ace = new ACERecord(chunk);
 
-                    ACERecords.Add(ace);   
+                    ACERecords.Add(ace);
                 }
-                    
             }
         }
 

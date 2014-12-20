@@ -1,9 +1,8 @@
-﻿using System;
+﻿using NFluent;
+using Registry.Other;
+using System;
 using System.Linq;
 using System.Text;
-using NFluent;
-using Registry.Other;
-
 
 // namespaces...
 namespace Registry.Cells
@@ -19,9 +18,9 @@ namespace Registry.Cells
         /// Initializes a new instance of the <see cref="SKCellRecord"/> class.
         /// <remarks>Represents a Key Security Record</remarks>
         /// </summary>
-        protected internal SKCellRecord(byte[] rawBytes, long absoluteOffset)
+        protected internal SKCellRecord(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -46,10 +45,17 @@ namespace Registry.Cells
             if (rawDescriptor.Length > 0)
             {
                 // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
-                SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);    
+                SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);
             }
+        }
 
-            
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
         }
 
         // public properties...
@@ -57,8 +63,10 @@ namespace Registry.Cells
         public uint DescriptorLength { get; private set; }
         public uint FLink { get; private set; }
         public bool IsFree { get; private set; }
+        public bool IsReferenceed { get; internal set; }
         public byte[] RawBytes { get; private set; }
         public uint ReferenceCount { get; private set; }
+        public long RelativeOffset { get; private set; }
         public ushort Reserved { get; private set; }
         public SKSecurityDescriptor SecurityDescriptor { get; private set; }
         public string Signature { get; private set; }
@@ -71,14 +79,13 @@ namespace Registry.Cells
             }
         }
 
-        public long AbsoluteOffset { get; private set; }
-
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 

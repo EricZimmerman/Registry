@@ -1,7 +1,7 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Lists
@@ -18,9 +18,9 @@ namespace Registry.Lists
         /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
-        public LIListRecord(byte[] rawBytes, long absoluteOffset)
+        public LIListRecord(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
             IsFree = _size > 0;
@@ -61,7 +61,17 @@ namespace Registry.Lists
         }
 
         // public properties...
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
+        }
+
+        // public properties...
         public bool IsFree { get; private set; }
+        public bool IsReferenceed { get; internal set; }
         public int NumberOfEntries { get; private set; }
         public List<uint> Offsets
         {
@@ -72,6 +82,7 @@ namespace Registry.Lists
         }
 
         public byte[] RawBytes { get; private set; }
+        public long RelativeOffset { get; private set; }
         public string Signature { get; private set; }
         public int Size
         {
@@ -81,14 +92,13 @@ namespace Registry.Lists
             }
         }
 
-        public long AbsoluteOffset { get; private set; }
-
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 

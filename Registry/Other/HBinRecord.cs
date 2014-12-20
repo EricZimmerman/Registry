@@ -1,13 +1,11 @@
-﻿using System;
+﻿using NFluent;
+using Registry.Cells;
+using Registry.Lists;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using NFluent;
-using Registry.Cells;
-using Registry.Lists;
-
 
 // namespaces...
 namespace Registry.Other
@@ -20,9 +18,9 @@ namespace Registry.Other
         /// Initializes a new instance of the <see cref="HBinRecord"/> class.
         /// <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
-        protected internal HBinRecord(byte[] rawBytes, long absoluteOffset)
+        protected internal HBinRecord(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
@@ -38,9 +36,10 @@ namespace Registry.Other
 
             try
             {
-                var dt = DateTimeOffset.FromFileTime(ts).ToUniversalTime(); ;
+                var dt = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+                ;
 
-                if (dt.Year > 1600)
+                if (dt.Year > 1601)
                 {
                     LastWriteTimestamp = dt;
                 }
@@ -61,7 +60,7 @@ namespace Registry.Other
 
             var offsetInHbin = 0x20;
 
-   
+
 
             while (offsetInHbin < Size)
             {
@@ -81,7 +80,7 @@ namespace Registry.Other
                 {
                     foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
                 }
-                catch (ArgumentException ex)
+                catch (ArgumentException)
                 {
                     // Syntax error in the regular expression
                 }
@@ -90,118 +89,120 @@ namespace Registry.Other
                 if (foundMatch && RegistryHive.VerboseOutput)
                 {
                     Console.WriteLine("\tprocessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                        cellSignature, offsetInHbin, offsetInHbin + absoluteOffset);
+                        cellSignature, offsetInHbin, offsetInHbin + relativeOffset);
                 }
 
                 ICellTemplate cellRecord = null;
-                    IListTemplate listRecord = null;
-                    DataNode dataRecord = null;
+                IListTemplate listRecord = null;
+                DataNode dataRecord = null;
 
-                    try
+                try
+                {
+                    switch (cellSignature)
                     {
-                        switch (cellSignature)
-                        {
-                            case "lf":
-                            case "lh":
-                                listRecord = new LxListRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "lf":
+                        case "lh":
+                            listRecord = new LxListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //  Debug.WriteLine(listRecord);
+                            //  Debug.WriteLine(listRecord);
 
-                                break;
+                            break;
 
-                            case "li":
-                                listRecord = new LIListRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "li":
+                            listRecord = new LIListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //   Debug.WriteLine(listRecord);
+                            //   Debug.WriteLine(listRecord);
 
-                                break;
+                            break;
 
-                            case "ri":
-                                listRecord = new RIListRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "ri":
+                            listRecord = new RIListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //  Debug.WriteLine(listRecord);
-                                break;
+                            //  Debug.WriteLine(listRecord);
+                            break;
 
-                            case "db":
-                                listRecord = new DBListRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "db":
+                            listRecord = new DBListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //    Debug.WriteLine(listRecord);
-                                break;
+                            //    Debug.WriteLine(listRecord);
+                            break;
 
-                            case "lk":
+                        case "lk":
 
-                                //    Debug.WriteLine(cellRecord);
-                                break;
+                            //    Debug.WriteLine(cellRecord);
+                            break;
 
-                            case "nk":
-                                cellRecord = new NKCellRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "nk":
+                            cellRecord = new NKCellRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //    Debug.WriteLine(cellRecord);
-                                break;
-                            case "sk":
-                                cellRecord = new SKCellRecord(rawRecord, offsetInHbin + absoluteOffset);
+                            //    Debug.WriteLine(cellRecord);
+                            break;
+                        case "sk":
+                            cellRecord = new SKCellRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //   Debug.WriteLine(cellRecord);
+                            //   Debug.WriteLine(cellRecord);
 
-                                break;
+                            break;
 
-                            case "vk":
-                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + absoluteOffset);
+                        case "vk":
+                            cellRecord = new VKCellRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                                //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
+                            //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
 
-                                break;
+                            break;
 
-                            default:
-                                dataRecord = new DataNode(rawRecord, offsetInHbin + absoluteOffset);
+                        default:
+                            dataRecord = new DataNode(rawRecord, offsetInHbin + relativeOffset);
 
-                                //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
+                            //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
 
-                                break;
-                        }
+                            break;
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
+                    //TODO store it somewhere else
+
+                    var _size = BitConverter.ToInt32(rawRecord, 0);
+
+                    if (_size < 0)
                     {
-                        //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
-                        //TODO store it somewhere else
+                        RegistryHive._hardParsingErrors += 1;
+                        //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
-                        var _size = BitConverter.ToInt32(rawRecord, 0);
 
-                        if (_size < 0)
-                        {
-                            RegistryHive._hardParsingErrors += 1;    
-                            //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
-                            Console.WriteLine("Cell signature: {0}, Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature,offsetInHbin + absoluteOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                        Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + relativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
-                            Console.WriteLine();
-                            Console.WriteLine();
-                            //Console.WriteLine("Press a key to continue");
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        //Console.WriteLine("Press a key to continue");
 
-                            //Console.ReadKey();
-                        }
-                        else
-                        {
-                            RegistryHive._softParsingErrors += 1;
-                        }
-
+                        //Console.ReadKey();
                     }
-
-
-                    if (cellRecord != null)
+                    else
                     {
-                        RegistryHive.CellRecords.Add(cellRecord.AbsoluteOffset, cellRecord);
+                        //This record is marked 'Free' so its not as important of an error
+                        RegistryHive._softParsingErrors += 1;
                     }
+                }
 
-                    if (listRecord != null)
-                    {
-                        RegistryHive.ListRecords.Add(listRecord.AbsoluteOffset, listRecord);
-                    }
 
-                    if (dataRecord != null)
-                    {
-                        RegistryHive.DataRecords.Add(dataRecord.AbsoluteOffset, dataRecord);
-                    }
-               
+                if (cellRecord != null)
+                {
+                    RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                }
+
+                if (listRecord != null)
+                {
+                    RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+                }
+
+                if (dataRecord != null)
+                {
+                    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                }
+
 
 
 
@@ -211,15 +212,25 @@ namespace Registry.Other
             }
         }
 
-        public long AbsoluteOffset { get; private set; }
         // public properties...
-        
+        /// <summary>
+        /// The offset to this record from the beginning of the hive, in bytes
+        /// </summary>
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
+        }
 
+        // public properties...
         public uint FileOffset { get; private set; }
         public DateTimeOffset? LastWriteTimestamp { get; private set; }
-        
-        
-
+        /// <summary>
+        /// The offset to this record as stored by other records
+        /// </summary>
+        public long RelativeOffset { get; private set; }
         public uint Reserved { get; private set; }
         /// <summary>
         /// The signature of the hbin record. Should always be "hbin"
@@ -234,6 +245,7 @@ namespace Registry.Other
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
 
             sb.AppendLine(string.Format("Signature: {0}", Signature));

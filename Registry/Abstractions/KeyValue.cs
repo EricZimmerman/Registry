@@ -1,24 +1,19 @@
-﻿using System;
+﻿using Registry.Cells;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Registry.Cells;
 
+// namespaces...
 namespace Registry.Abstractions
 {
+    // public classes...
     /// <summary>
     /// Represents a value that is associated with a RegistryKey
     /// <remarks>Also contains references to low level structures related to a given value</remarks>
     /// </summary>
     public class KeyValue
     {
-        public VKCellRecord VKRecord { get; private set; }
-        public string ValueName { get; private set; }
-        public string ValueType { get; private set; }
-        public string ValueData { get; private set; }
-        public string ValueSlack { get; private set; }
-        public byte[] ValueSlackRaw { get; private set; }
+        // public constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyValue"/> class.
         /// </summary>
@@ -36,5 +31,13 @@ namespace Registry.Abstractions
             ValueSlack = valueSlack;
             ValueSlackRaw = valueSlackRaw;
         }
+
+        // public properties...
+        public string ValueData { get; private set; }
+        public string ValueName { get; private set; }
+        public string ValueSlack { get; private set; }
+        public byte[] ValueSlackRaw { get; private set; }
+        public string ValueType { get; private set; }
+        public VKCellRecord VKRecord { get; private set; }
     }
 }

@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using NFluent;
+﻿using NFluent;
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
 using Registry.Other;
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 // namespaces...
 namespace Registry
@@ -19,9 +15,16 @@ namespace Registry
     public class RegistryHive : IDisposable
     {
         // private fields...
-        private readonly string _filename;
         private static BinaryReader _binaryReader;
+        // private fields...
+        private readonly string _filename;
         private static FileStream _fileStream;
+        private static int KeyCount;
+        private static int ValueCount;
+
+        // internal fields...
+        internal static int _hardParsingErrors;
+        internal  static int _softParsingErrors;
 
         // public constructors...
         /// <summary>
@@ -45,6 +48,7 @@ namespace Registry
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
             DataRecords = new Dictionary<long, DataNode>();
+            HBinRecords = new Dictionary<long, HBinRecord>();
 
             _fileStream = new FileStream(_filename, FileMode.Open);
             _binaryReader = new BinaryReader(_fileStream);
@@ -56,6 +60,15 @@ namespace Registry
         }
 
         // public properties...
+        /// <summary>
+        /// List of all NK, VK, and SK cell records, both in use and free, as found in the hive
+        /// </summary>
+        public static Dictionary<long, ICellTemplate> CellRecords { get; private set; }
+        /// <summary>
+        /// List of all data nodes, both in use and free, as found in the hive
+        /// </summary>
+        public static Dictionary<long, DataNode> DataRecords { get; private set; }
+        // public properties...
         public string Filename
         {
             get
@@ -64,203 +77,34 @@ namespace Registry
             }
         }
 
+        public  int HardParsingErrors
+        {
+            get
+            {
+                return _hardParsingErrors;
+            }
+        }
+
         public static RegistryHeader Header { get; private set; }
-
-        public  RegistryKey Root { get; private set; }
-        /// <summary>
-        /// List of all NK, VK, and SK cell records, both in use and free, as found in the hive
-        /// </summary>
-        public static Dictionary<long,ICellTemplate> CellRecords { get; private set; }
-        /// <summary>
-        /// List of all data nodes, both in use and free, as found in the hive
-        /// </summary>
-        public static Dictionary<long, DataNode> DataRecords { get; private set; }
-
         /// <summary>
         /// List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
         public static Dictionary<long, IListTemplate> ListRecords { get; private set; }
-
-        public  int HardParsingErrors
-        {
-            get { return _hardParsingErrors; }
-        
-        }
-
+        public static Dictionary<long, HBinRecord> HBinRecords { get; private set; }
+        public  RegistryKey Root { get; private set; }
         public  int SoftParsingErrors
         {
-            get { return _softParsingErrors; }
-    
-        }
-
-        // public methods...
-        public void Dispose()
-        {
-            if (_binaryReader != null)
+            get
             {
-                _binaryReader.Close();
-            }
-            if (_fileStream != null)
-            {
-                _fileStream.Close();
+                return _softParsingErrors;
             }
         }
 
         public static bool VerboseOutput { get; private set; }
 
-        // public methods...
-        protected internal static long HiveLength()
-        {
-            return _binaryReader.BaseStream.Length;
-        }
-
-        // public methods...
-        public bool ParseHive(bool verboseOutput)
-        {
-            if (_filename == null)
-            {
-                throw new ArgumentNullException("Filename cannot be null");
-            }
-
-            if (!File.Exists(_filename))
-            {
-                throw new FileNotFoundException();
-            }
-
-            var header = ReadBytesFromHive(0, 4096);
-
-            Header = new RegistryHeader(header);
-
-            VerboseOutput = verboseOutput;
-
-            _softParsingErrors = 0;
-            _hardParsingErrors = 0;
-
-            ////Look at first hbin, get its size, then read that many bytes to create hbin record
-            //var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
-
-            //var rawhbin = ReadBytesFromHive(4096, (int)hbBlockSize);
-
-            //var h = new HBinRecord(rawhbin);
-
-
-            // for initial testing we just walk down the file looking at everything
-            long offsetInHive = 4096;
-
-            const uint hbinHeader = 0x6e696268;
-
-            long hivelen = HiveLength();
-
-            while (offsetInHive < HiveLength())
-            {
-                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
-
-                if (hbinSize == 0)
-                {
-                    // Go to end if we find a 0 size block (padding?)
-                    offsetInHive = HiveLength();
-                    continue;
-                }
-
-                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive, 4), 0);
-
-                if (hbinSig != hbinHeader)
-                {
-                    Console.WriteLine("hbin header incorrect at offset 0x{0:X}!!!\t\t\t\tPercent done: {1:P}", offsetInHive, (double)offsetInHive / hivelen);
-                    break;
-                }
-
-                Check.That(hbinSig).IsEqualTo(hbinHeader);
-
-                if (VerboseOutput)
-                {
-                    Console.WriteLine("Pulling hbin at offset 0x{0:X}. Size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize, (double)offsetInHive / hivelen);
-                }
-
-
-
-                var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
-
-                try
-                {
-                    var h = new HBinRecord(rawhbin, offsetInHive - 4096);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("********Error processing hbin at offset 0x{0:X}. Error: {1}, Stack: {2}", offsetInHive, ex.Message, ex.StackTrace);
-                }
-
-
-
-                //File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
-
-
-                offsetInHive += hbinSize;
-            }
-
-
-            Console.WriteLine("Initial processing complete. Building tree...");
-
-            var rootNode = CellRecords.Values.OfType<NKCellRecord>().SingleOrDefault((f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
-
-            if (rootNode == null)
-            {
-                throw new Exception("Root nk record not found!");
-            }
-
-            Console.WriteLine("Found root node! Getting subkeys...");
-
-            Root = new RegistryKey(rootNode, null);
-
-            //TODO Build FullPath or Path property as this is being built
-
-            var keys =   GetSubKeys(Root);
-
-            Root.SubKeys.AddRange(keys);
-
-            return true;
-        }
-
-        public void ExportDataToWilliFormat(string outfile)
-        {
-           KeyCount = 1; //root key
-            ValueCount = 0;
-
-            using (var sw = new StreamWriter(outfile,false))
-            {
-                sw.AutoFlush = true;
-
-                sw.WriteLine("key|{0}|{1}", Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
-
-                ValueCount += Root.Values.Count;
-              
-                foreach (var val in Root.Values)
-                {
-
-
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}", Root.KeyPath, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                }
-
-
-                DumpKeyWilli(Root, sw);
-
-                sw.WriteLine("total_keys|{0}",KeyCount);
-                sw.WriteLine("total_values|{0}",ValueCount);
-                
-
-            }
-
-
-        }
-
-        private static int KeyCount;
-        private static int ValueCount;
-        internal  static int _softParsingErrors;
-        internal static int _hardParsingErrors;
-
+        // private methods...
         private void DumpKeyWilli(RegistryKey key, StreamWriter sw)
         {
-
             KeyCount += key.SubKeys.Count;
 
             foreach (var subkey in key.SubKeys)
@@ -277,28 +121,25 @@ namespace Registry
 
                     sw.WriteLine(@"value|{0}|{1}|{2}|{3}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                 }
-                
-               DumpKeyWilli(subkey, sw);
+
+                DumpKeyWilli(subkey, sw);
             }
-
-            
-
         }
 
         //TODO this needs refactored to remove duplicated code
-        private List<RegistryKey> GetSubKeys(RegistryKey key)
+        private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
             if (VerboseOutput)
             {
-                Console.WriteLine("Getting subkeys for {0}", key.KeyPath);    
+                Console.WriteLine("Getting subkeys for {0}", key.KeyPath);
             }
-            
+
 
             var keys = new List<RegistryKey>();
-            
+
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
-                Console.WriteLine("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
+                Console.WriteLine("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
             }
 
             // look for values in this key HERE
@@ -307,6 +148,7 @@ namespace Registry
                 var vc = CellRecords[(long)valueOffset];
 
                 var vk = vc as VKCellRecord;
+                vk.IsReferenceed = true;
 
                 var valueDataString = string.Empty;
 
@@ -345,123 +187,135 @@ namespace Registry
 
                 key.Values.Add(value);
             }
-          
+
 
             if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
             {
-               
                 return keys;
             }
 
-      
-            var l = ListRecords[key.NKRecord.SubkeyListsStableCellIndex]; 
 
-                switch (l.Signature)
-                {
-                    case "lf":
-                    case "lh":
-                        var sk1 = l as LxListRecord;
+            var l = ListRecords[key.NKRecord.SubkeyListsStableCellIndex];
 
-                        foreach (var offset in sk1.Offsets)
+            switch (l.Signature)
+            {
+                case "lf":
+                case "lh":
+                    var lxRecord = l as LxListRecord;
+                    lxRecord.IsReferenceed = true;
+
+                    foreach (var offset in lxRecord.Offsets)
+                    {
+                        var cell = CellRecords[offset.Key];
+
+                        var nk = cell as NKCellRecord;
+                        nk.IsReferenceed = true;
+
+                        var tempKey = new RegistryKey(nk, key.KeyPath);
+
+
+
+                        var sks = GetSubKeysAndValues(tempKey);
+                        tempKey.SubKeys.AddRange(sks);
+
+                        keys.Add(tempKey);
+                    }
+
+
+                    break;
+
+                case "ri":
+                    var riRecord = l as RIListRecord;
+                    riRecord.IsReferenceed = true;
+
+                    foreach (var offset in riRecord.Offsets)
+                    {
+                        var tempList = ListRecords[offset];
+
+                        //templist is now an li or lh list 
+
+                        if (tempList.Signature == "li")
                         {
-                            var cell = CellRecords[offset.Key]; 
+                            var sk3 = tempList as LIListRecord;
 
-                            var nk = cell as NKCellRecord;
-
-                            var tempKey = new RegistryKey(nk, key.KeyPath);
-
-                            
-
-                            var sks = GetSubKeys(tempKey);
-                            tempKey.SubKeys.AddRange(sks);
-
-                            keys.Add(tempKey);
-                        }
-
-
-                        break;
-
-                    case "ri":
-                        var ri = l as RIListRecord;
-
-                        foreach (var offset in ri.Offsets)
-                        {
-                            var tempList = ListRecords[offset];
-
-                            //templist is now an li or lh list 
-
-                            if (tempList.Signature == "li")
+                            foreach (var offset1 in sk3.Offsets)
                             {
-                                var sk3 = tempList as LIListRecord;
+                                var cell = CellRecords[offset1];
 
-                                foreach (var offset1 in sk3.Offsets)
-                                {
-                                    var cell = CellRecords[offset1]; 
+                                var nk = cell as NKCellRecord;
+                                nk.IsReferenceed = true;
 
-                                    var nk = cell as NKCellRecord;
+                                var tempKey = new RegistryKey(nk, key.KeyPath);
 
-                                    var tempKey = new RegistryKey(nk, key.KeyPath);
+                                var sks = GetSubKeysAndValues(tempKey);
+                                tempKey.SubKeys.AddRange(sks);
 
-                                    var sks = GetSubKeys(tempKey); 
-                                    tempKey.SubKeys.AddRange(sks);
-
-                                    keys.Add(tempKey);
-                                }
+                                keys.Add(tempKey);
                             }
-                            else
-                            {
-                                var sk3 = tempList as LxListRecord;
-
-                                foreach (var offset3 in sk3.Offsets)
-                                {
-                                    var cell = CellRecords[offset3.Key]; 
-
-                                    var nk = cell as NKCellRecord;
-
-                                    var tempKey = new RegistryKey(nk, key.KeyPath);
-
-                                    var sks = GetSubKeys(tempKey);
-                                    tempKey.SubKeys.AddRange(sks);
-
-                                    keys.Add(tempKey);
-                                }
-                            }
-                            
-
                         }
-
-
-
-                        break;
-
-                    case "li":
-                        var sk2 = l as LIListRecord;
-
-                        foreach (var offset in sk2.Offsets)
+                        else
                         {
-                            var cell = CellRecords[offset]; 
+                            var lxRecord_ = tempList as LxListRecord;
+                            lxRecord_.IsReferenceed = true;
 
-                            var nk = cell as NKCellRecord;
+                            foreach (var offset3 in lxRecord_.Offsets)
+                            {
+                                var cell = CellRecords[offset3.Key];
 
-                            var tempKey = new RegistryKey(nk, key.KeyPath);
+                                var nk = cell as NKCellRecord;
+                                nk.IsReferenceed = true;
 
-                            var sks = GetSubKeys(tempKey);
-                            tempKey.SubKeys.AddRange(sks);
+                                var tempKey = new RegistryKey(nk, key.KeyPath);
 
-                            keys.Add(tempKey);
+                                var sks = GetSubKeysAndValues(tempKey);
+                                tempKey.SubKeys.AddRange(sks);
+
+                                keys.Add(tempKey);
+                            }
                         }
+                    }
 
 
-                        break;
-                    default:
-                        throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
-                }
-          
+
+                    break;
+
+                case "li":
+                    var liRecord = l as LIListRecord;
+                    liRecord.IsReferenceed = true;
+
+                    foreach (var offset in liRecord.Offsets)
+                    {
+                        var cell = CellRecords[offset];
+
+                        var nk = cell as NKCellRecord;
+                        nk.IsReferenceed = true;
+
+                        var tempKey = new RegistryKey(nk, key.KeyPath);
+
+                        var sks = GetSubKeysAndValues(tempKey);
+                        tempKey.SubKeys.AddRange(sks);
+
+                        keys.Add(tempKey);
+                    }
+
+
+                    break;
+                default:
+                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
+            }
+
 
 
 
 
             return keys;
+        }
+
+        // protected internal methods...
+        // public methods...
+        protected internal static long HiveLength()
+        {
+            return _binaryReader.BaseStream.Length;
         }
 
         /// <summary>
@@ -475,6 +329,154 @@ namespace Registry
             _binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
 
             return _binaryReader.ReadBytes(Math.Abs(length));
+        }
+
+        // public methods...
+        public void Dispose()
+        {
+            if (_binaryReader != null)
+            {
+                _binaryReader.Close();
+            }
+            if (_fileStream != null)
+            {
+                _fileStream.Close();
+            }
+        }
+
+        public void ExportDataToWilliFormat(string outfile)
+        {
+            KeyCount = 1; //root key
+            ValueCount = 0;
+
+            using (var sw = new StreamWriter(outfile, false))
+            {
+                sw.AutoFlush = true;
+
+                sw.WriteLine("key|{0}|{1}", Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
+
+                ValueCount += Root.Values.Count;
+
+                foreach (var val in Root.Values)
+                {
+                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}", Root.KeyPath, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                }
+
+
+                DumpKeyWilli(Root, sw);
+
+                sw.WriteLine("total_keys|{0}", KeyCount);
+                sw.WriteLine("total_values|{0}", ValueCount);
+            }
+        }
+
+        // public methods...
+        public bool ParseHive(bool verboseOutput)
+        {
+            if (_filename == null)
+            {
+                throw new ArgumentNullException("Filename cannot be null");
+            }
+
+            if (!File.Exists(_filename))
+            {
+                throw new FileNotFoundException();
+            }
+
+            var header = ReadBytesFromHive(0, 4096);
+
+            Header = new RegistryHeader(header);
+
+            VerboseOutput = verboseOutput;
+
+            _softParsingErrors = 0;
+            _hardParsingErrors = 0;
+
+            ////Look at first hbin, get its size, then read that many bytes to create hbin record
+            //var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
+
+            //var rawhbin = ReadBytesFromHive(4096, (int)hbBlockSize);
+
+            //var h = new HBinRecord(rawhbin);
+
+
+            // for initial testing we just walk down the file looking at everything
+            long offsetInHive = 4096;
+
+            const uint hbinHeader = 0x6e696268;
+
+            var hivelen = HiveLength();
+
+            while (offsetInHive < HiveLength())
+            {
+                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
+
+                if (hbinSize == 0)
+                {
+                    // Go to end if we find a 0 size block (padding?)
+                    offsetInHive = HiveLength();
+                    continue;
+                }
+
+                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive, 4), 0);
+
+                if (hbinSig != hbinHeader)
+                {
+                    Console.WriteLine("hbin header incorrect at offset 0x{0:X}!!!\t\t\t\tPercent done: {1:P}", offsetInHive, (double)offsetInHive / hivelen);
+                    break;
+                }
+
+                Check.That(hbinSig).IsEqualTo(hbinHeader);
+
+                if (VerboseOutput)
+                {
+                    Console.WriteLine("Pulling hbin at offset 0x{0:X}. Size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize, (double)offsetInHive / hivelen);
+                }
+
+
+
+                var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
+
+                try
+                {
+                    var h = new HBinRecord(rawhbin, offsetInHive - 4096);
+
+                    HBinRecords.Add(h.RelativeOffset,h);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("********Error processing hbin at offset 0x{0:X}. Error: {1}, Stack: {2}", offsetInHive, ex.Message, ex.StackTrace);
+                }
+
+                //File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
+
+
+                offsetInHive += hbinSize;
+            }
+
+
+            Console.WriteLine("Initial processing complete. Building tree...");
+
+            var rootNode = CellRecords.Values.OfType<NKCellRecord>().SingleOrDefault((f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
+
+            if (rootNode == null)
+            {
+                throw new Exception("Root nk record not found!");
+            }
+
+            rootNode.IsReferenceed = true;
+
+            Console.WriteLine("Found root node! Getting subkeys...");
+
+            Root = new RegistryKey(rootNode, null);
+
+            //TODO Build FullPath or Path property as this is being built
+
+            var keys =   GetSubKeysAndValues(Root);
+
+            Root.SubKeys.AddRange(keys);
+
+            return true;
         }
 
         /// <summary>

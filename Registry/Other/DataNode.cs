@@ -6,6 +6,7 @@ using System.Text;
 namespace Registry.Other
 {
     // internal classes...
+    // public classes...
     //TODO DO I NEED THIS?
     public class DataNode
     {
@@ -16,9 +17,9 @@ namespace Registry.Other
         /// <summary>
         /// Initializes a new instance of the <see cref="DataNode"/> class.
         /// </summary>
-        public DataNode(byte[] rawBytes, long absoluteOffset)
+        public DataNode(byte[] rawBytes, long relativeOffset)
         {
-            AbsoluteOffset = absoluteOffset;
+            RelativeOffset = relativeOffset;
 
             RawBytes = rawBytes;
 
@@ -31,9 +32,25 @@ namespace Registry.Other
         }
 
         // public properties...
+        /// <summary>
+        /// The offset to this record from the beginning of the hive, in bytes
+        /// </summary>
+        public long AbsoluteOffset
+        {
+            get
+            {
+                return RelativeOffset + 4096;
+            }
+        }
+
+        // public properties...
         public byte[] Data { get; private set; }
         public bool IsFree { get; private set; }
         public byte[] RawBytes { get; private set; }
+        /// <summary>
+        /// The offset to this record as stored by other records
+        /// </summary>
+        public long RelativeOffset { get; private set; }
         public int Size
         {
             get
@@ -42,17 +59,15 @@ namespace Registry.Other
             }
         }
 
-        public long AbsoluteOffset { get; private set; }
-
-
-
+        // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
-         
+
             sb.AppendLine();
 
             sb.AppendLine(string.Format("IsFree: {0}", IsFree));
@@ -68,5 +83,4 @@ namespace Registry.Other
             return sb.ToString();
         }
     }
-
 }

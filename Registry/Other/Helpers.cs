@@ -412,7 +412,7 @@ namespace Registry.Other
             return field == null ? default(T) : (T) field.Field.GetRawConstantValue();
         }
 
-        public static Helpers.SidTypeEnum GetSIDTypeFromSIDString(string SID)
+        public static SidTypeEnum GetSIDTypeFromSIDString(string SID)
         {
             var SIDType = Helpers.SidTypeEnum.UnknownOrUserSID;
             switch (SID)

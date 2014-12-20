@@ -1,6 +1,6 @@
-﻿using System;
+﻿using NFluent;
+using System;
 using System.Text;
-using NFluent;
 
 // namespaces...
 namespace Registry.Other
@@ -23,7 +23,8 @@ namespace Registry.Other
 
             var ts = BitConverter.ToInt64(rawBytes, 0xc);
 
-            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime(); ;
+            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+            ;
 
             MajorVersion = BitConverter.ToUInt32(rawBytes, 0x14);
             MinorVersion = BitConverter.ToUInt32(rawBytes, 0x18);
