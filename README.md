@@ -32,7 +32,35 @@ Total soft parsing errors (record marked as free):	522 (0.0055246735944521 % err
 
 ***Parsing success rate: 99.99286660919031 %*** <br />
 
+**The following kinds of statistics are also possible:**<br />
 
+Found 1,797 Cell records (NK: 292, VK: 1,495, SK: 10)<br />
+Found 93 List records<br />
+Found 1,046 Data records<br />
+
+Found 3 free Cell records (NK: 0, VK: 3, SK: 0)<br />
+Found 1 free List records<br />
+Found 177 free Data records<br />
+
+There are 1,784 cell records marked as being referenced (99.28 %)<br />
+There are 92 list records marked as being referenced (98.92 %)<br />
+
+There were 10 cell records marked as in use but not referenced by
+anything in the registry tree<br />
+There were 0 cell records referenced by another record somewhere, but
+marked as free based on size in the registry tree<br />
+There were 0 list records marked as in use but not referenced by
+anything in the registry tree<br />
+There were 0 list records referenced by another record somewhere, but
+marked as free based on size in the registry tree<br />
+
+There were 0 hard parsing errors (a record marked 'in use' that didn't
+parse correctly.)<br />
+There were 0 soft parsing errors (a record marked 'free' that didn't
+parse correctly.)<br />
+
+
+Processing took 0.1400 seconds<br />
 
 ### Example data ###
 
