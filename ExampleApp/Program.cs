@@ -19,20 +19,20 @@ namespace ExampleApp
             var testFiles = new List<string>();
 
             //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\COMPONENTS");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DEFAULT");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DRIVERS");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\NTUSER.DAT");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DEFAULT");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\DRIVERS");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\NTUSER.DAT");
             //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SAM");
             //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SECURITY");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SOFTWARE");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM_WILLITEST");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\DanBinghamUsrClass.dat");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\keggUsrClass.dat");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\punja UsrClass.dat");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\RichUsrClass.dat");
-            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\UsrClassRichWin8.dat");
+        //    testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SOFTWARE");
+            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM");
+            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM_WILLITEST");
+            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat");
+            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\DanBinghamUsrClass.dat");
+            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\keggUsrClass.dat");
+            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\punja UsrClass.dat");
+            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\RichUsrClass.dat");
+            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\UsrClassRichWin8.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\weg UsrClass.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!Strange\Devon_UsrClass.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!Strange\Donald\NTUSER.DAT");
@@ -132,6 +132,8 @@ namespace ExampleApp
             //testFiles.Add(@"C:\Users\eric\Desktop\WilliTestingHives\SECURITY");
             //testFiles.Add(@"C:\Users\eric\Desktop\WilliTestingHives\UsrClass.dat");
 
+            //TODO Change this to accept command line options to process a directory or a file (-d or -f)
+
             foreach (var testFile in testFiles)
             {
                 if (File.Exists(testFile) == false)
@@ -184,6 +186,8 @@ namespace ExampleApp
                     var goofyListsShouldBeUsed = RegistryHive.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenceed == false);
                     var goofyListsShouldBeAllocated = RegistryHive.ListRecords.Where(t => t.Value.IsFree  && t.Value.IsReferenceed );
 
+                    var goofyDataShouldBeUsed = RegistryHive.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenceed == false);
+                    var goofyDataShouldBeAllocated = RegistryHive.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenceed);
 
                     Console.WriteLine();
                     Console.WriteLine("Found {0:N0} Cell records (NK: {1:N0}, VK: {2:N0}, SK: {3:N0})", RegistryHive.CellRecords.Count, RegistryHive.CellRecords.Count(w => w.Value is NKCellRecord), RegistryHive.CellRecords.Count(w => w.Value is VKCellRecord), RegistryHive.CellRecords.Count(w => w.Value is SKCellRecord));
@@ -206,11 +210,18 @@ namespace ExampleApp
                     Console.WriteLine("There were {0:N0} cell records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyCellsShouldBeAllocated.Count());
                     Console.WriteLine("There were {0:N0} list records marked as in use but not referenced by anything in the registry tree", goofyListsShouldBeUsed.Count());
                     Console.WriteLine("There were {0:N0} list records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyListsShouldBeAllocated.Count());
-
+                    Console.WriteLine("There were {0:N0} data records marked as in use but not referenced by anything in the registry tree", goofyDataShouldBeUsed.Count());
+                    Console.WriteLine("There were {0:N0} datw records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyDataShouldBeAllocated.Count());
 
                     Console.WriteLine();
                     Console.WriteLine("There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)", fName1Test.HardParsingErrors);
                     Console.WriteLine("There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)", fName1Test.SoftParsingErrors);
+
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",RegistryHive.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
+                    Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
+                    Console.WriteLine("Data: Free + referenced + marked as in use but not referenced == Total? {0}",RegistryHive.DataRecords.Count == freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
                     
 
                     //now we can build our tree of allocated things
@@ -234,6 +245,8 @@ namespace ExampleApp
                     Console.WriteLine("Press any key to continue to next file");
                     Console.ReadKey();
 
+                    Console.WriteLine();
+                    Console.WriteLine();
 
                 }
                 

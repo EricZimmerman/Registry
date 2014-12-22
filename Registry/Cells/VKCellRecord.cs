@@ -172,6 +172,8 @@ namespace Registry.Cells
                     //make a place to reassemble things
                     var bigDataRaw = new ArrayList((int)dataLengthInternal);
 
+                  
+
                     for (var i = 1; i <= db.NumberOfEntries; i++)
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc

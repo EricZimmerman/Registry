@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections;
 
 // namespaces...
 namespace Registry
@@ -180,9 +181,26 @@ namespace Registry
                 var vk = vc as VKCellRecord;
                 vk.IsReferenceed = true;
 
+                var dbListProcessed = false;
+
                 foreach (var dataOffet in vk.DataOffets)
                 {
-                    DataRecords[(long) dataOffet].IsReferenceed = true;
+                    //there is a special case when registry version > 1.4 and size > 16344
+                    //if this is true, the first offset is a db record, found with the lists
+                    if ((Header.MinorVersion > 4) && vk.DataLength > 16344 && dbListProcessed == false)
+                    {
+                        var db = ListRecords[(long)dataOffet];
+
+                        var dbr = db as DBListRecord;
+                        dbr.IsReferenceed = true;
+                        dbListProcessed = true;
+                    }
+                    else
+                    {
+                        DataRecords[(long)dataOffet].IsReferenceed = true;
+                    }
+
+                        
                 }
 
                 var valueDataString = string.Empty;
