@@ -48,6 +48,11 @@ namespace Registry.Other
         public bool IsFree { get; private set; }
         public byte[] RawBytes { get; private set; }
         /// <summary>
+        /// Set to true when a record is referenced by another referenced record.
+        /// <remarks>This flag allows for determining records that are marked 'in use' by their size but never actually referenced by another record in a hive</remarks>
+        /// </summary>
+        public bool IsReferenceed { get; internal set; }
+        /// <summary>
         /// The offset to this record as stored by other records
         /// </summary>
         public long RelativeOffset { get; private set; }
