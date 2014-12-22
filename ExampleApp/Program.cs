@@ -25,14 +25,14 @@ namespace ExampleApp
             //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SAM");
             //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SECURITY");
         //    testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SOFTWARE");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM_WILLITEST");
-            testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat");
-            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\DanBinghamUsrClass.dat");
-            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\keggUsrClass.dat");
-            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\punja UsrClass.dat");
-            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\RichUsrClass.dat");
-            testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\UsrClassRichWin8.dat");
+    //        testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\SYSTEM_WILLITEST");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\Registry2\Registry\ExampleApp\UsrClass.dat");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\DanBinghamUsrClass.dat");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\keggUsrClass.dat");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\punja UsrClass.dat");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\RichUsrClass.dat");
+            //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\UsrClassRichWin8.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!ext block mismatch\weg UsrClass.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!Strange\Devon_UsrClass.dat");
             //testFiles.Add(@"C:\ProjectWorkingFolder\ShellBagsExplorer\test data\!Strange\Donald\NTUSER.DAT");
@@ -133,6 +133,65 @@ namespace ExampleApp
             //testFiles.Add(@"C:\Users\eric\Desktop\WilliTestingHives\UsrClass.dat");
 
             //TODO Change this to accept command line options to process a directory or a file (-d or -f)
+
+            var result = CommandLine.Parser.Default.ParseArguments<Options>(args);
+            if (!result.Errors.Any())
+            {
+
+                if (result.Value.HiveName == null && result.Value.DirectoryName ==null)
+                {
+                    
+                    Console.WriteLine(result.Value.GetUsage());
+                    Environment.Exit(1);
+                }
+
+                if (result.Value.HiveName != null && result.Value.HiveName.Length > 0 )
+                {
+                    if (result.Value.DirectoryName != null && result.Value.DirectoryName.Length > 0)
+                    {
+                        Console.WriteLine("Must specify either -d or -f, but not both");
+                        Environment.Exit(1);
+                    }
+                  
+                }
+
+                if (result.Value.DirectoryName != null && result.Value.DirectoryName.Length > 0)
+                {
+                    if (result.Value.HiveName != null && result.Value.HiveName.Length > 0)
+                    {
+                        Console.WriteLine("Must specify either -d or -f, but not both");
+                        Environment.Exit(1);
+                    }
+
+                }
+
+                if (result.Value.HiveName != null && result.Value.HiveName.Length > 0)
+                {
+                    testFiles.Add(result.Value.HiveName);
+                }
+                else
+                {
+                    if (Directory.Exists(result.Value.DirectoryName))
+                    {
+                        foreach (var file in Directory.GetFiles(result.Value.DirectoryName))
+                        {
+                            testFiles.Add(file);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Directory '{0}' does not exist!",result.Value.DirectoryName);
+                        Environment.Exit(1);
+                    }
+                }
+            }
+            else
+            {
+                    Console.WriteLine(result.Value.GetUsage());
+                    Environment.Exit(1);
+            }
+        
+
 
             foreach (var testFile in testFiles)
             {
