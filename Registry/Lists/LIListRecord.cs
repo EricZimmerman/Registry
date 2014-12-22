@@ -40,8 +40,7 @@ namespace Registry.Lists
 
             var index = 0x8;
             var counter = 0;
-
-
+            
             while (counter < NumberOfEntries)
             {
                 var os = BitConverter.ToUInt32(rawBytes, index);

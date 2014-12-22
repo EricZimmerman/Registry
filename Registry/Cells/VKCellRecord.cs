@@ -2,6 +2,7 @@
 using Registry.Lists;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,8 @@ namespace Registry.Cells
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("vk");
+
+            DataOffets = new List<ulong>();
 
             //there is still data in there, so get it if possible
             //TODO whats the minimum where this works? look for exceptions when free and support this better
@@ -131,6 +134,8 @@ namespace Registry.Cells
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
                 var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
 
+                DataOffets.Add(OffsetToData);
+
                 // in some rare cases the bytes returned from the previous line are all zeros, so make sure we get something but all zeros
                 if (datablockSizeRaw.Length == 4)
                 {
@@ -171,6 +176,9 @@ namespace Registry.Cells
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
                         var os = BitConverter.ToUInt32(datablockRaw, i * 4);
+
+                       
+                        DataOffets.Add(os);
 
                         var tempDataBlockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + os, 4);
                         var tempdataBlockSize = BitConverter.ToInt32(tempDataBlockSizeRaw, 0);
@@ -362,6 +370,8 @@ namespace Registry.Cells
             [Description("Unknown data type")]
             RegUnknown = 999
         }
+
+        public List<ulong> DataOffets { get; private set; }
 
         // public properties...
         public long AbsoluteOffset

@@ -88,32 +88,7 @@ namespace Registry.Cells
             }
 
 
-            if (ValueListCellIndex > 0)
-            {
-                //there are values for this key, so get the offsets so we can pull them later
-
-                var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, 4);
-
-
-                var dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
-
-                if (Math.Abs(dataBlockSize) > 0)
-                {
-                    var datablockRaw = RegistryHive.ReadBytesFromHive(4096 + ValueListCellIndex, Math.Abs(dataBlockSize));
-
-                    for (var i = 1; i <= ValueListCount; i++)
-                    {
-                        // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
-                        var os = BitConverter.ToUInt32(datablockRaw, i * 4);
-
-                        ValueOffsets.Add(os);
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("if (Math.Abs(dataBlockSize) > 0) in nkcellrecord");
-                }
-            }
+            
 
 
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);

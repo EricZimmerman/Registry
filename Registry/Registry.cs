@@ -137,10 +137,40 @@ namespace Registry
 
             var keys = new List<RegistryKey>();
 
+        
+
+            //Build ValueOffsets for this NKRecord
+            if (key.NKRecord.ValueListCellIndex > 0)
+            {
+                //there are values for this key, so get the offsets so we can pull them next
+
+                var offsetList = DataRecords[key.NKRecord.ValueListCellIndex];
+
+                offsetList.IsReferenceed = true;
+
+                for (var i = 0; i < key.NKRecord.ValueListCount; i++)
+                {
+                    //use i * 4 so we get 4, 8, 12, 16, etc
+                    var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
+
+                    key.NKRecord.ValueOffsets.Add(os);
+                }
+
+                //TODO need a trap here in case we run out of data ? test it
+
+            }
+
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
+                //This needs to be a stronger warning since we will not have all data
                 Console.WriteLine("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
             }
+
+            //TODO need to add check on each vk record below
+            //ifor each d in dataoffsets, get data from datarecords and set isreferenced to true
+            //in vkrecord, add dataoffsets list and then set them to referenced here
+            //this keeps processing of datas in the vk class
+            //
 
             // look for values in this key HERE
             foreach (var valueOffset in key.NKRecord.ValueOffsets)
@@ -149,6 +179,11 @@ namespace Registry
 
                 var vk = vc as VKCellRecord;
                 vk.IsReferenceed = true;
+
+                foreach (var dataOffet in vk.DataOffets)
+                {
+                    DataRecords[(long) dataOffet].IsReferenceed = true;
+                }
 
                 var valueDataString = string.Empty;
 
@@ -188,7 +223,10 @@ namespace Registry
                 key.Values.Add(value);
             }
 
+            var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
+            sk.IsReferenceed = true;
 
+            //TODo THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
             if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
             {
                 return keys;
@@ -213,15 +251,11 @@ namespace Registry
 
                         var tempKey = new RegistryKey(nk, key.KeyPath);
 
-
-
                         var sks = GetSubKeysAndValues(tempKey);
                         tempKey.SubKeys.AddRange(sks);
 
                         keys.Add(tempKey);
                     }
-
-
                     break;
 
                 case "ri":
@@ -289,7 +323,7 @@ namespace Registry
 
                         var nk = cell as NKCellRecord;
                         nk.IsReferenceed = true;
-
+                        
                         var tempKey = new RegistryKey(nk, key.KeyPath);
 
                         var sks = GetSubKeysAndValues(tempKey);
@@ -303,10 +337,6 @@ namespace Registry
                 default:
                     throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
             }
-
-
-
-
 
             return keys;
         }

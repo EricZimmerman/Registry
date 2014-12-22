@@ -162,6 +162,7 @@ namespace ExampleApp
 
                     var freeLists = RegistryHive.ListRecords.Where(t => t.Value.IsFree);
                     var referencedList = RegistryHive.ListRecords.Where(t => t.Value.IsReferenceed);
+                    var referencedData = RegistryHive.DataRecords.Where(t => t.Value.IsReferenceed);
 
                     //need to change these to public classes first
                     //var dbFree = freeData.Count(t => t.Value is DBListRecord);
@@ -198,6 +199,7 @@ namespace ExampleApp
                     Console.WriteLine();
                     Console.WriteLine("There are {0:N0} cell records marked as being referenced ({1:P})", referencedCells.Count(), (double)referencedCells.Count() / (double)RegistryHive.CellRecords.Count);
                     Console.WriteLine("There are {0:N0} list records marked as being referenced ({1:P})", referencedList.Count(), (double)referencedList.Count() / (double)RegistryHive.ListRecords.Count);
+                    Console.WriteLine("There are {0:N0} data records marked as being referenced ({1:P})", referencedData.Count(), (double)referencedData.Count() / (double)RegistryHive.DataRecords.Count);
               
                     Console.WriteLine();
                     Console.WriteLine("There were {0:N0} cell records marked as in use but not referenced by anything in the registry tree", goofyCellsShouldBeUsed.Count());
