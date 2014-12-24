@@ -46,5 +46,6 @@ namespace Registry.Abstractions
         public List<RegistryKey> SubKeys { get; private set; }
         public List<KeyValue> Values { get; private set; }
         public string ClassName { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

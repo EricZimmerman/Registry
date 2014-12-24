@@ -427,6 +427,42 @@ namespace Registry
 
         public static long TotalBytesRead;
 
+        public RegistryKey FindKey(string keypath)
+        {
+            return null;
+        }
+
+        public RegistryKey FindKey(long relativeOffset, RegistryKey parent)
+        {
+            RegistryKey found = null;
+            if (Root == null)
+            {
+                return null;
+            }
+
+            if (parent.NKRecord.RelativeOffset == relativeOffset)
+            {
+                return parent;
+            }
+
+            foreach (var registryKey in parent.SubKeys)
+            {
+                if (found != null)
+                {
+                    break;
+                }
+                    found =   FindKey(relativeOffset, registryKey);
+            }
+
+            return found;
+
+        }
+
+        //private RegistryKey FindKeyByRelativeOffset(RegistryKey key,long relativeOffset)
+        //{
+        //    if (key.NKRecord.RelativeOffset )
+        //}
+
         // public methods...
         public bool ParseHive(bool verboseOutput)
         {
@@ -548,6 +584,8 @@ namespace Registry
             var unreferencedVKCells = CellRecords.Where(t => t.Value.IsReferenceed == false && t.Value is VKCellRecord);
             var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenceed == false);
 
+            var restoredDeletedKeys = 0;
+
             foreach (var unreferencedNkCell in unreferencedNKCells)
             {
                 var nk = unreferencedNkCell.Value  as NKCellRecord;
@@ -567,9 +605,16 @@ namespace Registry
                             if (parentNK.IsReferenceed)
                             {
                                 //parent exists in our tree, so add unreferencedNkCell as a child but mark it deleted
-                                var key = new RegistryKey(nk, "NEED TO GET THIS PATH FROM ROOT OBJECT");
+
+                            var pk = FindKey(nk.ParentCellIndex, Root);
+
+                            var key = new RegistryKey(nk, pk.KeyPath);
                                 //TODO code FIND method on root node. have an 'exact' flag and if set use contains vs ==
                                 //be sure to force to lower
+                            key.IsDeleted = true;
+                             
+                                pk.SubKeys.Add(key);
+                            restoredDeletedKeys += 1;
                                 
 
                                 // does nk.ValueListCellIndex point to an unreferenced vk object?
@@ -587,7 +632,8 @@ namespace Registry
                 }
             }
 
-            //TODO Add something with ClassCellIndex on NK records
+            //TODO reflect restoredDeletedKeys count somewhere, as well as whats left
+           
 
             if (HiveLength() != TotalBytesRead)
             {
