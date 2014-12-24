@@ -390,6 +390,7 @@ namespace Registry.Cells
         public uint DataTypeRaw { get; set; }
         public bool IsFree { get; private set; }
         public bool IsReferenceed { get; internal set; }
+
         public ushort NameLength { get; set; }
         public ushort NamePresentFlag { get; set; }
         public uint OffsetToData { get; set; }

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Collections;
+using System.Diagnostics;
+using System.Text;
 
 // namespaces...
 namespace Registry
@@ -135,10 +137,15 @@ namespace Registry
                 Console.WriteLine("Getting subkeys for {0}", key.KeyPath);
             }
 
-
             var keys = new List<RegistryKey>();
 
-        
+            if (key.NKRecord.ClassCellIndex > 0)
+            {
+                var d = DataRecords[key.NKRecord.ClassCellIndex];
+                d.IsReferenceed = true;
+                var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NKRecord.ClassLength);
+                key.ClassName = clsName;
+            }
 
             //Build ValueOffsets for this NKRecord
             if (key.NKRecord.ValueListCellIndex > 0)
@@ -418,6 +425,8 @@ namespace Registry
             }
         }
 
+        public static long TotalBytesRead;
+
         // public methods...
         public bool ParseHive(bool verboseOutput)
         {
@@ -432,6 +441,10 @@ namespace Registry
             }
 
             var header = ReadBytesFromHive(0, 4096);
+
+            TotalBytesRead = 0;
+
+            TotalBytesRead += 4096;
 
             Header = new RegistryHeader(header);
 
@@ -481,9 +494,9 @@ namespace Registry
                     Console.WriteLine("Pulling hbin at offset 0x{0:X}. Size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize, (double)offsetInHive / hivelen);
                 }
 
-
-
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
+
+            
 
                 try
                 {
@@ -512,6 +525,9 @@ namespace Registry
                 throw new Exception("Root nk record not found!");
             }
 
+            //validate what we found above
+            Check.That((long)Header.RootCellOffset).IsEqualTo(rootNode.RelativeOffset);
+
             rootNode.IsReferenceed = true;
 
             Console.WriteLine("Found root node! Getting subkeys...");
@@ -523,6 +539,75 @@ namespace Registry
             var keys =   GetSubKeysAndValues(Root);
 
             Root.SubKeys.AddRange(keys);
+
+            Console.WriteLine("Initial processing complete! Associating deleted keys and values...");
+            //TODO MOVE THE stuff from program.cs inside the class so we have access to the kinds of things calculated there.
+            //copy pasted for now
+
+            var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenceed == false && t.Value is NKCellRecord);
+            var unreferencedVKCells = CellRecords.Where(t => t.Value.IsReferenceed == false && t.Value is VKCellRecord);
+            var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenceed == false);
+
+            foreach (var unreferencedNkCell in unreferencedNKCells)
+            {
+                var nk = unreferencedNkCell.Value  as NKCellRecord;
+                if (CellRecords.ContainsKey(nk.ParentCellIndex))
+                {
+                    // unreferencedNKCell has a parent key that exists! Now to see if its referenced
+                    if (CellRecords.ContainsKey(nk.ParentCellIndex))
+                    {
+                           var parentNK = CellRecords[nk.ParentCellIndex] as NKCellRecord;
+
+                        if (parentNK == null)
+                        {
+                            //the data at that index is not an NKRecord
+                            continue;
+                        }
+
+                            if (parentNK.IsReferenceed)
+                            {
+                                //parent exists in our tree, so add unreferencedNkCell as a child but mark it deleted
+                                var key = new RegistryKey(nk, "NEED TO GET THIS PATH FROM ROOT OBJECT");
+                                //TODO code FIND method on root node. have an 'exact' flag and if set use contains vs ==
+                                //be sure to force to lower
+                                
+
+                                // does nk.ValueListCellIndex point to an unreferenced vk object?
+                                //is this right? i think this is whats blanked to FFFFFFFF/0
+                                //Does it have to reference an unreferenced list?
+                             
+                                if (ListRecords.ContainsKey(nk.ValueListCellIndex))
+                                {
+                                    Debug.WriteLine(nk.ValueListCellIndex);
+                                }
+                            }
+                    }
+
+                     
+                }
+            }
+
+            //TODO Add something with ClassCellIndex on NK records
+
+            if (HiveLength() != TotalBytesRead)
+            {
+              
+                var remainingHive = ReadBytesFromHive(TotalBytesRead,(int) (HiveLength() - TotalBytesRead));
+
+                //Sometimes the remainder of the file is all zeros, which is useless, so check for that
+                if (!Array.TrueForAll(remainingHive,a => a == 0))
+                {
+                    Debug.WriteLine("Hive length ({0:x}) does not equal bytes read ({1:x})!!", HiveLength(), TotalBytesRead);
+                }
+
+                //as a second check, compare Header length with what we read (taking the header into account as length is only for hbin records)
+                Check.That((long)Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
+            }
+
+            //TODO ADD THIS TO VK RECORD AND ALL LISTS (What about datanodes? sweep for signatures?)
+            //can we defer the data checks until we look at unrefereenced stuff?
+            //Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
+
 
             return true;
         }

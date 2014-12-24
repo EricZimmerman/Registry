@@ -30,6 +30,7 @@ namespace Registry.Abstractions
             ValueData = valueData;
             ValueSlack = valueSlack;
             ValueSlackRaw = valueSlackRaw;
+           
         }
 
         // public properties...
@@ -38,6 +39,7 @@ namespace Registry.Abstractions
         public string ValueSlack { get; private set; }
         public byte[] ValueSlackRaw { get; private set; }
         public string ValueType { get; private set; }
+    
         public VKCellRecord VKRecord { get; private set; }
     }
 }

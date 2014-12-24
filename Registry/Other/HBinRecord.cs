@@ -3,6 +3,7 @@ using Registry.Cells;
 using Registry.Lists;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,7 +30,7 @@ namespace Registry.Other
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
             Size = BitConverter.ToUInt32(rawBytes, 0x8);
-
+      
             Reserved = BitConverter.ToUInt32(rawBytes, 0xc);
 
             var ts = BitConverter.ToInt64(rawBytes, 0x14);
@@ -60,6 +61,7 @@ namespace Registry.Other
 
             var offsetInHbin = 0x20;
 
+            RegistryHive.TotalBytesRead += 0x20;
 
 
             while (offsetInHbin < Size)
@@ -72,6 +74,8 @@ namespace Registry.Other
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
 
                 var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
+
+                RegistryHive.TotalBytesRead += readSize;
 
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
 

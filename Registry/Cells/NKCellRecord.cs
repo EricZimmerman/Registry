@@ -154,6 +154,9 @@ namespace Registry.Cells
             {
                 Padding = string.Empty;
             }
+
+            Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
+
         }
 
         // public enums...
@@ -214,6 +217,12 @@ namespace Registry.Cells
                 return Math.Abs(_size);
             }
         }
+
+        /// <summary>
+        /// When true, this key has been deleted
+        /// <remarks>The parent key is determined by checking whether ParentCellIndex 1) exists and 2) ParentCellIndex.IsReferenced == true. </remarks>
+        /// </summary>
+        public bool IsDeleted { get; internal set; }
 
         public uint SubkeyCountsStable { get; private set; }
         public uint SubkeyCountsVolatile { get; private set; }

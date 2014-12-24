@@ -34,6 +34,8 @@ namespace Registry.Abstractions
 
             SubKeys = new List<RegistryKey>();
             Values = new List<KeyValue>();
+
+            ClassName = string.Empty;
         }
 
         // public properties...
@@ -43,5 +45,6 @@ namespace Registry.Abstractions
         public NKCellRecord NKRecord { get; private set; }
         public List<RegistryKey> SubKeys { get; private set; }
         public List<KeyValue> Values { get; private set; }
+        public string ClassName { get; set; }
     }
 }

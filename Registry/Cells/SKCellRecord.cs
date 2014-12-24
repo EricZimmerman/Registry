@@ -47,6 +47,24 @@ namespace Registry.Cells
                 // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
                 SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);
             }
+
+            //this has to be a multiple of 8, so check for it
+            var paddingOffset = 0x18 + DescriptorLength;
+            var paddingLength = rawBytes.Length - paddingOffset;
+
+            if (paddingLength > 0)
+            {
+                var padding = rawBytes.Skip((int) paddingOffset).Take((int) paddingLength).ToArray();
+
+                Check.That(Array.TrueForAll(padding, a => a == 0));
+
+              
+            }
+
+
+
+
+            Check.That(0x18 + (int)DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
         }
 
         // public properties...
