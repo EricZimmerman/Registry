@@ -30,16 +30,21 @@ namespace Registry.Abstractions
             ValueData = valueData;
             ValueSlack = valueSlack;
             ValueSlackRaw = valueSlackRaw;
-           
+
+            InternalGUID = Guid.NewGuid().ToString();
         }
 
+        // public properties...
+        /// <summary>
+        /// A unique value that can be used to find this key in a collection
+        /// </summary>
+        public string InternalGUID { get; set; }
         // public properties...
         public string ValueData { get; private set; }
         public string ValueName { get; private set; }
         public string ValueSlack { get; private set; }
         public byte[] ValueSlackRaw { get; private set; }
         public string ValueType { get; private set; }
-    
         public VKCellRecord VKRecord { get; private set; }
     }
 }

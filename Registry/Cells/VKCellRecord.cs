@@ -4,8 +4,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 // namespaces...
 namespace Registry.Cells
@@ -19,6 +21,8 @@ namespace Registry.Cells
     {
         // private fields...
         private readonly int _size;
+
+        private const uint DEVPROP_MASK_TYPE = 0x00000FFF;
 
         // public constructors...
         /// <summary>
@@ -40,7 +44,6 @@ namespace Registry.Cells
 
             DataOffets = new List<ulong>();
 
-            //there is still data in there, so get it if possible
             //TODO whats the minimum where this works? look for exceptions when free and support this better
             //if (IsFree)
             //{
@@ -78,7 +81,7 @@ namespace Registry.Cells
             OffsetToData = BitConverter.ToUInt32(rawBytes, 0x0c);
 
             //we need to preserve the datatype as it exists (so we can see unsupported types easily)
-            DataTypeRaw = BitConverter.ToUInt32(rawBytes, 0x10);
+            DataTypeRaw = BitConverter.ToUInt32(rawBytes, 0x10) & DEVPROP_MASK_TYPE;
 
             //force to a known datatype 
             var dataTypeInternal = DataTypeRaw;
@@ -105,7 +108,26 @@ namespace Registry.Cells
                 }
                 else
                 {
-                    ValueName = Encoding.Unicode.GetString(rawBytes, 0x18, NameLength);
+                    // in very rare cases, the valuename is in ascii even when it should be in Unicode.
+                    var valString = BitConverter.ToString(rawBytes,0x18,NameLength);
+
+                   bool foundMatch = false;
+                    try {
+	                    foundMatch = Regex.IsMatch(valString, "-[!^0]{2}");
+                    } catch (ArgumentException ex) {
+	                    // Syntax error in the regular expression
+                    }
+
+                    if (foundMatch)
+                    {
+                        // we found what appears to be unicode
+                        ValueName = Encoding.Unicode.GetString(rawBytes, 0x18, NameLength);
+                    }
+                    else
+                    {
+                        ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
+                    }
+
                 }
             }
 
@@ -114,8 +136,23 @@ namespace Registry.Cells
 
             if (dataIsResident)
             {
-                //Since its resident, the data lives in the OffsetToData.
-                datablockRaw = new byte[dataLengthInternal];
+                //test validation for making sure we are taking the "right" side of the 4 bytes (which is really the left side)
+                //if (dataLengthInternal < 4 && dataLengthInternal != 0 && rawBytes[0xc] != 0x00)
+                //{
+                //    var testing = new byte[4];
+                //    Array.Copy(rawBytes, 0xc, testing, 0, 4);
+                //    Debug.WriteLine("Testing resident data. Type: {2}, data type raw: 0x{3:X}, Data len: {0}, bytes: {1}", dataLengthInternal, BitConverter.ToString(testing, 0),DataType, DataTypeRaw);
+                //}
+
+                if (DataType == DataTypeEnum.RegDwordBigEndian)
+                {
+                    //this is a special case where the data length shows up as 2, but a dword needs 4 bytes, so adjust
+                    dataLengthInternal = 4;
+                }
+
+
+                    //Since its resident, the data lives in the OffsetToData.
+                    datablockRaw = new byte[dataLengthInternal];
 
                 //make a copy for processing below
                 //Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4); org
@@ -129,6 +166,9 @@ namespace Registry.Cells
             }
             else
             {
+                //TODO All calls to ReadBytesFromHive should just go get the datacell at OffsetToData vs re-reading data already read once
+
+
                 //We have to go look at the OffsetToData to see what we have so we can do the right thing
 
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
@@ -251,7 +291,6 @@ namespace Registry.Cells
                         var ts = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
 
                         ValueData = DateTimeOffset.FromFileTime((long)ts).ToUniversalTime();
-                        ;
 
                         break;
 
@@ -272,20 +311,22 @@ namespace Registry.Cells
                         break;
 
                     case DataTypeEnum.RegDword:
-                        if (dataLengthInternal == 4)
-                        {
-                            ValueData = BitConverter.ToUInt32(datablockRaw, 0);
-                        }
-                        else
-                        {
-                            ValueData = 0;
-                        }
+                        ValueData = dataLengthInternal == 4 ? BitConverter.ToUInt32(datablockRaw, 0) : 0;
 
 
                         break;
 
                     case DataTypeEnum.RegDwordBigEndian:
-                        break;
+                        if (datablockRaw.Length > 0)
+                        {
+                            var reversedBlock = datablockRaw;
+
+                            Array.Reverse(reversedBlock);
+
+                            ValueData = BitConverter.ToUInt32(reversedBlock, 0);
+                        }
+
+                            break;
 
 
 
@@ -406,9 +447,21 @@ namespace Registry.Cells
         }
 
         public ushort Unknown { get; set; }
+
+        /// <summary>
+        /// The normalized Value of this value record. This is what is visible under the 'Data' column in RegEdit
+        /// </summary>
         public object ValueData { get; set; }
+        /// <summary>
+        /// The raw contents of this value record's Value 
+        /// </summary>
         public byte[] ValueDataRaw { get; set; }
+        //The raw contents of this value record's slack space
         public byte[] ValueDataSlack { get; set; }
+
+        /// <summary>
+        /// The name of the value. This is what is visible under the 'Name' column in RegEdit.
+        /// </summary>
         public string ValueName { get; set; }
 
         // public methods...
@@ -487,7 +540,7 @@ namespace Registry.Cells
 
             if (ValueDataSlack != null)
             {
-                sb.AppendLine(string.Format("ValueDataSlack: {0}", BitConverter.ToString((byte[])ValueDataSlack, 0)));
+                sb.AppendLine(string.Format("ValueDataSlack: {0}", BitConverter.ToString(ValueDataSlack, 0)));
             }
 
 

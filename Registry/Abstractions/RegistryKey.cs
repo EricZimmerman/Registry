@@ -30,6 +30,7 @@ namespace Registry.Abstractions
                 KeyPath = string.Format(@"{0}\{1}", parentPath, KeyName);
             }
 
+            InternalGUID = Guid.NewGuid().ToString();
 
 
             SubKeys = new List<RegistryKey>();
@@ -39,13 +40,18 @@ namespace Registry.Abstractions
         }
 
         // public properties...
+        public string ClassName { get; set; }
+        /// <summary>
+        /// A unique value that can be used to find this key in a collection
+        /// </summary>
+        public string InternalGUID { get; set; }
+        public bool IsDeleted { get; set; }
+        // public properties...
         public string KeyName { get; private set; }
         public string KeyPath { get; private set; }
         public DateTimeOffset? LastWriteTime { get; private set; }
         public NKCellRecord NKRecord { get; private set; }
         public List<RegistryKey> SubKeys { get; private set; }
         public List<KeyValue> Values { get; private set; }
-        public string ClassName { get; set; }
-        public bool IsDeleted { get; set; }
     }
 }

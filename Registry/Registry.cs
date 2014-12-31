@@ -221,7 +221,15 @@ namespace Registry
                     case VKCellRecord.DataTypeEnum.RegDwordBigEndian:
                     case VKCellRecord.DataTypeEnum.RegQword:
                     case VKCellRecord.DataTypeEnum.RegSz:
-                        valueDataString = vk.ValueData.ToString();
+                        if (vk.ValueData == null)
+                        {
+                            valueDataString = "";
+                        }
+                        else
+                        {
+                            valueDataString = vk.ValueData.ToString(); 
+                        }
+                            
 
                         break;
 
@@ -617,7 +625,7 @@ namespace Registry
                             restoredDeletedKeys += 1;
                                 
 
-                                // does nk.ValueListCellIndex point to an unreferenced vk object?
+                                //TODO  does nk.ValueListCellIndex point to an unreferenced vk object?
                                 //is this right? i think this is whats blanked to FFFFFFFF/0
                                 //Does it have to reference an unreferenced list?
                              
