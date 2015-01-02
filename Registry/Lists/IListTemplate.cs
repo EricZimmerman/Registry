@@ -24,6 +24,10 @@ namespace Registry.Lists
         /// The total number of offsets to other records this list holds.
         /// </summary>
         int NumberOfEntries { get; }
+
+        /// <summary>
+        /// The raw contents of this record
+        /// </summary>
         byte[] RawBytes { get; }
         /// <summary>
         /// The offset as stored in other records to a given record
@@ -32,6 +36,11 @@ namespace Registry.Lists
         long RelativeOffset { get; }
         string Signature { get; }
         // properties...
+
+        /// <summary>
+        /// The size of the hive
+        /// <remarks>This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a negative size)</remarks>
+        /// </summary>
         int Size { get; }
     }
 }

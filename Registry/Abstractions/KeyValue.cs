@@ -39,12 +39,31 @@ namespace Registry.Abstractions
         /// A unique value that can be used to find this key in a collection
         /// </summary>
         public string InternalGUID { get; set; }
-        // public properties...
+        
+        /// <summary>
+        /// The normalized representation of the value's value.
+        /// </summary>
         public string ValueData { get; private set; }
+        /// <summary>
+        /// The value as stored in the hive as a series of bytes
+        /// </summary>
+        public byte[] ValueDataRaw { get; private set; }
         public string ValueName { get; private set; }
+        /// <summary>
+        /// If present, the value slack as a string of bytes delimited by hyphens
+        /// </summary>
         public string ValueSlack { get; private set; }
+        /// <summary>
+        /// The value slack as stored in the hive as a series of bytes
+        /// </summary>
         public byte[] ValueSlackRaw { get; private set; }
+        /// <summary>
+        /// The values type (VKCellRecord.DataTypeEnum)
+        /// </summary>
         public string ValueType { get; private set; }
+        /// <summary>
+        /// The underlying VKRecord for this Key. This allows access to all info about the VK Record 
+        /// </summary>
         public VKCellRecord VKRecord { get; private set; }
     }
 }

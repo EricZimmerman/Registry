@@ -51,8 +51,7 @@ namespace Registry.Lists
                     //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
                     break;
                 }
-
-
+                
                 _offsets.Add(os);
 
                 counter += 1;
@@ -69,9 +68,18 @@ namespace Registry.Lists
         }
 
         // public properties...
+        
         public bool IsFree { get; private set; }
+
+        
         public bool IsReferenceed { get; internal set; }
+
+        
         public int NumberOfEntries { get; private set; }
+        
+        /// <summary>
+        /// A list of relative offsets to other records
+        /// </summary>
         public List<uint> Offsets
         {
             get
@@ -80,9 +88,14 @@ namespace Registry.Lists
             }
         }
 
+        
         public byte[] RawBytes { get; private set; }
+        
         public long RelativeOffset { get; private set; }
+        
         public string Signature { get; private set; }
+
+        
         public int Size
         {
             get
@@ -97,21 +110,17 @@ namespace Registry.Lists
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
-            //if (IsFree)
-            //{
-            //    return sb.ToString();
-            //}
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("NumberOfEntries: {0:N0}", NumberOfEntries));
+            sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
             sb.AppendLine();
 
             var i = 0;

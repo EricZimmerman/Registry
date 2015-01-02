@@ -15,9 +15,7 @@ namespace Registry.Other
         public ACERecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
-
-
-
+            
             switch (rawBytes[0])
             {
                 case 0x0:

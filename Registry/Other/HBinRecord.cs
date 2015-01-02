@@ -207,11 +207,6 @@ namespace Registry.Other
                     RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
                 }
 
-
-
-
-
-
                 offsetInHbin += readSize;
             }
         }
@@ -229,17 +224,32 @@ namespace Registry.Other
         }
 
         // public properties...
+
+        /// <summary>
+        /// The relative offset to this record
+        /// </summary>
         public uint FileOffset { get; private set; }
+
+        /// <summary>
+        /// The last write time of this key
+        /// </summary>
         public DateTimeOffset? LastWriteTimestamp { get; private set; }
         /// <summary>
         /// The offset to this record as stored by other records
+        /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
         public long RelativeOffset { get; private set; }
+
         public uint Reserved { get; private set; }
         /// <summary>
         /// The signature of the hbin record. Should always be "hbin"
         /// </summary>
         public string Signature { get; private set; }
+
+        /// <summary>
+        /// The size of the hive
+        /// <remarks>This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a negative size)</remarks>
+        /// </summary>
         public uint Size { get; private set; }
         public uint Spare { get; private set; }
 
@@ -249,17 +259,16 @@ namespace Registry.Other
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
 
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             if (LastWriteTimestamp.HasValue)
             {
-                sb.AppendLine(string.Format("LastWriteTimestamp: {0}", LastWriteTimestamp));
+                sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
             }
-
-
+            
             sb.AppendLine();
 
             sb.AppendLine();

@@ -52,8 +52,10 @@ namespace Registry.Other
         /// <remarks>This flag allows for determining records that are marked 'in use' by their size but never actually referenced by another record in a hive</remarks>
         /// </summary>
         public bool IsReferenceed { get; internal set; }
+
         /// <summary>
-        /// The offset to this record as stored by other records
+        /// The offset as stored in other records to a given record
+        /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
         public long RelativeOffset { get; private set; }
         public int Size
@@ -70,16 +72,16 @@ namespace Registry.Other
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("RawBytes: {0}", BitConverter.ToString(RawBytes)));
+            sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
             sb.AppendLine();
 
 

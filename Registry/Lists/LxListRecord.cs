@@ -61,8 +61,7 @@ namespace Registry.Lists
                     //numerical hash
                     hash = BitConverter.ToUInt32(rawBytes, index).ToString();
                 }
-
-
+                
                 index += 4;
 
                 _offsets.Add(os, hash);
@@ -80,10 +79,19 @@ namespace Registry.Lists
             }
         }
 
-        // public properties...
+
+        
         public bool IsFree { get; private set; }
+
         public bool IsReferenceed { get; internal set; }
+        
+        
         public int NumberOfEntries { get; private set; }
+
+        /// <summary>
+        /// A dictionary of relative offsets and hashes to other records
+        /// <remarks>The offset is the key and the hash value is the value</remarks>
+        /// </summary>
         public Dictionary<uint, string> Offsets
         {
             get
@@ -109,13 +117,13 @@ namespace Registry.Lists
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
             //if (IsFree)
             //{
@@ -123,7 +131,7 @@ namespace Registry.Lists
             //}
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("NumberOfEntries: {0:N0}", NumberOfEntries));
+            sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
             sb.AppendLine();
 
             var i = 0;

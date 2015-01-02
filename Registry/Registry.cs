@@ -80,6 +80,9 @@ namespace Registry
             }
         }
 
+        /// <summary>
+        /// The total number of record parsing errors where the records were IsFree == false
+        /// </summary>
         public  int HardParsingErrors
         {
             get
@@ -94,7 +97,13 @@ namespace Registry
         /// </summary>
         public static Dictionary<long, IListTemplate> ListRecords { get; private set; }
         public static Dictionary<long, HBinRecord> HBinRecords { get; private set; }
+
+
         public  RegistryKey Root { get; private set; }
+
+        /// <summary>
+        /// The total number of record parsing errors where the records were IsFree == true
+        /// </summary>
         public  int SoftParsingErrors
         {
             get
@@ -170,12 +179,12 @@ namespace Registry
 
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
-                //This needs to be a stronger warning since we will not have all data
+                //todo This needs to be a stronger warning since we will not have all data
                 Console.WriteLine("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
             }
 
             //TODO need to add check on each vk record below
-            //ifor each d in dataoffsets, get data from datarecords and set isreferenced to true
+            //for each d in dataoffsets, get data from datarecords and set isreferenced to true
             //in vkrecord, add dataoffsets list and then set them to referenced here
             //this keeps processing of datas in the vk class
             //
@@ -220,6 +229,7 @@ namespace Registry
                     case VKCellRecord.DataTypeEnum.RegDword:
                     case VKCellRecord.DataTypeEnum.RegDwordBigEndian:
                     case VKCellRecord.DataTypeEnum.RegQword:
+                    case VKCellRecord.DataTypeEnum.RegLink:
                     case VKCellRecord.DataTypeEnum.RegSz:
                         if (vk.ValueData == null)
                         {
@@ -437,6 +447,7 @@ namespace Registry
 
         public RegistryKey FindKey(string keypath)
         {
+            //todo finish this
             return null;
         }
 

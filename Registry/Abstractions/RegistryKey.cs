@@ -45,13 +45,35 @@ namespace Registry.Abstractions
         /// A unique value that can be used to find this key in a collection
         /// </summary>
         public string InternalGUID { get; set; }
+        /// <summary>
+        /// When true, this key has been recovered and placed as a subkey to the key referenced by NKRecord.ParentCellIndex.
+        /// <remarks>The parent key is determined by checking whether ParentCellIndex 1) exists and 2) ParentCellIndex.IsReferenced == true. </remarks>
+        /// </summary>
         public bool IsDeleted { get; set; }
-        // public properties...
+        
+        /// <summary>
+        /// The name of this key. For the full path, see KeyPath
+        /// </summary>
         public string KeyName { get; private set; }
+        /// <summary>
+        /// The full path to the  key, including its KeyName
+        /// </summary>
         public string KeyPath { get; private set; }
+        /// <summary>
+        /// The last write time of this key
+        /// </summary>
         public DateTimeOffset? LastWriteTime { get; private set; }
+        /// <summary>
+        /// The underlying NKRecord for this Key. This allows access to all info about the NK Record
+        /// </summary>
         public NKCellRecord NKRecord { get; private set; }
+        /// <summary>
+        /// A list of child keys that exist under this key
+        /// </summary>
         public List<RegistryKey> SubKeys { get; private set; }
+        /// <summary>
+        /// A list of values that exists under this key
+        /// </summary>
         public List<KeyValue> Values { get; private set; }
     }
 }

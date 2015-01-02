@@ -40,8 +40,6 @@ namespace Registry.Other
             OwnerSIDType = Helpers.GetSIDTypeFromSIDString(OwnerSID);
             GroupSIDType = Helpers.GetSIDTypeFromSIDString(GroupSID);
 
-
-            //((myProperties.AllowedColors & MyColor.Yellow) == MyColor.Yellow)
             if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
             {
                 var rawDacl = rawBytes.Skip((int)DaclOffset).Take((int)sizeDacl).ToArray();
@@ -115,14 +113,14 @@ namespace Registry.Other
             if (DACL != null)
             {
                 sb.AppendLine();
-                sb.AppendLine(string.Format("DaclrOffset: 0x{0:X}", DaclOffset));
+                sb.AppendLine(string.Format("Dacl Offset: 0x{0:X}", DaclOffset));
                 sb.AppendLine(string.Format("DACL: {0}", DACL));
             }
 
             if (SACL != null)
             {
                 sb.AppendLine();
-                sb.AppendLine(string.Format("SaclOffset: 0x{0:X}", SaclOffset));
+                sb.AppendLine(string.Format("Sacl Offset: 0x{0:X}", SaclOffset));
                 sb.AppendLine(string.Format("SACL: {0}", SACL));
             }
 

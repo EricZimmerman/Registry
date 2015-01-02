@@ -108,13 +108,13 @@ namespace Registry.Cells
                 }
                 else
                 {
-                    // in very rare cases, the valuename is in ascii even when it should be in Unicode.
+                    // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
                     var valString = BitConverter.ToString(rawBytes,0x18,NameLength);
 
                    bool foundMatch = false;
                     try {
-	                    foundMatch = Regex.IsMatch(valString, "-[!^0]{2}");
-                    } catch (ArgumentException ex) {
+                        foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?"); // look for hex chars followed by 00 separators
+                    } catch (ArgumentException) {
 	                    // Syntax error in the regular expression
                     }
 
@@ -149,9 +149,7 @@ namespace Registry.Cells
                     //this is a special case where the data length shows up as 2, but a dword needs 4 bytes, so adjust
                     dataLengthInternal = 4;
                 }
-
-
-                    //Since its resident, the data lives in the OffsetToData.
+                //Since its resident, the data lives in the OffsetToData.
                     datablockRaw = new byte[dataLengthInternal];
 
                 //make a copy for processing below
@@ -167,8 +165,7 @@ namespace Registry.Cells
             else
             {
                 //TODO All calls to ReadBytesFromHive should just go get the datacell at OffsetToData vs re-reading data already read once
-
-
+                
                 //We have to go look at the OffsetToData to see what we have so we can do the right thing
 
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
@@ -189,8 +186,7 @@ namespace Registry.Cells
 
                 //datablockRaw now has our value AND slack space!
                 //value is dataLengthInternal long. rest is slack
-
-
+                
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw
                 if (dataLengthInternal > 16344 && (RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3))
                 {
@@ -211,15 +207,13 @@ namespace Registry.Cells
 
                     //make a place to reassemble things
                     var bigDataRaw = new ArrayList((int)dataLengthInternal);
-
-                  
-
+                    
                     for (var i = 1; i <= db.NumberOfEntries; i++)
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
                         var os = BitConverter.ToUInt32(datablockRaw, i * 4);
 
-                       
+                       // in order to accurately mark data cells as Referenced later, add these offsets to a list
                         DataOffets.Add(os);
 
                         var tempDataBlockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + os, 4);
@@ -277,16 +271,6 @@ namespace Registry.Cells
             {
                 switch (DataType)
                 {
-
-
-                    //This is disabled and RegNone is moved to the general 'binary' case since the spec says RegNone means "No defined data type", and not "no data"
-                    //           case DataTypeEnum.RegNone:
-                    ////testing, does Reg_None mean no data or no defined value TYPE
-                    //               ValueDataRaw = new byte[0];
-                    //               ValueData = new byte[0];
-                    //               
-
-                    //               break;
                     case DataTypeEnum.RegFileTime:
                         var ts = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
 
@@ -301,7 +285,7 @@ namespace Registry.Cells
 
                         break;
 
-                    case DataTypeEnum.RegNone:
+                    case DataTypeEnum.RegNone: // spec says RegNone means "No defined data type", and not "no data"
                     case DataTypeEnum.RegBinary:
                     case DataTypeEnum.RegResourceRequirementsList:
                     case DataTypeEnum.RegResourceList:
@@ -312,7 +296,6 @@ namespace Registry.Cells
 
                     case DataTypeEnum.RegDword:
                         ValueData = dataLengthInternal == 4 ? BitConverter.ToUInt32(datablockRaw, 0) : 0;
-
 
                         break;
 
@@ -327,8 +310,6 @@ namespace Registry.Cells
                         }
 
                             break;
-
-
 
                     case DataTypeEnum.RegQword:
                         ValueData = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
@@ -354,6 +335,11 @@ namespace Registry.Cells
 
                         ValueDataSlack = new byte[0];
 
+                        break;
+
+                    case DataTypeEnum.RegLink:
+                        ValueData =
+Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
                         break;
 
                     default:
@@ -388,7 +374,7 @@ namespace Registry.Cells
             RegBinary = 0x0003,
             [Description("A DWORD value, a 32-bit unsigned integer (little-endian)")]
             RegDword = 0x0004,
-            [Description("A DWORD value, a 32-bit unsigned integer  (big endian)")]
+            [Description("A DWORD value, a 32-bit unsigned integer (big endian)")]
             RegDwordBigEndian = 0x0005,
             [Description("An 'expandable' string value that can contain environment variables, normally stored and exposed in UTF-16LE")]
             RegExpandSz = 0x0002,
@@ -414,6 +400,11 @@ namespace Registry.Cells
             RegUnknown = 999
         }
 
+
+        /// <summary>
+        /// A list of offsets to data records.
+        /// <remarks>This is used to mark each Data record's IsReferenced property to true</remarks>
+        /// </summary>
         public List<ulong> DataOffets { get; private set; }
 
         // public properties...
@@ -429,15 +420,33 @@ namespace Registry.Cells
         public uint DataLength { get; set; }
         public DataTypeEnum DataType { get; set; }
         public uint DataTypeRaw { get; set; }
+
+        
         public bool IsFree { get; private set; }
+
+        
         public bool IsReferenceed { get; internal set; }
 
         public ushort NameLength { get; set; }
+
+        /// <summary>
+        /// Used to determine if the name is stored in ASCII (> 0) or Unicode (== 0)
+        /// </summary>
         public ushort NamePresentFlag { get; set; }
+
+        /// <summary>
+        /// The relative offset to the data for this record. If the high bit is set, the data is resident in the offset itself.
+        /// <remarks>When resident, this value will be similar to '0x80000002' or '0x80000004'. The actual length can be determined by subtracting 0x80000000</remarks>
+        /// </summary>
         public uint OffsetToData { get; set; }
+
+        
         public byte[] RawBytes { get; private set; }
+
         public long RelativeOffset { get; private set; }
+
         public string Signature { get; private set; }
+        
         public int Size
         {
             get
@@ -470,12 +479,12 @@ namespace Registry.Cells
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Data Type: {0}", DataType));
             sb.AppendLine();
-            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
             //if (IsFree)
             //{
@@ -484,17 +493,17 @@ namespace Registry.Cells
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("DataLength: 0x{0:X}", DataLength));
-            sb.AppendLine(string.Format("OffsetToData: 0x{0:X}", OffsetToData));
+            sb.AppendLine(string.Format("Data Length: 0x{0:X}", DataLength));
+            sb.AppendLine(string.Format("Offset To Data: 0x{0:X}", OffsetToData));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("NameLength: 0x{0:X}", NameLength));
-            sb.AppendLine(string.Format("NamePresentFlag: 0x{0:X}", NamePresentFlag));
+            sb.AppendLine(string.Format("Name Length: 0x{0:X}", NameLength));
+            sb.AppendLine(string.Format("Name Present Flag: 0x{0:X}", NamePresentFlag));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("ValueName: {0}", ValueName));
+            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
 
 
             switch (DataType)
@@ -502,7 +511,8 @@ namespace Registry.Cells
                 case DataTypeEnum.RegSz:
                 case DataTypeEnum.RegExpandSz:
                 case DataTypeEnum.RegMultiSz:
-                    sb.AppendLine(string.Format("ValueData: {0}", ValueData));
+                case DataTypeEnum.RegLink:
+                    sb.AppendLine(string.Format("Value Data: {0}", ValueData));
 
                     break;
 
@@ -510,37 +520,50 @@ namespace Registry.Cells
                 case DataTypeEnum.RegBinary:
                 case DataTypeEnum.RegResourceList:
                 case DataTypeEnum.RegResourceRequirementsList:
+                case DataTypeEnum.RegFullResourceDescription:
                     if (ValueData == null)
                     {
-                        sb.AppendLine(string.Format("ValueData: {0}", ""));
+                        sb.AppendLine(string.Format("Value Data: {0}", ""));
                     }
                     else
                     {
-                        sb.AppendLine(string.Format("ValueData: {0}", BitConverter.ToString((byte[])ValueData)));
+                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[])ValueData)));
                     }
 
                     break;
 
+                case DataTypeEnum.RegFileTime:
+
+                    if (ValueData != null)
+                    {
+                        DateTimeOffset dto = (DateTimeOffset) ValueData;
+
+                        sb.AppendLine(string.Format("Value Data: {0}", dto));
+                    }
+
+                        break;
+
                 case DataTypeEnum.RegDwordBigEndian:
-                    break;
-                case DataTypeEnum.RegLink:
-                    break;
-
-                case DataTypeEnum.RegFullResourceDescription:
-                    break;
-
                 case DataTypeEnum.RegDword:
                 case DataTypeEnum.RegQword:
-                    sb.AppendLine(string.Format("ValueData: {0:N}", ValueData));
+                    sb.AppendLine(string.Format("Value Data: {0:N}", ValueData));
                     break;
                 default:
+                    if (ValueData == null)
+                    {
+                        sb.AppendLine(string.Format("Value Data: {0}", ""));
+                    }
+                    else
+                    {
+                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[])ValueData)));
+                    }
                     break;
             }
 
 
             if (ValueDataSlack != null)
             {
-                sb.AppendLine(string.Format("ValueDataSlack: {0}", BitConverter.ToString(ValueDataSlack, 0)));
+                sb.AppendLine(string.Format("Value Data Slack: {0}", BitConverter.ToString(ValueDataSlack, 0)));
             }
 
 

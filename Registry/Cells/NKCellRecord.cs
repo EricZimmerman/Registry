@@ -46,8 +46,7 @@ namespace Registry.Cells
 
             SubkeyCountsStable = BitConverter.ToUInt32(rawBytes, 0x18);
             SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
-
-
+            
 
             //SubkeyListsStableCellIndex
             var num = BitConverter.ToUInt32(rawBytes, 0x20);
@@ -86,11 +85,7 @@ namespace Registry.Cells
             {
                 ValueListCellIndex = num;
             }
-
-
             
-
-
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 
             //ClassCellIndex
@@ -108,21 +103,16 @@ namespace Registry.Cells
             MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
 
             var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
-
-            //  rawFlags = string.Format("{0:X8}", rawBytes[0x3a]);
-
-
+            
             var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); //TODO is this a flag enum somewhere?
-
-
+            
             var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));//TODO is this a flag enum somewhere?
 
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
 
             Debug = rawBytes[0x3a];
-
-
+            
             MaximumClassLength = BitConverter.ToUInt32(rawBytes, 0x3c);
             MaximumValueNameLength = BitConverter.ToUInt32(rawBytes, 0x40);
             MaximumValueDataLength = BitConverter.ToUInt32(rawBytes, 0x44);
@@ -140,9 +130,7 @@ namespace Registry.Cells
             {
                 Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
             }
-
-
-
+            
             var paddingOffset = 0x50 + NameLength;
             var paddingLength = Math.Abs(Size) - paddingOffset;
 
@@ -155,6 +143,8 @@ namespace Registry.Cells
                 Padding = string.Empty;
             }
 
+
+            //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
             Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
 
         }
@@ -191,25 +181,62 @@ namespace Registry.Cells
         }
 
         // public properties...
+        /// <summary>
+        /// The relative offset to a data node containing the classname
+        /// <remarks>Use ClassLength to get the correct classname vs using the entire contents of the data node. There is often slack slace in the data node when they hold classnames</remarks>
+        /// </summary>
         public uint ClassCellIndex { get; private set; }
+
+        /// <summary>
+        /// The length of the classname in the data node referenced by ClassCellIndex. 
+        /// </summary>
         public ushort ClassLength { get; private set; }
         public byte Debug { get; private set; }
         public FlagEnum Flags { get; private set; }
+
+        
         public bool IsFree { get; private set; }
+
+       
         public bool IsReferenceed { get; internal set; }
+
+        /// <summary>
+        /// The last write time of this key
+        /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; private set; }
+
+        
         public uint MaximumClassLength { get; private set; }
         public ushort MaximumNameLength { get; private set; }
         public uint MaximumValueDataLength { get; private set; }
         public uint MaximumValueNameLength { get; private set; }
+        
+        /// <summary>
+        /// The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
+        /// </summary>
         public string Name { get; private set; }
+        
         public ushort NameLength { get; private set; }
         public string Padding { get; private set; }
+
+        /// <summary>
+        /// The relative offset to the parent key for this record
+        /// </summary>
         public uint ParentCellIndex { get; private set; }
+
         public byte[] RawBytes { get; private set; }
+
+        
         public long RelativeOffset { get; private set; }
+
+        /// <summary>
+        /// The relative offset to the security record for this record
+        /// </summary>
         public uint SecurityCellIndex { get; private set; }
+
         public string Signature { get; private set; }
+
+        
         public int Size
         {
             get
@@ -224,12 +251,32 @@ namespace Registry.Cells
         /// </summary>
         public bool IsDeleted { get; internal set; }
 
+
+        /// <summary>
+        /// The number of subkeys this key contains
+        /// </summary>
         public uint SubkeyCountsStable { get; private set; }
+
+
         public uint SubkeyCountsVolatile { get; private set; }
+
+        /// <summary>
+        /// The relative offset to a list (or list of lists) that points to other NKRecords. These records are subkeys of this key.
+        /// </summary>
         public uint SubkeyListsStableCellIndex { get; private set; }
+
         public uint SubkeyListsVolatileCellIndex { get; private set; }
+
         public int UserFlags { get; private set; }
+
+        /// <summary>
+        /// The relative offset to a list of VKrecords for this key
+        /// </summary>
         public uint ValueListCellIndex { get; private set; }
+
+        /// <summary>
+        /// The number of values this key contains
+        /// </summary>
         public uint ValueListCount { get; private set; }
         public int VirtualControlFlags { get; private set; }
         public uint WorkVar { get; private set; }
@@ -240,8 +287,8 @@ namespace Registry.Cells
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("RelativeOffset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("AbsoluteOffset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
+            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Flags: {0}", Flags));
             sb.AppendLine();
@@ -251,46 +298,48 @@ namespace Registry.Cells
             sb.AppendLine();
 
 
-            sb.AppendLine(string.Format("IsFree: {0}", IsFree));
+            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
             sb.AppendLine();
             sb.AppendLine(string.Format("Debug: 0x{0:X}", Debug));
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("MaximumClassLength: 0x{0:X}", MaximumClassLength));
-            sb.AppendLine(string.Format("ClassCellIndex: 0x{0:X}", ClassCellIndex));
-            sb.AppendLine(string.Format("ClassLength: 0x{0:X}", ClassLength));
+            sb.AppendLine(string.Format("Maximum Class Length: 0x{0:X}", MaximumClassLength));
+            sb.AppendLine(string.Format("Class Cell Index: 0x{0:X}", ClassCellIndex));
+            sb.AppendLine(string.Format("Class Length: 0x{0:X}", ClassLength));
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("MaximumValueDataLength: 0x{0:X}", MaximumValueDataLength));
-            sb.AppendLine(string.Format("MaximumValueDataLength: 0x{0:X}", MaximumValueDataLength));
-            sb.AppendLine(string.Format("MaximumValueNameLength: 0x{0:X}", MaximumValueNameLength));
+            sb.AppendLine(string.Format("Maximum Value Data Length: 0x{0:X}", MaximumValueDataLength));
+            sb.AppendLine(string.Format("Maximum Value Name Length: 0x{0:X}", MaximumValueNameLength));
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("NameLength: 0x{0:X}", NameLength));
-            sb.AppendLine(string.Format("MaximumNameLength: 0x{0:X}", MaximumNameLength));
+            sb.AppendLine(string.Format("Name Length: 0x{0:X}", NameLength));
+            sb.AppendLine(string.Format("Maximum Name Length: 0x{0:X}", MaximumNameLength));
 
+            
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Parent Cell Index: 0x{0:X}", ParentCellIndex));
+            sb.AppendLine(string.Format("Security Cell Index: 0x{0:X}", SecurityCellIndex));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Subkey Counts Stable: 0x{0:X}", SubkeyCountsStable));
+            sb.AppendLine(string.Format("Subkey Lists Stable Cell Index: 0x{0:X}", SubkeyListsStableCellIndex));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Subkey Counts Volatile: 0x{0:X}", SubkeyCountsVolatile));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("User Flags: 0x{0:X}", UserFlags));
+            sb.AppendLine(string.Format("Virtual Control Flags: 0x{0:X}", VirtualControlFlags));
+            sb.AppendLine(string.Format("Work Var: 0x{0:X}", WorkVar));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Value List Cell Index: 0x{0:X}", ValueListCellIndex));
+            
+            sb.AppendLine();
             sb.AppendLine(string.Format("Padding: {0}", Padding));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("ParentCellIndex: 0x{0:X}", ParentCellIndex));
-            sb.AppendLine(string.Format("SecurityCellIndex: 0x{0:X}", SecurityCellIndex));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("SubkeyCountsStable: 0x{0:X}", SubkeyCountsStable));
-            sb.AppendLine(string.Format("SubkeyListsStableCellIndex: 0x{0:X}", SubkeyListsStableCellIndex));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("SubkeyCountsVolatile: 0x{0:X}", SubkeyCountsVolatile));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("UserFlags: 0x{0:X}", UserFlags));
-            sb.AppendLine(string.Format("VirtualControlFlags: 0x{0:X}", VirtualControlFlags));
-            sb.AppendLine(string.Format("WorkVar: 0x{0:X}", WorkVar));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("ValueListCellIndex: 0x{0:X}", ValueListCellIndex));
 
 
             return sb.ToString();

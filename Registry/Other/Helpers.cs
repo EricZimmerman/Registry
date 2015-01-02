@@ -310,6 +310,12 @@ namespace Registry.Other
         }
 
         // public methods...
+        /// <summary>
+        /// Converts a SID as stored in the registry to a human readable version.
+        /// <remarks>Use GetSIDTypeFromSIDString to get an Enum from this string with a description of what the SID is used for</remarks>
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
         public static string ConvertHexStringToSidString(byte[] hex)
         {
             //If your SID is S-1-5-21-2127521184-1604012920-1887927527-72713, then your raw hex SID is 01 05 00 00 00 00 00 05 15000000 A065CF7E 784B9B5F E77C8770 091C0100
@@ -414,407 +420,408 @@ namespace Registry.Other
 
         public static SidTypeEnum GetSIDTypeFromSIDString(string SID)
         {
-            var SIDType = Helpers.SidTypeEnum.UnknownOrUserSID;
+            SidTypeEnum SIDType = SidTypeEnum.UnknownOrUserSID;
+
             switch (SID)
             {
                 case "S-1-0-0":
-                    SIDType = Helpers.SidTypeEnum.Null;
+                    SIDType = SidTypeEnum.Null;
                     break;
 
                 case "S-1-1-0":
-                    SIDType = Helpers.SidTypeEnum.Everyone;
+                    SIDType = SidTypeEnum.Everyone;
                     break;
 
                 case "S-1-2-0":
-                    SIDType = Helpers.SidTypeEnum.Local;
+                    SIDType = SidTypeEnum.Local;
                     break;
 
                 case "S-1-2-1":
-                    SIDType = Helpers.SidTypeEnum.ConsoleLogon;
+                    SIDType = SidTypeEnum.ConsoleLogon;
                     break;
 
                 case "S-1-3-0":
-                    SIDType = Helpers.SidTypeEnum.CreatorOwner;
+                    SIDType = SidTypeEnum.CreatorOwner;
                     break;
 
                 case "S-1-3-1":
-                    SIDType = Helpers.SidTypeEnum.CreatorGroup;
+                    SIDType = SidTypeEnum.CreatorGroup;
                     break;
 
                 case "S-1-3-2":
-                    SIDType = Helpers.SidTypeEnum.OwnerServer;
+                    SIDType = SidTypeEnum.OwnerServer;
                     break;
 
                 case "S-1-3-3":
-                    SIDType = Helpers.SidTypeEnum.GroupServer;
+                    SIDType = SidTypeEnum.GroupServer;
                     break;
 
                 case "S-1-3-4":
-                    SIDType = Helpers.SidTypeEnum.OwnerServer;
+                    SIDType = SidTypeEnum.OwnerServer;
                     break;
 
                 case "S-1-5-1":
-                    SIDType = Helpers.SidTypeEnum.Dialup;
+                    SIDType = SidTypeEnum.Dialup;
                     break;
 
                 case "S-1-5-2":
-                    SIDType = Helpers.SidTypeEnum.Network;
+                    SIDType = SidTypeEnum.Network;
                     break;
 
                 case "S-1-5-3":
-                    SIDType = Helpers.SidTypeEnum.Batch;
+                    SIDType = SidTypeEnum.Batch;
                     break;
 
                 case "S-1-5-4":
-                    SIDType = Helpers.SidTypeEnum.Interactive;
+                    SIDType = SidTypeEnum.Interactive;
                     break;
 
                 case "S-1-5-6":
-                    SIDType = Helpers.SidTypeEnum.Service;
+                    SIDType = SidTypeEnum.Service;
                     break;
 
                 case "S-1-5-7":
-                    SIDType = Helpers.SidTypeEnum.Anonymous;
+                    SIDType = SidTypeEnum.Anonymous;
                     break;
 
                 case "S-1-5-8":
-                    SIDType = Helpers.SidTypeEnum.Proxy;
+                    SIDType = SidTypeEnum.Proxy;
                     break;
 
                 case "S-1-5-9":
-                    SIDType = Helpers.SidTypeEnum.EnterpriseDomainControllers;
+                    SIDType = SidTypeEnum.EnterpriseDomainControllers;
                     break;
 
                 case "S-1-5-10":
-                    SIDType = Helpers.SidTypeEnum.PrincipalSelf;
+                    SIDType = SidTypeEnum.PrincipalSelf;
                     break;
 
                 case "S-1-5-11":
-                    SIDType = Helpers.SidTypeEnum.AuthenticatedUsers;
+                    SIDType = SidTypeEnum.AuthenticatedUsers;
                     break;
 
                 case "S-1-5-12":
-                    SIDType = Helpers.SidTypeEnum.RestrictedCode;
+                    SIDType = SidTypeEnum.RestrictedCode;
                     break;
 
                 case "S-1-5-13":
-                    SIDType = Helpers.SidTypeEnum.TerminalServerUser;
+                    SIDType = SidTypeEnum.TerminalServerUser;
                     break;
 
                 case "S-1-5-14":
-                    SIDType = Helpers.SidTypeEnum.RemoteInteractiveLogon;
+                    SIDType = SidTypeEnum.RemoteInteractiveLogon;
                     break;
 
                 case "S-1-5-15":
-                    SIDType = Helpers.SidTypeEnum.ThisOrganization;
+                    SIDType = SidTypeEnum.ThisOrganization;
                     break;
 
                 case "S-1-5-17":
-                    SIDType = Helpers.SidTypeEnum.Iusr;
+                    SIDType = SidTypeEnum.Iusr;
                     break;
 
                 case "S-1-5-18":
-                    SIDType = Helpers.SidTypeEnum.LocalSystem;
+                    SIDType = SidTypeEnum.LocalSystem;
                     break;
 
                 case "S-1-5-19":
-                    SIDType = Helpers.SidTypeEnum.LocalService;
+                    SIDType = SidTypeEnum.LocalService;
                     break;
 
                 case "S-1-5-20":
-                    SIDType = Helpers.SidTypeEnum.NetworkService;
+                    SIDType = SidTypeEnum.NetworkService;
                     break;
 
                 case "S-1-5-21-0-0-0-496":
-                    SIDType = Helpers.SidTypeEnum.CompoundedAuthentication;
+                    SIDType = SidTypeEnum.CompoundedAuthentication;
                     break;
 
                 case "S-1-5-21-0-0-0-497":
-                    SIDType = Helpers.SidTypeEnum.ClaimsValid;
+                    SIDType = SidTypeEnum.ClaimsValid;
                     break;
 
                 case "S-1-5-32-544":
-                    SIDType = Helpers.SidTypeEnum.BuiltinAdministrators;
+                    SIDType = SidTypeEnum.BuiltinAdministrators;
                     break;
 
                 case "S-1-5-32-545":
-                    SIDType = Helpers.SidTypeEnum.BuiltinUsers;
+                    SIDType = SidTypeEnum.BuiltinUsers;
                     break;
 
                 case "S-1-5-32-546":
-                    SIDType = Helpers.SidTypeEnum.BuiltinGuests;
+                    SIDType = SidTypeEnum.BuiltinGuests;
                     break;
 
                 case "S-1-5-32-547":
-                    SIDType = Helpers.SidTypeEnum.PowerUsers;
+                    SIDType = SidTypeEnum.PowerUsers;
                     break;
 
                 case "S-1-5-32-548":
-                    SIDType = Helpers.SidTypeEnum.AccountOperators;
+                    SIDType = SidTypeEnum.AccountOperators;
                     break;
 
                 case "S-1-5-32-549":
-                    SIDType = Helpers.SidTypeEnum.ServerOperators;
+                    SIDType = SidTypeEnum.ServerOperators;
                     break;
 
                 case "S-1-5-32-550":
-                    SIDType = Helpers.SidTypeEnum.PrinterOperators;
+                    SIDType = SidTypeEnum.PrinterOperators;
                     break;
 
                 case "S-1-5-32-551":
-                    SIDType = Helpers.SidTypeEnum.BackupOperators;
+                    SIDType = SidTypeEnum.BackupOperators;
                     break;
 
                 case "S-1-5-32-552":
-                    SIDType = Helpers.SidTypeEnum.Replicator;
+                    SIDType = SidTypeEnum.Replicator;
                     break;
 
                 case "S-1-5-32-554":
-                    SIDType = Helpers.SidTypeEnum.AliasPrew2Kcompacc;
+                    SIDType = SidTypeEnum.AliasPrew2Kcompacc;
                     break;
 
                 case "S-1-5-32-555":
-                    SIDType = Helpers.SidTypeEnum.RemoteDesktop;
+                    SIDType = SidTypeEnum.RemoteDesktop;
                     break;
 
                 case "S-1-5-32-556":
-                    SIDType = Helpers.SidTypeEnum.NetworkConfigurationOps;
+                    SIDType = SidTypeEnum.NetworkConfigurationOps;
                     break;
 
                 case "S-1-5-32-557":
-                    SIDType = Helpers.SidTypeEnum.IncomingForestTrustBuilders;
+                    SIDType = SidTypeEnum.IncomingForestTrustBuilders;
                     break;
 
                 case "S-1-5-32-558":
-                    SIDType = Helpers.SidTypeEnum.PerfmonUsers;
+                    SIDType = SidTypeEnum.PerfmonUsers;
                     break;
 
                 case "S-1-5-32-559":
-                    SIDType = Helpers.SidTypeEnum.PerflogUsers;
+                    SIDType = SidTypeEnum.PerflogUsers;
                     break;
 
                 case "S-1-5-32-560":
-                    SIDType = Helpers.SidTypeEnum.WindowsAuthorizationAccessGroup;
+                    SIDType = SidTypeEnum.WindowsAuthorizationAccessGroup;
                     break;
 
                 case "S-1-5-32-561":
-                    SIDType = Helpers.SidTypeEnum.TerminalServerLicenseServers;
+                    SIDType = SidTypeEnum.TerminalServerLicenseServers;
                     break;
 
                 case "S-1-5-32-562":
-                    SIDType = Helpers.SidTypeEnum.DistributedComUsers;
+                    SIDType = SidTypeEnum.DistributedComUsers;
                     break;
 
                 case "S-1-5-32-568":
-                    SIDType = Helpers.SidTypeEnum.IisIusrs;
+                    SIDType = SidTypeEnum.IisIusrs;
                     break;
 
                 case "S-1-5-32-569":
-                    SIDType = Helpers.SidTypeEnum.CryptographicOperators;
+                    SIDType = SidTypeEnum.CryptographicOperators;
                     break;
 
                 case "S-1-5-32-573":
-                    SIDType = Helpers.SidTypeEnum.EventLogReaders;
+                    SIDType = SidTypeEnum.EventLogReaders;
                     break;
 
                 case "S-1-5-32-574":
-                    SIDType = Helpers.SidTypeEnum.CertificateServiceDcomAccess;
+                    SIDType = SidTypeEnum.CertificateServiceDcomAccess;
                     break;
 
                 case "S-1-5-32-575":
-                    SIDType = Helpers.SidTypeEnum.RdsRemoteAccessServers;
+                    SIDType = SidTypeEnum.RdsRemoteAccessServers;
                     break;
 
                 case "S-1-5-32-576":
-                    SIDType = Helpers.SidTypeEnum.RdsEndpointServers;
+                    SIDType = SidTypeEnum.RdsEndpointServers;
                     break;
 
                 case "S-1-5-32-577":
-                    SIDType = Helpers.SidTypeEnum.RdsManagementServers;
+                    SIDType = SidTypeEnum.RdsManagementServers;
                     break;
 
                 case "S-1-5-32-578":
-                    SIDType = Helpers.SidTypeEnum.HyperVAdmins;
+                    SIDType = SidTypeEnum.HyperVAdmins;
                     break;
 
                 case "S-1-5-32-579":
-                    SIDType = Helpers.SidTypeEnum.AccessControlAssistanceOps;
+                    SIDType = SidTypeEnum.AccessControlAssistanceOps;
                     break;
 
                 case "S-1-5-32-580":
-                    SIDType = Helpers.SidTypeEnum.RemoteManagementUsers;
+                    SIDType = SidTypeEnum.RemoteManagementUsers;
                     break;
 
                 case "S-1-5-33":
-                    SIDType = Helpers.SidTypeEnum.WriteRestrictedCode;
+                    SIDType = SidTypeEnum.WriteRestrictedCode;
                     break;
 
                 case "S-1-5-64-10":
-                    SIDType = Helpers.SidTypeEnum.NtlmAuthentication;
+                    SIDType = SidTypeEnum.NtlmAuthentication;
                     break;
 
                 case "S-1-5-64-14":
-                    SIDType = Helpers.SidTypeEnum.SchannelAuthentication;
+                    SIDType = SidTypeEnum.SchannelAuthentication;
                     break;
 
                 case "S-1-5-64-21":
-                    SIDType = Helpers.SidTypeEnum.DigestAuthentication;
+                    SIDType = SidTypeEnum.DigestAuthentication;
                     break;
 
                 case "S-1-5-65-1":
-                    SIDType = Helpers.SidTypeEnum.ThisOrganizationCertificate;
+                    SIDType = SidTypeEnum.ThisOrganizationCertificate;
                     break;
 
                 case "S-1-5-80":
-                    SIDType = Helpers.SidTypeEnum.NtService;
+                    SIDType = SidTypeEnum.NtService;
                     break;
 
                 case "S-1-5-84-0-0-0-0-0":
-                    SIDType = Helpers.SidTypeEnum.UserModeDrivers;
+                    SIDType = SidTypeEnum.UserModeDrivers;
                     break;
 
                 case "S-1-5-113":
-                    SIDType = Helpers.SidTypeEnum.LocalAccount;
+                    SIDType = SidTypeEnum.LocalAccount;
                     break;
 
                 case "S-1-5-114":
-                    SIDType = Helpers.SidTypeEnum.LocalAccountAndMemberOfAdministratorsGroup;
+                    SIDType = SidTypeEnum.LocalAccountAndMemberOfAdministratorsGroup;
                     break;
 
                 case "S-1-5-1000":
-                    SIDType = Helpers.SidTypeEnum.OtherOrganization;
+                    SIDType = SidTypeEnum.OtherOrganization;
                     break;
 
                 case "S-1-15-2-1":
-                    SIDType = Helpers.SidTypeEnum.AllAppPackages;
+                    SIDType = SidTypeEnum.AllAppPackages;
                     break;
 
                 case "S-1-16-0":
-                    SIDType = Helpers.SidTypeEnum.MlUntrusted;
+                    SIDType = SidTypeEnum.MlUntrusted;
                     break;
 
                 case "S-1-16-4096":
-                    SIDType = Helpers.SidTypeEnum.MlLow;
+                    SIDType = SidTypeEnum.MlLow;
                     break;
 
                 case "S-1-16-8192":
-                    SIDType = Helpers.SidTypeEnum.MlMedium;
+                    SIDType = SidTypeEnum.MlMedium;
                     break;
 
                 case "S-1-16-8448":
-                    SIDType = Helpers.SidTypeEnum.MlMediumPlus;
+                    SIDType = SidTypeEnum.MlMediumPlus;
                     break;
 
                 case "S-1-16-12288":
-                    SIDType = Helpers.SidTypeEnum.MlHigh;
+                    SIDType = SidTypeEnum.MlHigh;
                     break;
 
                 case "S-1-16-16384":
-                    SIDType = Helpers.SidTypeEnum.MlSystem;
+                    SIDType = SidTypeEnum.MlSystem;
                     break;
 
                 case "S-1-16-20480":
-                    SIDType = Helpers.SidTypeEnum.MlProtectedProcess;
+                    SIDType = SidTypeEnum.MlProtectedProcess;
                     break;
 
                 case "S-1-18-1":
-                    SIDType = Helpers.SidTypeEnum.AuthenticationAuthorityAssertedIdentity;
+                    SIDType = SidTypeEnum.AuthenticationAuthorityAssertedIdentity;
                     break;
 
                 case "S-1-18-2":
-                    SIDType = Helpers.SidTypeEnum.ServiceAssertedIdentity;
+                    SIDType = SidTypeEnum.ServiceAssertedIdentity;
                     break;
 
                 default:
-                    SIDType = Helpers.SidTypeEnum.UnknownOrUserSID;
+                    SIDType = SidTypeEnum.UnknownOrUserSID;
                     break;
             }
 
-            if (SIDType == Helpers.SidTypeEnum.UnknownOrUserSID)
+            if (SIDType == SidTypeEnum.UnknownOrUserSID)
             {
                 if (SID.StartsWith("S-1-5-5-"))
                 {
-                    SIDType = Helpers.SidTypeEnum.LogonId;
+                    SIDType = SidTypeEnum.LogonId;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-498"))
                 {
-                    SIDType = Helpers.SidTypeEnum.EnterpriseDomainControllers;
+                    SIDType = SidTypeEnum.EnterpriseDomainControllers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-500"))
                 {
-                    SIDType = Helpers.SidTypeEnum.Administrator;
+                    SIDType = SidTypeEnum.Administrator;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-501"))
                 {
-                    SIDType = Helpers.SidTypeEnum.Guest;
+                    SIDType = SidTypeEnum.Guest;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-512"))
                 {
-                    SIDType = Helpers.SidTypeEnum.DomainAdmins;
+                    SIDType = SidTypeEnum.DomainAdmins;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-513"))
                 {
-                    SIDType = Helpers.SidTypeEnum.DomainUsers;
+                    SIDType = SidTypeEnum.DomainUsers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-514"))
                 {
-                    SIDType = Helpers.SidTypeEnum.DomainGuests;
+                    SIDType = SidTypeEnum.DomainGuests;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-515"))
                 {
-                    SIDType = Helpers.SidTypeEnum.DomainComputers;
+                    SIDType = SidTypeEnum.DomainComputers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-516"))
                 {
-                    SIDType = Helpers.SidTypeEnum.DomainDomainControllers;
+                    SIDType = SidTypeEnum.DomainDomainControllers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-517"))
                 {
-                    SIDType = Helpers.SidTypeEnum.CertPublishers;
+                    SIDType = SidTypeEnum.CertPublishers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-518"))
                 {
-                    SIDType = Helpers.SidTypeEnum.SchemaAdministrators;
+                    SIDType = SidTypeEnum.SchemaAdministrators;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-519"))
                 {
-                    SIDType = Helpers.SidTypeEnum.EnterpriseAdmins;
+                    SIDType = SidTypeEnum.EnterpriseAdmins;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-520"))
                 {
-                    SIDType = Helpers.SidTypeEnum.GroupPolicyCreatorOwners;
+                    SIDType = SidTypeEnum.GroupPolicyCreatorOwners;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-521"))
                 {
-                    SIDType = Helpers.SidTypeEnum.ReadonlyDomainControllers;
+                    SIDType = SidTypeEnum.ReadonlyDomainControllers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-522"))
                 {
-                    SIDType = Helpers.SidTypeEnum.CloneableControllers;
+                    SIDType = SidTypeEnum.CloneableControllers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-525"))
                 {
-                    SIDType = Helpers.SidTypeEnum.ProtectedUsers;
+                    SIDType = SidTypeEnum.ProtectedUsers;
                 }
 
                 if (SID.StartsWith("S-1-5-21-") && SID.EndsWith("-553"))
                 {
-                    SIDType = Helpers.SidTypeEnum.RasServers;
+                    SIDType = SidTypeEnum.RasServers;
                 }
             }
 

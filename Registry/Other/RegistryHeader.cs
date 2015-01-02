@@ -61,6 +61,10 @@ namespace Registry.Other
         /// The last write timestamp of the registry hive
         /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; private set; }
+
+        /// <summary>
+        /// The total number of bytes used by this hive
+        /// </summary>
         public uint Length { get; private set; }
         public uint MajorVersion { get; private set; }
         public uint MinorVersion { get; private set; }
