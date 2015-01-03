@@ -1,7 +1,7 @@
 # Registry #
 
 
-Full featured, offline registry parser in C#
+Full featured, offline registry parser in C#. For discussion and design decisions, see http://binaryforay.blogspot.com/.
 
 ## The goals of this project are:  ##
 
