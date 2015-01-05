@@ -31,9 +31,9 @@ namespace ExampleApp
                     Environment.Exit(1);
                 }
 
-                if (result.Value.HiveName != null && result.Value.HiveName.Length > 0 )
+                if (!string.IsNullOrEmpty(result.Value.HiveName) )
                 {
-                    if (result.Value.DirectoryName != null && result.Value.DirectoryName.Length > 0)
+                    if (!string.IsNullOrEmpty(result.Value.DirectoryName))
                     {
                         Console.WriteLine("Must specify either -d or -f, but not both");
                         Environment.Exit(1);
@@ -41,9 +41,9 @@ namespace ExampleApp
                   
                 }
 
-                if (result.Value.DirectoryName != null && result.Value.DirectoryName.Length > 0)
+                if (!string.IsNullOrEmpty(result.Value.DirectoryName))
                 {
-                    if (result.Value.HiveName != null && result.Value.HiveName.Length > 0)
+                    if (!string.IsNullOrEmpty(result.Value.HiveName))
                     {
                         Console.WriteLine("Must specify either -d or -f, but not both");
                         Environment.Exit(1);
@@ -51,7 +51,7 @@ namespace ExampleApp
 
                 }
 
-                if (result.Value.HiveName != null && result.Value.HiveName.Length > 0)
+                if (!string.IsNullOrEmpty(result.Value.HiveName))
                 {
                     testFiles.Add(result.Value.HiveName);
                 }
@@ -89,6 +89,7 @@ namespace ExampleApp
 
                     Console.WriteLine("Processing '{0}'", testFile);
                 Console.Title = string.Format( "Processing '{0}'", testFile);
+
                 using (var fName1Test = new RegistryHive(testFile, false))
                 {
                     var sw = new Stopwatch();
@@ -205,16 +206,6 @@ namespace ExampleApp
                 
 
             }
-
-
-            //This is a testing harness for now. once parser is complete it will do a lot more
-
-            // a few tests to make sure the hive isnt damaged at a basic level
-            //var fName1Test = new Registry.Registry(fName1, false);
-            //var meta1 =   fName1Test.Verify();
-            //fName1Test.ParseHive();
-         //
-
         }
     }
 }
