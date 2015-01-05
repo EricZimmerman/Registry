@@ -26,8 +26,7 @@ namespace Registry.Other
             _size = BitConverter.ToInt32(rawBytes, 0);
 
             IsFree = _size > 0;
-
-
+            
             Data = rawBytes.Skip(4).ToArray();
         }
 
@@ -83,9 +82,6 @@ namespace Registry.Other
 
             sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
             sb.AppendLine();
-
-
-
 
             return sb.ToString();
         }

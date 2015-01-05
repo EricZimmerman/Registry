@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 // namespaces...
 namespace Registry.Abstractions
@@ -32,6 +33,25 @@ namespace Registry.Abstractions
             ValueSlackRaw = valueSlackRaw;
 
             InternalGUID = Guid.NewGuid().ToString();
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
+            sb.AppendLine(string.Format("Value Type: {0}", ValueType));
+            sb.AppendLine(string.Format("Value Data: {0}", ValueData));
+            sb.AppendLine(string.Format("Value Slack: {0}", ValueSlack));
+          
+            sb.AppendLine();
+
+            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
+            sb.AppendLine();
+
+            sb.AppendLine(string.Format("VK Record: {0}", VKRecord));
+
+            return sb.ToString();
         }
 
         // public properties...

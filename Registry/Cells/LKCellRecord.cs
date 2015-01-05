@@ -7,7 +7,7 @@ using System.Text;
 namespace Registry.Cells
 {
     // public classes...
-    public class NKCellRecord : ICellTemplate
+    public class LKCellRecord : ICellTemplate
     {
         // private fields...
         private readonly int _size;
@@ -21,7 +21,7 @@ namespace Registry.Cells
         /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
         /// <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal NKCellRecord(byte[] rawBytes, long relativeOffset)
+        protected internal LKCellRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
@@ -34,9 +34,9 @@ namespace Registry.Cells
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
-            Check.That(Signature).IsEqualTo("nk");
+            Check.That(Signature).IsEqualTo("lk");
 
-            Flags = (FlagEnum) BitConverter.ToUInt16(rawBytes, 6);
+            Flags = (FlagEnum)BitConverter.ToUInt16(rawBytes, 6);
 
             var ts = BitConverter.ToInt64(rawBytes, 0x8);
 
@@ -46,7 +46,7 @@ namespace Registry.Cells
 
             SubkeyCountsStable = BitConverter.ToUInt32(rawBytes, 0x18);
             SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
-            
+
 
             //SubkeyListsStableCellIndex
             var num = BitConverter.ToUInt32(rawBytes, 0x20);
@@ -85,7 +85,7 @@ namespace Registry.Cells
             {
                 ValueListCellIndex = num;
             }
-            
+
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 
             //ClassCellIndex
@@ -103,16 +103,16 @@ namespace Registry.Cells
             MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
 
             var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
-            
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); //TODO is this a flag enum somewhere?
-            
+
+            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4)); //TODO is this a flag enum somewhere?
+
             var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));//TODO is this a flag enum somewhere?
 
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
 
             Debug = rawBytes[0x3a];
-            
+
             MaximumClassLength = BitConverter.ToUInt32(rawBytes, 0x3c);
             MaximumValueNameLength = BitConverter.ToUInt32(rawBytes, 0x40);
             MaximumValueDataLength = BitConverter.ToUInt32(rawBytes, 0x44);
@@ -130,7 +130,7 @@ namespace Registry.Cells
             {
                 Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
             }
-            
+
             var paddingOffset = 0x50 + NameLength;
             var paddingLength = Math.Abs(Size) - paddingOffset;
 
@@ -194,10 +194,10 @@ namespace Registry.Cells
         public byte Debug { get; private set; }
         public FlagEnum Flags { get; private set; }
 
-        
+
         public bool IsFree { get; private set; }
 
-       
+
         public bool IsReferenceed { get; internal set; }
 
         /// <summary>
@@ -205,17 +205,17 @@ namespace Registry.Cells
         /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; private set; }
 
-        
+
         public uint MaximumClassLength { get; private set; }
         public ushort MaximumNameLength { get; private set; }
         public uint MaximumValueDataLength { get; private set; }
         public uint MaximumValueNameLength { get; private set; }
-        
+
         /// <summary>
         /// The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
         public string Name { get; private set; }
-        
+
         public ushort NameLength { get; private set; }
         public string Padding { get; private set; }
 
@@ -226,7 +226,7 @@ namespace Registry.Cells
 
         public byte[] RawBytes { get; private set; }
 
-        
+
         public long RelativeOffset { get; private set; }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace Registry.Cells
 
         public string Signature { get; private set; }
 
-        
+
         public int Size
         {
             get
@@ -296,7 +296,7 @@ namespace Registry.Cells
             sb.AppendLine();
             sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
             sb.AppendLine();
-            
+
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
             sb.AppendLine();
@@ -334,10 +334,10 @@ namespace Registry.Cells
 
             sb.AppendLine();
             sb.AppendLine(string.Format("Value List Cell Index: 0x{0:X}", ValueListCellIndex));
-            
+
             sb.AppendLine();
             sb.AppendLine(string.Format("Padding: {0}", Padding));
-            
+
             return sb.ToString();
         }
     }

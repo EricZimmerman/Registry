@@ -20,6 +20,7 @@ namespace Registry.Lists
         /// <remarks>The signature determines how the hash is calculated/verified</remarks>
         /// </summary>
         /// <param name="rawBytes"></param>
+        /// <param name="relativeOffset"></param>
         public LxListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
@@ -78,14 +79,9 @@ namespace Registry.Lists
                 return RelativeOffset + 4096;
             }
         }
-
-
         
         public bool IsFree { get; private set; }
-
         public bool IsReferenceed { get; internal set; }
-        
-        
         public int NumberOfEntries { get; private set; }
 
         /// <summary>
@@ -125,10 +121,6 @@ namespace Registry.Lists
 
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
-            //if (IsFree)
-            //{
-            //    return sb.ToString();
-            //}
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
@@ -145,8 +137,7 @@ namespace Registry.Lists
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();
-
-
+            
             return sb.ToString();
         }
     }

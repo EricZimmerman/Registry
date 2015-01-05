@@ -146,7 +146,6 @@ namespace Registry.Cells
             sb.AppendLine();
             sb.AppendLine(string.Format("Security descriptor: {0}", SecurityDescriptor));
             
-
             return sb.ToString();
         }
     }

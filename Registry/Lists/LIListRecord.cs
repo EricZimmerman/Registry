@@ -18,6 +18,7 @@ namespace Registry.Lists
         /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
+        /// <param name="relativeOffset"></param>
         public LIListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;

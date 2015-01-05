@@ -18,6 +18,7 @@ namespace Registry.Lists
         /// Initializes a new instance of the <see cref="DBListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
+        /// <param name="relativeOffset"></param>
         public DBListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
@@ -96,21 +97,15 @@ namespace Registry.Lists
 
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
-            //if (IsFree)
-            //{
-            //    return sb.ToString();
-            //}
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Offset To Offsets: 0x{0:X}", OffsetToOffsets));
-
-
+            
             sb.AppendLine();
-
-
+            
             return sb.ToString();
         }
     }

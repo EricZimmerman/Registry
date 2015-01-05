@@ -55,12 +55,11 @@ namespace Registry.Other
 
             foreach (var chunk in chunks)
             {
-                if (chunk.Length > 0)
-                {
-                    var ace = new ACERecord(chunk);
+                if (chunk.Length <= 0) continue;
 
-                    ACERecords.Add(ace);
-                }
+                var ace = new ACERecord(chunk);
+
+                ACERecords.Add(ace);
             }
         }
 
@@ -88,11 +87,9 @@ namespace Registry.Other
 
             sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclRevision));
             sb.AppendLine(string.Format("ACL Type: {0}", ACLType));
-
-
+            
             sb.AppendLine(string.Format("ACE Records Count: {0}", AceCount));
-
-
+            
             sb.AppendLine();
 
             var i = 0;

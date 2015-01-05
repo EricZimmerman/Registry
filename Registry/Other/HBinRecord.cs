@@ -38,7 +38,6 @@ namespace Registry.Other
             try
             {
                 var dt = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
-                ;
 
                 if (dt.Year > 1601)
                 {
@@ -49,26 +48,19 @@ namespace Registry.Other
             {
                 //very rarely you get a 'Not a valid Win32 FileTime' error, so trap it if thats the case
             }
-
-
+            
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
 
             //additional cell data starts 32 bytes (0x20) in
-
-            var recordSize = BitConverter.ToUInt32(rawBytes, 0x20);
-
-            int readSize;
-
             var offsetInHbin = 0x20;
 
             RegistryHive.TotalBytesRead += 0x20;
-
-
+            
             while (offsetInHbin < Size)
             {
-                recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
+                var recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
 
-                readSize = (int)recordSize;
+                var readSize = (int)recordSize;
 
                 readSize = Math.Abs(readSize);
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
@@ -89,10 +81,10 @@ namespace Registry.Other
                     // Syntax error in the regular expression
                 }
 
-                //only process records with 2 letter signatures. this avoids wasting time on data cells
+                //only process records with 2 letter signatures. this avoids crazy output for data cells
                 if (foundMatch && RegistryHive.VerboseOutput)
                 {
-                    Console.WriteLine("\tprocessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                    Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
                         cellSignature, offsetInHbin, offsetInHbin + relativeOffset);
                 }
 
@@ -108,57 +100,44 @@ namespace Registry.Other
                         case "lh":
                             listRecord = new LxListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                            //  Debug.WriteLine(listRecord);
-
                             break;
 
                         case "li":
                             listRecord = new LIListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                            //   Debug.WriteLine(listRecord);
-
                             break;
 
                         case "ri":
                             listRecord = new RIListRecord(rawRecord, offsetInHbin + relativeOffset);
-
-                            //  Debug.WriteLine(listRecord);
+                            
                             break;
 
                         case "db":
                             listRecord = new DBListRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                            //    Debug.WriteLine(listRecord);
                             break;
 
                         case "lk":
+                            cellRecord = new LKCellRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                            //    Debug.WriteLine(cellRecord);
                             break;
 
                         case "nk":
                             cellRecord = new NKCellRecord(rawRecord, offsetInHbin + relativeOffset);
-
-                            //    Debug.WriteLine(cellRecord);
+                            
                             break;
                         case "sk":
                             cellRecord = new SKCellRecord(rawRecord, offsetInHbin + relativeOffset);
-
-                            //   Debug.WriteLine(cellRecord);
 
                             break;
 
                         case "vk":
                             cellRecord = new VKCellRecord(rawRecord, offsetInHbin + relativeOffset);
 
-                            //  System.IO.File.AppendAllText(@"C:\temp\values.txt",cellRecord.ToString());
-
                             break;
 
                         default:
                             dataRecord = new DataNode(rawRecord, offsetInHbin + relativeOffset);
-
-                            //     Debug.WriteLine(string.Format( "Unknown cell signature: {0}", cellSignature));
 
                             break;
                     }
@@ -168,14 +147,13 @@ namespace Registry.Other
                     //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
                     //TODO store it somewhere else
 
-                    var _size = BitConverter.ToInt32(rawRecord, 0);
+                    var size = BitConverter.ToInt32(rawRecord, 0);
 
-                    if (_size < 0)
+                    if (size < 0)
                     {
                         RegistryHive._hardParsingErrors += 1;
                         //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
-
-
+                        
                         Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + relativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
                         Console.WriteLine();
@@ -195,16 +173,19 @@ namespace Registry.Other
                 if (cellRecord != null)
                 {
                     RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                    //   Debug.WriteLine(cellRecord);
                 }
 
                 if (listRecord != null)
                 {
                     RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+                    //   Debug.WriteLine(listRecord);
                 }
 
                 if (dataRecord != null)
                 {
                     RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                    //   Debug.WriteLine(dataRecord);
                 }
 
                 offsetInHbin += readSize;

@@ -163,17 +163,16 @@ namespace Registry.Cells
                 }
             }
             else
-            {
-                //TODO All calls to ReadBytesFromHive should just go get the datacell at OffsetToData vs re-reading data already read once
-                
+            {               
                 //We have to go look at the OffsetToData to see what we have so we can do the right thing
 
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
                 var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
 
+                //add this offset so we can mark the data cells as referenced later
                 DataOffets.Add(OffsetToData);
 
-                // in some rare cases the bytes returned from the previous line are all zeros, so make sure we get something but all zeros
+                // in some rare cases the bytes returned from above are all zeros, so make sure we get something but all zeros
                 if (datablockSizeRaw.Length == 4)
                 {
                     dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
@@ -187,10 +186,10 @@ namespace Registry.Cells
                 //datablockRaw now has our value AND slack space!
                 //value is dataLengthInternal long. rest is slack
                 
-                //Some values are huge, so look for them and, if found, get the data into dataBlockRaw
+                //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
                 if (dataLengthInternal > 16344 && (RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3))
                 {
-                    // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType
+                    // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType data
 
                     datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
 
@@ -486,11 +485,6 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             sb.AppendLine();
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
-            //if (IsFree)
-            //{
-            //    return sb.ToString();
-            //}
-
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Data Length: 0x{0:X}", DataLength));
@@ -504,8 +498,7 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Value Name: {0}", ValueName));
-
-
+            
             switch (DataType)
             {
                 case DataTypeEnum.RegSz:
@@ -559,17 +552,14 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                     }
                     break;
             }
-
-
+            
             if (ValueDataSlack != null)
             {
                 sb.AppendLine(string.Format("Value Data Slack: {0}", BitConverter.ToString(ValueDataSlack, 0)));
             }
-
-
+            
             sb.AppendLine();
-
-
+            
             return sb.ToString();
         }
     }

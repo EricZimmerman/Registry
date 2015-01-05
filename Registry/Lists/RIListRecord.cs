@@ -19,6 +19,7 @@ namespace Registry.Lists
         /// Initializes a new instance of the <see cref="RIListRecord"/>  class.
         /// </summary>
         /// <param name="rawBytes"></param>
+        /// <param name="relativeOffset"></param>
         public RIListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
@@ -31,9 +32,7 @@ namespace Registry.Lists
             {
                 return;
             }
-
-
-
+            
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("ri");
@@ -55,8 +54,7 @@ namespace Registry.Lists
 
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
-
-
+                
                 _offsets.Add(os);
 
                 counter += 1;
@@ -113,10 +111,6 @@ namespace Registry.Lists
 
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 
-            //if (IsFree)
-            //{
-            //    return sb.ToString();
-            //}
             sb.AppendLine();
 
             sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
@@ -133,7 +127,6 @@ namespace Registry.Lists
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();
-
 
             return sb.ToString();
         }

@@ -51,8 +51,7 @@ namespace Registry.Other
                 var rawSacl = rawBytes.Skip((int)SaclOffset).Take((int)sizeSacl).ToArray();
                 SACL = new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
             }
-
-
+            
             Padding = String.Empty; //TODO VERIFY ITS ALWAYS ZEROs
         }
 
