@@ -254,10 +254,17 @@ namespace Registry.Cells
 
             ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
 
-            ValueDataSlack =
-                    datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
-                        .Take((int)(Math.Abs(dataBlockSize) - internalDataOffset - dataLengthInternal))
-                        .ToArray();
+            //we can determine max slack size since all data cells are a multiple of 8 bytes long
+            //we know how long our data should be from the vk record (dataLengthInternal).
+            //we add 4 to account for the length of where the value lives, then divide by 8 and round up.
+            //this number * 8 is the maximum size the data record should be to hold the value.
+            //take away what we used (dataLengthInternal) and then account for our offset to said data (internalDataOffset)
+            var maxSlackSize = Math.Ceiling((double)(dataLengthInternal + 4) / 8) * 8 - dataLengthInternal - internalDataOffset;
+            
+                ValueDataSlack =
+                datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
+                .Take((int)(Math.Abs(maxSlackSize)))
+                .ToArray();
 
             if (IsFree)
             {
@@ -376,59 +383,17 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                     Padding = string.Empty;
                 }
 
-                try
+                RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
+
+                if (!IsFree)
                 {
-                        Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
+                    //When records ARE free, different rules apply, so we process thsoe all at once later
+                    Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
+                }
+
+                // Check.That(actualPaddingOffset + dataBlockSize).IsEqualTo(rawBytes.Length);
+
                     
-                }
-                catch (Exception)
-                {
-                  
-
-                    try
-                    {
-                        Check.That(actualPaddingOffset + dataBlockSize).IsEqualTo(rawBytes.Length);
-                    }
-                    catch (Exception)
-                    {
-                        if (!IsFree)
-                        {
-                            System.Diagnostics.Debug.Write("This should never be");
-                        }
-
-                      //    if (IsFree)
-                      //  {
-                      //      //Check the remaining data we havent looked at for other records we can recover
-                      //
-
-                      //      var remainingData = rawBytes.Skip(actualPaddingOffset).ToArray();
-
-                      //      try
-                      //      {
-                      //          var found = Helpers.ExtractRecordsFromSlack(remainingData, relativeOffset + actualPaddingOffset);
-
-                      //          if (found > 0)
-                      //          {
-
-                      //              System.Diagnostics.Debug.WriteLine("Recovered {0:N0} records in VK!", found);    
-                      //          }
-
-                      //      }
-                      //      catch (Exception ex)
-                      //      {
-                      //       System.Diagnostics.Debug.Write(1);   
-                      //       
-                      //      }
-                      //      
-
-                      //      
-                      //  }
-                        
-                    }
-
-                      
-
-                }
        
             }
 
@@ -448,6 +413,8 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                 }
             }
         }
+
+        public byte[] RecordSlack { get; private set; }
 
         public string Padding { get; private set; }
 
@@ -644,6 +611,15 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             }
             
             sb.AppendLine();
+
+        
+            sb.AppendLine(string.Format("Padding: {0}", Padding));
+
+            sb.AppendLine();
+            if (RecordSlack.Length > 0)
+            {
+                sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));
+            }
             
             return sb.ToString();
         }

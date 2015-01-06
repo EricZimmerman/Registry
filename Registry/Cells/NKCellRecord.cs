@@ -151,56 +151,18 @@ namespace Registry.Cells
                 Padding = string.Empty;
             }
 
+            RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
+
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
 
-            try
+            if (!IsFree)
             {
+                //When records ARE free, different rules apply, so we process thsoe all at once later
                 Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-
             }
-            catch (Exception)
-            {
 
-
-            
-                    if (!IsFree)
-                    {
-                        System.Diagnostics.Debug.Write("This should never be");
-                    }
-
-                //    if (IsFree)
-                //    {
-                //        //Check the remaining data we havent looked at for other records we can recover
-
-
-                //        var remainingData = rawBytes.Skip(actualPaddingOffset).ToArray();
-
-                //        try
-                //        {
-                //            var found = Helpers.ExtractRecordsFromSlack(remainingData, relativeOffset + actualPaddingOffset);
-
-                //            if (found > 0)
-                //            {
-
-                //                System.Diagnostics.Debug.WriteLine("Recovered {0:N0} records in NK!", found);
-                //            }
-
-                //        }
-                //        catch (Exception ex)
-                //        {
-                //            System.Diagnostics.Debug.Write(1);
-
-                //        }
-
-
-
-
-                //}
-
-
-
-            }
+                
 
         }
 
@@ -239,6 +201,9 @@ namespace Registry.Cells
         }
 
         // public properties...
+
+
+        public byte[] RecordSlack { get; private set; }
         /// <summary>
         /// The relative offset to a data node containing the classname
         /// <remarks>Use ClassLength to get the correct classname vs using the entire contents of the data node. There is often slack slace in the data node when they hold classnames</remarks>
@@ -396,6 +361,13 @@ namespace Registry.Cells
             
             sb.AppendLine();
             sb.AppendLine(string.Format("Padding: {0}", Padding));
+
+            sb.AppendLine();
+            if (RecordSlack.Length > 0)
+            {
+                sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));    
+            }
+            
             
             return sb.ToString();
         }
