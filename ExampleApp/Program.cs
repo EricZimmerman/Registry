@@ -92,6 +92,7 @@ namespace ExampleApp
 
                     try
                     {
+
                         fName1Test.ParseHive(false);
 
 Console.WriteLine("Finished processing '{0}'", testFile);
@@ -189,7 +190,7 @@ Console.WriteLine("Finished processing '{0}'", testFile);
 
                             foreach (var keyValuePair in unrefcells)
                             {
-                                var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
+                            var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
 
                                 //TODO add a check here into referenced cells to see if an active parent exists
 

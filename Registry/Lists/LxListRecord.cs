@@ -137,6 +137,13 @@ namespace Registry.Lists
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();
+
+            if (IsFree)
+            {
+                sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
+                    sb.AppendLine();
+            }
+                
             
             return sb.ToString();
         }

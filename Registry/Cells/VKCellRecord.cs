@@ -374,15 +374,13 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
 
+                Padding = string.Empty;
+
                 if (paddingLength > 0)
                 {
                     Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
                 }
-                else
-                {
-                    Padding = string.Empty;
-                }
-
+           
                 RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
 
                 if (!IsFree)
@@ -390,10 +388,17 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                     //When records ARE free, different rules apply, so we process thsoe all at once later
                     Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
                 }
-
-                // Check.That(actualPaddingOffset + dataBlockSize).IsEqualTo(rawBytes.Length);
-
-                    
+                else
+                {
+                    if (RecordSlack.Length > 0)
+                    {
+                            var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
+                            if (found > 0)
+                            {
+                                Console.WriteLine("Recovered {0:N0} records from free space in vk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+                            }
+                    }
+                }                   
        
             }
 
@@ -616,7 +621,7 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
-            if (RecordSlack.Length > 0)
+            if (RecordSlack != null && RecordSlack.Length > 0)
             {
                 sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));
             }
