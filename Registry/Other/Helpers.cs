@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using Registry.Cells;
 
 // namespaces...
 namespace Registry.Other
@@ -827,6 +831,170 @@ namespace Registry.Other
 
 
             return SIDType;
+        }
+
+        public static int ExtractRecordsFromSlack(byte[] remainingData, long actualPaddingOffset)
+        {
+            var foundRecords = 0;
+
+            
+
+            //Find offsets to records via regex
+            //For each match, pull those bytes 
+            //case statement based on signature
+            //done
+
+            var indexes = new List<int>();
+
+            try {
+	Regex regexObj = new Regex("00-(6E|73|76)-6B");
+	Match matchResults = regexObj.Match(BitConverter.ToString(remainingData));
+
+                
+
+
+	while (matchResults.Success) {
+
+        indexes.Add((matchResults.Index / 3) - 3);
+
+		// matched text: matchResults.Value
+		// match start: matchResults.Index
+		// match length: matchResults.Length
+		matchResults = matchResults.NextMatch();
+	} 
+} catch (ArgumentException ex) {
+	// Syntax error in the regular expression
+}
+
+            indexes.Reverse(); //start from the end because sometimes the length is crazy long and messes things up
+
+            uint lastSize = 0;
+
+            foreach (var index1 in indexes)
+            {
+                try
+                {
+                    //index1 is now the position of the start of a record
+                    var size = BitConverter.ToUInt32(remainingData, index1);
+
+                    if (size == 0)
+                    {
+                        continue;
+                    }
+
+                        var raw = remainingData.Skip(index1).Take((int)size).ToArray();
+                    //if (size - lastSize == 0)
+                    //{
+                    //    
+                    //}
+                    //else
+                    //{
+                    //    raw = remainingData.Skip(index1).Take((int) (size - lastSize)).ToArray();
+                    //}
+
+                       if (raw.Length < 6)
+                    {
+                        Console.WriteLine(1);
+                    }
+
+                    lastSize =  size;
+
+                 
+
+                        var sig = Encoding.ASCII.GetString(raw, 4, 2);
+
+                    switch (sig)
+                    {
+                        case "nk":
+                            var nk = new NKCellRecord(raw, actualPaddingOffset + index1);
+                            if (nk != null)
+                            {
+                                if (RegistryHive.CellRecords.ContainsKey(actualPaddingOffset + index1) == false)
+                                {
+                                    RegistryHive.CellRecords.Add(actualPaddingOffset + index1, nk);
+
+
+                                    foundRecords += 1;
+                                }
+
+                                    
+                            }
+                            break;
+                        case "vk":
+                            var vk = new VKCellRecord(raw, actualPaddingOffset + index1);
+                            if (vk != null)
+                            {
+                                if (RegistryHive.CellRecords.ContainsKey(actualPaddingOffset + index1) == false)
+                                {
+                                    RegistryHive.CellRecords.Add(actualPaddingOffset + index1, vk);
+                                    foundRecords += 1;
+                                }
+
+                                
+                            }
+                            break;
+
+                        default:
+                            //    var dr = new DataNode(rawRecord, actualPaddingOffset + relativeOffset);
+                            //    if (dr != null)
+                            //    {
+                            //        RegistryHive.DataRecords.Add(actualPaddingOffset, dr);
+                            //    }
+                            break;
+                    }
+                }
+                catch (Exception e)
+                
+{
+                    Console.WriteLine(e.Message + " " + index1);
+                }
+            }
+
+
+            
+
+            //while (index < remainingData.Length)
+            //{
+            //    var len = BitConverter.ToUInt32(remainingData, (int)index);
+
+            //    var rawRecord = remainingData.Skip((int)index).Take((int)len).ToArray();
+
+            //    var sig = Encoding.ASCII.GetString(rawRecord, 4, 2);
+
+            //    switch (sig)
+            //    {
+            //        case "nk":
+            //            var nk = new NKCellRecord(rawRecord, actualPaddingOffset + relativeOffset);
+            //            if (nk != null)
+            //            {
+            //                RegistryHive.CellRecords.Add(actualPaddingOffset, nk);
+            //            }
+            //            break;
+            //        case "vk":
+            //            var vk = new VKCellRecord(rawRecord, actualPaddingOffset + relativeOffset);
+            //            if (vk != null)
+            //            {
+            //                RegistryHive.CellRecords.Add(actualPaddingOffset, vk);
+            //            }
+            //            break;
+
+            //        //default:
+            //        //    var dr = new DataNode(rawRecord, actualPaddingOffset + relativeOffset);
+            //        //    if (dr != null)
+            //        //    {
+            //        //        RegistryHive.DataRecords.Add(actualPaddingOffset, dr);
+            //        //    }
+            //        //    break;
+            //    }
+
+
+
+
+            //    index += len;
+            //}
+
+
+            return foundRecords;
         }
     }
 }

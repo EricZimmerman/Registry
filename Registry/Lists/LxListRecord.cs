@@ -81,7 +81,7 @@ namespace Registry.Lists
         }
         
         public bool IsFree { get; private set; }
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
         public int NumberOfEntries { get; private set; }
 
         /// <summary>

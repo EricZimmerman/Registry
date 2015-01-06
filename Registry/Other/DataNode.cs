@@ -50,7 +50,7 @@ namespace Registry.Other
         /// Set to true when a record is referenced by another referenced record.
         /// <remarks>This flag allows for determining records that are marked 'in use' by their size but never actually referenced by another record in a hive</remarks>
         /// </summary>
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
 
         /// <summary>
         /// The offset as stored in other records to a given record

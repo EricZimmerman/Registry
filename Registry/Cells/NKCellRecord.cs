@@ -1,7 +1,10 @@
 ﻿using NFluent;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Collections;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Cells
@@ -111,7 +114,7 @@ namespace Registry.Cells
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
 
-            Debug = rawBytes[0x3a];
+            Debug = rawBytes[0x3b];
             
             MaximumClassLength = BitConverter.ToUInt32(rawBytes, 0x3c);
             MaximumValueNameLength = BitConverter.ToUInt32(rawBytes, 0x40);
@@ -132,7 +135,12 @@ namespace Registry.Cells
             }
             
             var paddingOffset = 0x50 + NameLength;
-            var paddingLength = Math.Abs(Size) - paddingOffset;
+
+            var paddingBlock = (int) Math.Ceiling((double)paddingOffset / 8);
+
+            var actualPaddingOffset = paddingBlock * 8;
+
+            var paddingLength = actualPaddingOffset - paddingOffset;
 
             if (paddingLength > 0)
             {
@@ -145,9 +153,59 @@ namespace Registry.Cells
 
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-            Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
+
+            try
+            {
+                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
+
+            }
+            catch (Exception)
+            {
+
+
+            
+                    if (!IsFree)
+                    {
+                        System.Diagnostics.Debug.Write("This should never be");
+                    }
+
+                //    if (IsFree)
+                //    {
+                //        //Check the remaining data we havent looked at for other records we can recover
+
+
+                //        var remainingData = rawBytes.Skip(actualPaddingOffset).ToArray();
+
+                //        try
+                //        {
+                //            var found = Helpers.ExtractRecordsFromSlack(remainingData, relativeOffset + actualPaddingOffset);
+
+                //            if (found > 0)
+                //            {
+
+                //                System.Diagnostics.Debug.WriteLine("Recovered {0:N0} records in NK!", found);
+                //            }
+
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            System.Diagnostics.Debug.Write(1);
+
+                //        }
+
+
+
+
+                //}
+
+
+
+            }
 
         }
+
+      
+
 
         // public enums...
         [Flags]
@@ -198,7 +256,7 @@ namespace Registry.Cells
         public bool IsFree { get; private set; }
 
        
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
 
         /// <summary>
         /// The last write time of this key
@@ -333,6 +391,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Work Var: 0x{0:X}", WorkVar));
 
             sb.AppendLine();
+            sb.AppendLine(string.Format("Value Count: 0x{0:X}", ValueListCount));
             sb.AppendLine(string.Format("Value List Cell Index: 0x{0:X}", ValueListCellIndex));
             
             sb.AppendLine();

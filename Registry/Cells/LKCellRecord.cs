@@ -48,44 +48,31 @@ namespace Registry.Cells
             SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
 
 
-            //SubkeyListsStableCellIndex
+            //RootCellIndex
             var num = BitConverter.ToUInt32(rawBytes, 0x20);
 
             if (num == 0xFFFFFFFF)
             {
-                SubkeyListsStableCellIndex = 0;
+                RootCellIndex = 0;
             }
             else
             {
-                SubkeyListsStableCellIndex = num;
+                RootCellIndex = num;
             }
 
-            //SubkeyListsVolatileCellIndex
+            //HivePointer
             num = BitConverter.ToUInt32(rawBytes, 0x24);
 
             if (num == 0xFFFFFFFF)
             {
-                SubkeyListsVolatileCellIndex = 0;
+                HivePointer = 0;
             }
             else
             {
-                SubkeyListsVolatileCellIndex = num;
+                HivePointer = num;
             }
 
-            ValueListCount = BitConverter.ToUInt32(rawBytes, 0x28);
-
-            //ValueListCellIndex
-            num = BitConverter.ToUInt32(rawBytes, 0x2c);
-
-            if (num == 0xFFFFFFFF)
-            {
-                ValueListCellIndex = 0;
-            }
-            else
-            {
-                ValueListCellIndex = num;
-            }
-
+   
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 
             //ClassCellIndex
@@ -111,7 +98,7 @@ namespace Registry.Cells
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
 
-            Debug = rawBytes[0x3a];
+            Debug = rawBytes[0x3b];
 
             MaximumClassLength = BitConverter.ToUInt32(rawBytes, 0x3c);
             MaximumValueNameLength = BitConverter.ToUInt32(rawBytes, 0x40);
@@ -198,7 +185,7 @@ namespace Registry.Cells
         public bool IsFree { get; private set; }
 
 
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
 
         /// <summary>
         /// The last write time of this key
@@ -261,23 +248,15 @@ namespace Registry.Cells
         public uint SubkeyCountsVolatile { get; private set; }
 
         /// <summary>
-        /// The relative offset to a list (or list of lists) that points to other NKRecords. These records are subkeys of this key.
+        /// The relative offset to the root cell this record is linked to.
         /// </summary>
-        public uint SubkeyListsStableCellIndex { get; private set; }
+        public uint RootCellIndex { get; private set; }
 
-        public uint SubkeyListsVolatileCellIndex { get; private set; }
+        public uint HivePointer { get; private set; }
 
         public int UserFlags { get; private set; }
 
-        /// <summary>
-        /// The relative offset to a list of VKrecords for this key
-        /// </summary>
-        public uint ValueListCellIndex { get; private set; }
-
-        /// <summary>
-        /// The number of values this key contains
-        /// </summary>
-        public uint ValueListCount { get; private set; }
+        
         public int VirtualControlFlags { get; private set; }
         public uint WorkVar { get; private set; }
 
@@ -322,7 +301,10 @@ namespace Registry.Cells
 
             sb.AppendLine();
             sb.AppendLine(string.Format("Subkey Counts Stable: 0x{0:X}", SubkeyCountsStable));
-            sb.AppendLine(string.Format("Subkey Lists Stable Cell Index: 0x{0:X}", SubkeyListsStableCellIndex));
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Hive pointer: 0x{0:X}", HivePointer));
+            sb.AppendLine(string.Format("Root cell index: 0x{0:X}", RootCellIndex));
 
             sb.AppendLine();
             sb.AppendLine(string.Format("Subkey Counts Volatile: 0x{0:X}", SubkeyCountsVolatile));
@@ -332,9 +314,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Virtual Control Flags: 0x{0:X}", VirtualControlFlags));
             sb.AppendLine(string.Format("Work Var: 0x{0:X}", WorkVar));
 
-            sb.AppendLine();
-            sb.AppendLine(string.Format("Value List Cell Index: 0x{0:X}", ValueListCellIndex));
-
+  
             sb.AppendLine();
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 

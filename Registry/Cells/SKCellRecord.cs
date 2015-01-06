@@ -91,7 +91,7 @@ namespace Registry.Cells
 
 
       
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
       
         public byte[] RawBytes { get; private set; }
 

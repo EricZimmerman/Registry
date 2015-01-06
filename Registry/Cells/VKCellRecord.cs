@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Cells
@@ -32,7 +33,8 @@ namespace Registry.Cells
         {
             RelativeOffset = relativeOffset;
 
-            RawBytes = rawBytes;
+ 
+                RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
@@ -130,6 +132,8 @@ namespace Registry.Cells
 
                 }
             }
+
+          
 
             byte[] datablockRaw;
             var dataBlockSize = 0;
@@ -279,8 +283,21 @@ namespace Registry.Cells
 
                     case DataTypeEnum.RegExpandSz:
                     case DataTypeEnum.RegMultiSz:
-                        ValueData =
-                        Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
+                    case DataTypeEnum.RegSz:
+                        if ((int)dataLengthInternal > datablockRaw.Length)
+                        {
+                            ValueData = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
+                        }
+                        else
+                        {
+                            ValueData = Encoding.Unicode.GetString(datablockRaw, internalDataOffset,
+                                (int)dataLengthInternal)
+                                .Replace("\0", "");
+                        }
+
+                        //
+                        //ValueData =
+                        //Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
 
                         break;
 
@@ -315,19 +332,7 @@ namespace Registry.Cells
 
                         break;
 
-                    case DataTypeEnum.RegSz:
-                        if ((int)dataLengthInternal > datablockRaw.Length)
-                        {
-                            ValueData = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
-                        }
-                        else
-                        {
-                            ValueData = Encoding.Unicode.GetString(datablockRaw, internalDataOffset,
-                                (int)dataLengthInternal)
-                                .Replace("\0", "");
-                        }
-
-                        break;
+                   
 
                     case DataTypeEnum.RegUnknown:
                         ValueData = datablockRaw;
@@ -351,11 +356,89 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
 
                         break;
                 }
+
+
+
+                var paddingOffset = 0x18 + NameLength;
+
+                var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
+
+                var actualPaddingOffset = paddingBlock * 8;
+
+                var paddingLength = actualPaddingOffset - paddingOffset;
+
+                if (paddingLength > 0)
+                {
+                    Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+                }
+                else
+                {
+                    Padding = string.Empty;
+                }
+
+                try
+                {
+                        Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
+                    
+                }
+                catch (Exception)
+                {
+                  
+
+                    try
+                    {
+                        Check.That(actualPaddingOffset + dataBlockSize).IsEqualTo(rawBytes.Length);
+                    }
+                    catch (Exception)
+                    {
+                        if (!IsFree)
+                        {
+                            System.Diagnostics.Debug.Write("This should never be");
+                        }
+
+                      //    if (IsFree)
+                      //  {
+                      //      //Check the remaining data we havent looked at for other records we can recover
+                      //
+
+                      //      var remainingData = rawBytes.Skip(actualPaddingOffset).ToArray();
+
+                      //      try
+                      //      {
+                      //          var found = Helpers.ExtractRecordsFromSlack(remainingData, relativeOffset + actualPaddingOffset);
+
+                      //          if (found > 0)
+                      //          {
+
+                      //              System.Diagnostics.Debug.WriteLine("Recovered {0:N0} records in VK!", found);    
+                      //          }
+
+                      //      }
+                      //      catch (Exception ex)
+                      //      {
+                      //       System.Diagnostics.Debug.Write(1);   
+                      //       
+                      //      }
+                      //      
+
+                      //      
+                      //  }
+                        
+                    }
+
+                      
+
+                }
+       
             }
-            catch (Exception)
+
+
+         
+
+            catch (Exception ex)
             {
                 //if its a free record, errors are expected, but if not, throw so the issue can be addressed
-                if (IsFree)
+                if (IsFree && ValueData == null)
                 {
                     ValueData = datablockRaw;
                 }
@@ -365,6 +448,8 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                 }
             }
         }
+
+        public string Padding { get; private set; }
 
         // public enums...
         public enum DataTypeEnum
@@ -424,7 +509,7 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
         public bool IsFree { get; private set; }
 
         
-        public bool IsReferenceed { get; internal set; }
+        public bool IsReferenced { get; internal set; }
 
         public ushort NameLength { get; set; }
 

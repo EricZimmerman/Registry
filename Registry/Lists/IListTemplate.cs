@@ -19,7 +19,7 @@ namespace Registry.Lists
         /// Set to true when a record is referenced by another referenced record.
         /// <remarks>This flag allows for determining records that are marked 'in use' by their size but never actually referenced by another record in a hive</remarks>
         /// </summary>
-        bool IsReferenceed { get; }
+        bool IsReferenced { get; }
         /// <summary>
         /// The total number of offsets to other records this list holds.
         /// </summary>

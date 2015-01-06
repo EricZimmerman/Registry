@@ -145,13 +145,13 @@ namespace Registry
             {
                 Console.WriteLine("Getting subkeys for {0}", key.KeyPath);
             }
-
-            var keys = new List<RegistryKey>();
+            
+                var keys = new List<RegistryKey>();
 
             if (key.NKRecord.ClassCellIndex > 0)
             {
                 var d = DataRecords[key.NKRecord.ClassCellIndex];
-                d.IsReferenceed = true;
+                d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NKRecord.ClassLength);
                 key.ClassName = clsName;
             }
@@ -163,7 +163,7 @@ namespace Registry
 
                 var offsetList = DataRecords[key.NKRecord.ValueListCellIndex];
 
-                offsetList.IsReferenceed = true;
+                offsetList.IsReferenced = true;
 
                 for (var i = 0; i < key.NKRecord.ValueListCount; i++)
                 {
@@ -189,18 +189,34 @@ namespace Registry
             //this keeps processing of datas in the vk class
             //
 
+
+
+
+
             // look for values in this key HERE
             foreach (var valueOffset in key.NKRecord.ValueOffsets)
             {
                 var vc = CellRecords[(long)valueOffset];
 
                 var vk = vc as VKCellRecord;
-                vk.IsReferenceed = true;
 
+                if (valueOffset == 0x95660)
+                {
+                    Debug.WriteLine(1);
+                }
+
+                    vk.IsReferenced = true;
+
+      
                 var dbListProcessed = false;
 
                 foreach (var dataOffet in vk.DataOffets)
                 {
+                    if (dataOffet == 0x95660)
+                    {
+                        Debug.WriteLine(1);
+                    }
+
                     //there is a special case when registry version > 1.4 and size > 16344
                     //if this is true, the first offset is a db record, found with the lists
                     if ((Header.MinorVersion > 4) && vk.DataLength > 16344 && dbListProcessed == false)
@@ -208,12 +224,12 @@ namespace Registry
                         var db = ListRecords[(long)dataOffet];
 
                         var dbr = db as DBListRecord;
-                        dbr.IsReferenceed = true;
+                        dbr.IsReferenced = true;
                         dbListProcessed = true;
                     }
                     else
                     {
-                        DataRecords[(long)dataOffet].IsReferenceed = true;
+                        DataRecords[(long)dataOffet].IsReferenced = true;
                     }
 
                         
@@ -267,7 +283,7 @@ namespace Registry
             }
 
             var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
-            sk.IsReferenceed = true;
+            sk.IsReferenced = true;
 
             //TODo THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
             if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
@@ -283,15 +299,21 @@ namespace Registry
                 case "lf":
                 case "lh":
                     var lxRecord = l as LxListRecord;
-                    lxRecord.IsReferenceed = true;
+                    lxRecord.IsReferenced = true;
 
                     foreach (var offset in lxRecord.Offsets)
                     {
+
+                        if (offset.Key == 0x95660)
+                        {
+                            Debug.WriteLine(1);
+                        }
+
                         var cell = CellRecords[offset.Key];
 
                         var nk = cell as NKCellRecord;
-                        nk.IsReferenceed = true;
-
+                        nk.IsReferenced = true;
+                        
                         var tempKey = new RegistryKey(nk, key.KeyPath);
 
                         var sks = GetSubKeysAndValues(tempKey);
@@ -303,10 +325,15 @@ namespace Registry
 
                 case "ri":
                     var riRecord = l as RIListRecord;
-                    riRecord.IsReferenceed = true;
+                    riRecord.IsReferenced = true;
 
                     foreach (var offset in riRecord.Offsets)
                     {
+                        if (offset == 0x95660)
+                        {
+                            Debug.WriteLine(1);
+                        }
+
                         var tempList = ListRecords[offset];
 
                         //templist is now an li or lh list 
@@ -317,10 +344,16 @@ namespace Registry
 
                             foreach (var offset1 in sk3.Offsets)
                             {
+                                if (offset1 == 0x95660)
+                                {
+                                    Debug.WriteLine(1);
+                                }
+
+
                                 var cell = CellRecords[offset1];
 
                                 var nk = cell as NKCellRecord;
-                                nk.IsReferenceed = true;
+                                nk.IsReferenced = true;
 
                                 var tempKey = new RegistryKey(nk, key.KeyPath);
 
@@ -333,14 +366,19 @@ namespace Registry
                         else
                         {
                             var lxRecord_ = tempList as LxListRecord;
-                            lxRecord_.IsReferenceed = true;
+                            lxRecord_.IsReferenced = true;
 
                             foreach (var offset3 in lxRecord_.Offsets)
                             {
+                                if (offset3.Key == 0x95660)
+                                {
+                                    Debug.WriteLine(1);
+                                }
+
                                 var cell = CellRecords[offset3.Key];
 
                                 var nk = cell as NKCellRecord;
-                                nk.IsReferenceed = true;
+                                nk.IsReferenced = true;
 
                                 var tempKey = new RegistryKey(nk, key.KeyPath);
 
@@ -358,14 +396,20 @@ namespace Registry
 
                 case "li":
                     var liRecord = l as LIListRecord;
-                    liRecord.IsReferenceed = true;
+                    liRecord.IsReferenced = true;
 
                     foreach (var offset in liRecord.Offsets)
                     {
+                        if (offset == 0x95660)
+                        {
+                            Debug.WriteLine(1);
+                        }
+
+
                         var cell = CellRecords[offset];
 
                         var nk = cell as NKCellRecord;
-                        nk.IsReferenceed = true;
+                        nk.IsReferenced = true;
                         
                         var tempKey = new RegistryKey(nk, key.KeyPath);
 
@@ -501,7 +545,10 @@ namespace Registry
 
             TotalBytesRead += 4096;
 
+            
             Header = new RegistryHeader(header);
+            
+            
 
             VerboseOutput = verboseOutput;
 
@@ -583,7 +630,7 @@ namespace Registry
             //validate what we found above
             Check.That((long)Header.RootCellOffset).IsEqualTo(rootNode.RelativeOffset);
 
-            rootNode.IsReferenceed = true;
+            rootNode.IsReferenced = true;
 
             Console.WriteLine("Found root node! Getting subkeys...");
 
@@ -599,9 +646,9 @@ namespace Registry
             //TODO MOVE THE stuff from program.cs inside the class so we have access to the kinds of things calculated there.
             //copy pasted for now
 
-            var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenceed == false && t.Value is NKCellRecord);
-            var unreferencedVKCells = CellRecords.Where(t => t.Value.IsReferenceed == false && t.Value is VKCellRecord);
-            var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenceed == false);
+            var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NKCellRecord);
+            var unreferencedVKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is VKCellRecord);
+            var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenced == false);
 
             var restoredDeletedKeys = 0;
 
@@ -621,7 +668,7 @@ namespace Registry
                             continue;
                         }
 
-                            if (parentNK.IsReferenceed)
+                            if (parentNK.IsReferenced)
                             {
                                 //parent exists in our tree, so add unreferencedNkCell as a child but mark it deleted
 
@@ -662,11 +709,22 @@ namespace Registry
                 //Sometimes the remainder of the file is all zeros, which is useless, so check for that
                 if (!Array.TrueForAll(remainingHive,a => a == 0))
                 {
-                    Debug.WriteLine("Hive length ({0:x}) does not equal bytes read ({1:x})!!", HiveLength(), TotalBytesRead);
-                }
 
-                //as a second check, compare Header length with what we read (taking the header into account as length is only for hbin records)
-                Check.That((long)Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
+                    Console.WriteLine("***** Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength());
+                    }
+
+                //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
+                try
+                {
+                    Check.That((long)Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead);    
+                }
+                
+
+                
             }
 
             //TODO ADD THIS TO VK RECORD AND ALL LISTS (What about datanodes? sweep for signatures?)
