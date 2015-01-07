@@ -95,7 +95,7 @@ namespace ExampleApp
 
                         fName1Test.ParseHive(false);
 
-Console.WriteLine("Finished processing '{0}'", testFile);
+                    Console.WriteLine("Finished processing '{0}'", testFile);
                     Console.Title = string.Format("Finished processing '{0}'", testFile);
 
                     sw.Stop();
@@ -179,7 +179,7 @@ Console.WriteLine("Finished processing '{0}'", testFile);
                     var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
 
                     var unrefcells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced == false);
-                    var unrefLists = RegistryHive.ListRecords.Where(t => t.Value.IsReferenced == false);
+              
 
                         if (unrefcells.Any())
                         {
@@ -192,17 +192,17 @@ Console.WriteLine("Finished processing '{0}'", testFile);
                             {
                             var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
 
-                                //TODO add a check here into referenced cells to see if an active parent exists
+                                //TODO add a check here into referenced cells to see if an active parent exists if its an nk record
 
                                 File.AppendAllText(outfile1, content);
                             }
 
-
-                            foreach (var keyValuePair in unrefLists)
-                            {
-                                var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
-                                File.AppendAllText(outfile1, content);
-                            }
+                        // lists dont really do anything for us since free lists have their # of entries set to 0
+                            //foreach (var keyValuePair in unrefLists)
+                            //{
+                            //    var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
+                            //    File.AppendAllText(outfile1, content);
+                            //}
 
 
 

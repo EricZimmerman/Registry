@@ -200,11 +200,7 @@ namespace Registry
 
                 var vk = vc as VKCellRecord;
 
-                if (valueOffset == 0x95660)
-                {
-                    Debug.WriteLine(1);
-                }
-
+             
                     vk.IsReferenced = true;
 
       
@@ -212,11 +208,7 @@ namespace Registry
 
                 foreach (var dataOffet in vk.DataOffets)
                 {
-                    if (dataOffet == 0x95660)
-                    {
-                        Debug.WriteLine(1);
-                    }
-
+                  
                     //there is a special case when registry version > 1.4 and size > 16344
                     //if this is true, the first offset is a db record, found with the lists
                     if ((Header.MinorVersion > 4) && vk.DataLength > 16344 && dbListProcessed == false)
@@ -304,10 +296,6 @@ namespace Registry
                     foreach (var offset in lxRecord.Offsets)
                     {
 
-                        if (offset.Key == 0x95660)
-                        {
-                            Debug.WriteLine(1);
-                        }
 
                         var cell = CellRecords[offset.Key];
 
@@ -329,10 +317,7 @@ namespace Registry
 
                     foreach (var offset in riRecord.Offsets)
                     {
-                        if (offset == 0x95660)
-                        {
-                            Debug.WriteLine(1);
-                        }
+
 
                         var tempList = ListRecords[offset];
 
@@ -344,11 +329,6 @@ namespace Registry
 
                             foreach (var offset1 in sk3.Offsets)
                             {
-                                if (offset1 == 0x95660)
-                                {
-                                    Debug.WriteLine(1);
-                                }
-
 
                                 var cell = CellRecords[offset1];
 
@@ -370,10 +350,6 @@ namespace Registry
 
                             foreach (var offset3 in lxRecord_.Offsets)
                             {
-                                if (offset3.Key == 0x95660)
-                                {
-                                    Debug.WriteLine(1);
-                                }
 
                                 var cell = CellRecords[offset3.Key];
 
@@ -400,11 +376,6 @@ namespace Registry
 
                     foreach (var offset in liRecord.Offsets)
                     {
-                        if (offset == 0x95660)
-                        {
-                            Debug.WriteLine(1);
-                        }
-
 
                         var cell = CellRecords[offset];
 
@@ -430,6 +401,11 @@ namespace Registry
 
         // protected internal methods...
         // public methods...
+        /// <summary>
+        /// Returns the length, in bytes, of the file being processed
+        /// <remarks>This is the length returned by the underlying stream used to open the file</remarks>
+        /// </summary>
+        /// <returns></returns>
         protected internal static long HiveLength()
         {
             return _binaryReader.BaseStream.Length;
@@ -556,20 +532,13 @@ namespace Registry
             _hardParsingErrors = 0;
 
             ////Look at first hbin, get its size, then read that many bytes to create hbin record
-            //var hbBlockSize = BitConverter.ToUInt32(header, 0x8);
-
-            //var rawhbin = ReadBytesFromHive(4096, (int)hbBlockSize);
-
-            //var h = new HBinRecord(rawhbin);
-
-
-            // for initial testing we just walk down the file looking at everything
             long offsetInHive = 4096;
 
             const uint hbinHeader = 0x6e696268;
 
             var hivelen = HiveLength();
 
+            //keep reading the file until we reach the end
             while (offsetInHive < HiveLength())
             {
                 var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
@@ -597,9 +566,7 @@ namespace Registry
                 }
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
-
-            
-
+                
                 try
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 4096);
@@ -611,15 +578,14 @@ namespace Registry
                     Console.WriteLine("********Error processing hbin at offset 0x{0:X}. Error: {1}, Stack: {2}", offsetInHive, ex.Message, ex.StackTrace);
                 }
 
-                //File.AppendAllText(@"C:\temp\hbins.txt", h.ToString());
-
-
                 offsetInHive += hbinSize;
             }
 
 
             Console.WriteLine("Initial processing complete. Building tree...");
 
+            //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
+            //here we are looking for the flag
             var rootNode = CellRecords.Values.OfType<NKCellRecord>().SingleOrDefault((f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
 
             if (rootNode == null)
@@ -627,7 +593,7 @@ namespace Registry
                 throw new Exception("Root nk record not found!");
             }
 
-            //validate what we found above
+            //validate what we found above via the flag method
             Check.That((long)Header.RootCellOffset).IsEqualTo(rootNode.RelativeOffset);
 
             rootNode.IsReferenced = true;

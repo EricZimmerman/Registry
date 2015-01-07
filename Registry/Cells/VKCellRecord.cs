@@ -74,7 +74,7 @@ namespace Registry.Cells
                 //A data size of 0 represents that the value is not set (or NULL)
 
                 //if (dataLengthInternal == 1)
-                //    Debug.Write(1);
+                //    Debug.Write("dataLengthInternal == 1");
 
                 internalDataOffset = 0;
             }
@@ -249,7 +249,7 @@ namespace Registry.Cells
             //Testing trap
             //if (ValueName == "(Default)" && DataTypeRaw == 1)
             //{
-            //    Debug.Write(1);
+            //    Debug.Write("VK testing trap hit");
             //}
 
             ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
