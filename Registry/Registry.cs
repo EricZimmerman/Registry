@@ -31,6 +31,11 @@ namespace Registry
         // public fields...
         public static long TotalBytesRead;
 
+        /// <summary>
+        /// Contains all recovered 
+        /// </summary>
+        public List<RegistryKey> DeletedRegistryKeys { get; private set; }
+
         // public constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="Registry"/> class.
@@ -57,6 +62,8 @@ namespace Registry
 
             _fileStream = new FileStream(_filename, FileMode.Open);
             _binaryReader = new BinaryReader(_fileStream);
+
+            DeletedRegistryKeys= new List<RegistryKey>();
 
             if (autoParse)
             {
@@ -129,8 +136,6 @@ namespace Registry
                         key.NKRecord.AbsoluteOffset);
                 }
 
-
-
                 sw.WriteLine("key|{0}|{1}{2}{3}", subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"), subkey.IsDeleted ? "|(deleted)" : "",osKey);
 
                 ValueCount += subkey.Values.Count;
@@ -145,7 +150,7 @@ namespace Registry
                         osVal = string.Format("|Rel off: 0x{0:X}, Abs off: 0x{1:X}", val.VKRecord.RelativeOffset, val.VKRecord.AbsoluteOffset);
                     }
 
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "), osVal);
+                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "), osVal);
                 }
 
                 DumpKeyWilli(subkey, sw, includeOffsets);
@@ -619,7 +624,7 @@ namespace Registry
             //for each unref NK, look for VKs associated with it and create RegistryKey objects
             //save to DeletedRegistryKeys collection
 
-            var DeletedRegistryKeys = new Dictionary<long, RegistryKey>();
+            var _deletedRegistryKeys = new Dictionary<long, RegistryKey>();
 
             //Phase one is to associate any value records with key records
             foreach (var unreferencedNkCell in unreferencedNKCells)
@@ -628,8 +633,10 @@ namespace Registry
                 {
                     var nk = unreferencedNkCell.Value as NKCellRecord;
 
-                    var regKey = new RegistryKey(nk, string.Empty);
-                    regKey.IsDeleted = true;
+                    var regKey = new RegistryKey(nk, string.Empty)
+                    {
+                        IsDeleted = true
+                    };
 
                     //if (nk.Name.Contains("ZA102692154.png"))
                     //{
@@ -714,7 +721,7 @@ namespace Registry
                     Console.WriteLine("\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}", regKey.Values.Count,nk.ValueListCount, nk.RelativeOffset);
 
 
-                    DeletedRegistryKeys.Add(nk.RelativeOffset, regKey);
+                    _deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
                 }
                 catch (Exception ex)
                 {
@@ -728,36 +735,36 @@ namespace Registry
 
             #region OutputTesting
 
-            var baseDir1 = @"C:\temp";
-            var baseFname1 = "DeletedRegistryKeys.txt";
+            //var baseDir1 = @"C:\temp";
+            //var baseFname1 = "DeletedRegistryKeys.txt";
 
-            var outfile1 = Path.Combine(baseDir1, baseFname1);
+            //var outfile1 = Path.Combine(baseDir1, baseFname1);
 
-            File.WriteAllText(outfile1,
-                "KeyName-ValueCount-RelativeOffset-ParentCellIndex\r\n\tValues (Name-->Value)\r\n\r\n");
+            //File.WriteAllText(outfile1,
+            //    "KeyName-ValueCount-RelativeOffset-ParentCellIndex\r\n\tValues (Name-->Value)\r\n\r\n");
 
-            foreach (var keyValuePair in DeletedRegistryKeys)
-            {
-                var sb = new StringBuilder();
+            //foreach (var keyValuePair in DeletedRegistryKeys)
+            //{
+            //    var sb = new StringBuilder();
 
-                foreach (var value in keyValuePair.Value.Values)
-                {
-                    sb.AppendLine(string.Format("\t{0}--->{1}", value.ValueName, value.ValueData));
-                }
+            //    foreach (var value in keyValuePair.Value.Values)
+            //    {
+            //        sb.AppendLine(string.Format("\t{0}--->{1}", value.ValueName, value.ValueData));
+            //    }
 
-                var content =
-                    string.Format(
-                        "{0}-{1:N0}, Rel offset: 0x{2:X}, Parent Cell Offset: 0x{3:X}\r\n{4}---------------------------\r\n",
-                        keyValuePair.Value.KeyPath, keyValuePair.Value.Values.Count,
-                        keyValuePair.Value.NKRecord.RelativeOffset, keyValuePair.Value.NKRecord.ParentCellIndex, sb);
-
-
-
-                //  var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
+            //    var content =
+            //        string.Format(
+            //            "{0}-{1:N0}, Rel offset: 0x{2:X}, Parent Cell Offset: 0x{3:X}\r\n{4}---------------------------\r\n",
+            //            keyValuePair.Value.KeyPath, keyValuePair.Value.Values.Count,
+            //            keyValuePair.Value.NKRecord.RelativeOffset, keyValuePair.Value.NKRecord.ParentCellIndex, sb);
 
 
-                File.AppendAllText(outfile1, content);
-            }
+
+            //    //  var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
+
+
+            //    File.AppendAllText(outfile1, content);
+            //}
 
             #endregion
 
@@ -769,14 +776,14 @@ namespace Registry
                 var keysToRemove = new List<long>();
                 matchFound = false;
 
-                foreach (var deletedRegistryKey in DeletedRegistryKeys)
+                foreach (var deletedRegistryKey in _deletedRegistryKeys)
                 {
-                    if (DeletedRegistryKeys.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
+                    if (_deletedRegistryKeys.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
                     {
                         //deletedRegistryKey is a child of RegistryKey with relative offset ParentCellIndex
 
                         //add the key as as subkey of its parent
-                        var parent = DeletedRegistryKeys[deletedRegistryKey.Value.NKRecord.ParentCellIndex];
+                        var parent = _deletedRegistryKeys[deletedRegistryKey.Value.NKRecord.ParentCellIndex];
                         
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
                             deletedRegistryKey.Value.KeyName);
@@ -795,7 +802,7 @@ namespace Registry
                 foreach (var l in keysToRemove)
                 {
                     //take out the key from main collection since we copied it above to its parent's subkey list
-                    DeletedRegistryKeys.Remove(l);
+                    _deletedRegistryKeys.Remove(l);
                 }
             }
 
@@ -803,7 +810,7 @@ namespace Registry
             var restoredDeletedKeys = 0;
 
             //Phase 3 is looking at top level keys from Phase 2 and seeing if any of those can be assigned to non-deleted keys in the main tree
-            foreach (var deletedRegistryKey in DeletedRegistryKeys)
+            foreach (var deletedRegistryKey in _deletedRegistryKeys)
             {
                 if (CellRecords.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
                 {
@@ -832,6 +839,13 @@ namespace Registry
                         
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
+
+
+
+                        Console.WriteLine("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}", deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset);
+
+
+
                         restoredDeletedKeys += 1;
                     }
               
@@ -841,7 +855,7 @@ namespace Registry
             }
 
 
-
+            DeletedRegistryKeys = _deletedRegistryKeys.Values.ToList();
 
 
             //TODO reflect restoredDeletedKeys count somewhere, as well as whats left
