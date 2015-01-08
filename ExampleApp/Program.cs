@@ -93,6 +93,7 @@ namespace ExampleApp
                     try
                     {
 
+
                         fName1Test.ParseHive(false);
 
                     Console.WriteLine("Finished processing '{0}'", testFile);

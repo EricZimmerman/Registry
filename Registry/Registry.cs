@@ -719,7 +719,6 @@ var nk = unreferencedNkCell.Value as NKCellRecord;
                     }
 
                     
-
                 }
 
                 Console.WriteLine("\tAssociated {0:N0} value(s) for nk record at relative offset 0x{1:X}", regKey.Values.Count, nk.RelativeOffset);
