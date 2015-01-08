@@ -65,7 +65,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The full path to the  key, including its KeyName
         /// </summary>
-        public string KeyPath { get; private set; }
+        public string KeyPath { get; internal set; }
 
         /// <summary>
         ///     The last write time of this key

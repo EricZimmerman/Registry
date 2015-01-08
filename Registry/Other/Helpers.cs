@@ -3,6 +3,7 @@ using Registry.Lists;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -432,7 +433,7 @@ namespace Registry.Other
             }
         }
 
-        public static int ExtractRecordsFromSlack(byte[] remainingData, long actualPaddingOffset)
+        public static int ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
             // a list of our known signatures, so we can only show when these are found vs data cells
             _goodSigs = GetGoodSigs();
@@ -455,54 +456,55 @@ namespace Registry.Other
 
                 if (_goodSigs.Contains(sig))
                 {
-                    Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, actualPaddingOffset + index);
+                    Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
                 }
 
-                switch (sig)
-                {
-                    case "nk":
-                        var nk = new NKCellRecord(rawRecord, actualPaddingOffset + index);
-                        RegistryHive.CellRecords.Add(actualPaddingOffset + index, nk);
-                        foundRecords += 1;
-                        break;
-                    case "vk":
-                        var vk = new VKCellRecord(rawRecord, actualPaddingOffset + index);
-                        RegistryHive.CellRecords.Add(actualPaddingOffset + index, vk);
-                        foundRecords += 1;
-                        break;
 
-                    case "lf":
-                        var lf = new LxListRecord(rawRecord, actualPaddingOffset + index);
-                        RegistryHive.ListRecords.Add(actualPaddingOffset + index, lf);
-                        foundRecords += 1;
+                    switch (sig)
+                    {
+                        case "nk":
+                            var nk = new NKCellRecord(rawRecord, relativeoffset + index);
+                            RegistryHive.CellRecords.Add(relativeoffset + index, nk);
+                            foundRecords += 1;
+                            break;
+                        case "vk":
+                            var vk = new VKCellRecord(rawRecord, relativeoffset + index);
+                            RegistryHive.CellRecords.Add(relativeoffset + index, vk);
+                            foundRecords += 1;
+                            break;
 
-                        // there are often more records in these, so find the first occurrance of a known record type
+                        case "lf":
+                            var lf = new LxListRecord(rawRecord, relativeoffset + index);
+                            RegistryHive.ListRecords.Add(relativeoffset + index, lf);
+                            foundRecords += 1;
 
-                        ExtractRecordsFromSlackExtracted(actualPaddingOffset+ index, rawRecord);
+                            // there are often more records in these, so find the first occurrance of a known record type
 
-                        break;
+                            ExtractRecordsFromSlackExtracted(relativeoffset+ index, rawRecord);
 
-                    default:
-                        //we know about these signatures, so remove them. if we see others, tell someone so support can be added
-                        var goodSigs2 = _goodSigs;
-                        goodSigs2.Remove("nk");
-                        goodSigs2.Remove("vk");
-                        goodSigs2.Remove("li");
+                            break;
 
-                        if (goodSigs2.Contains(sig))
-                        {
-                            throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
-                        }
+                        default:
+                            //we know about these signatures, so remove them. if we see others, tell someone so support can be added
+                            var goodSigs2 = _goodSigs;
+                            goodSigs2.Remove("nk");
+                            goodSigs2.Remove("vk");
+                            goodSigs2.Remove("li");
 
-                        var dr = new DataNode(rawRecord, actualPaddingOffset + index);
-                        RegistryHive.DataRecords.Add(actualPaddingOffset + index, dr);
-                        foundRecords += 1;
+                            if (goodSigs2.Contains(sig))
+                            {
+                                throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
+                            }
 
-                        // there are often more records in these, so find the first occurrance of a known record type
-                        ExtractRecordsFromSlackExtracted(actualPaddingOffset + index, rawRecord);
+                            var dr = new DataNode(rawRecord, relativeoffset + index);
+                            RegistryHive.DataRecords.Add(relativeoffset + index, dr);
+                            foundRecords += 1;
 
-                        break;
-                }
+                            // there are often more records in these, so find the first occurrance of a known record type
+                            ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
+
+                            break;
+                    }
 
                 index += (int)len;
             }

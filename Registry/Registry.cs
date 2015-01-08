@@ -614,59 +614,171 @@ namespace Registry
 
             var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NKCellRecord);
             var unreferencedVKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is VKCellRecord);
-            var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenced == false);
+           // var unreferencedLists = ListRecords.Where(t => t.Value.IsReferenced == false);
 
             var restoredDeletedKeys = 0;
 
+            //for each unref NK, look for VKs associated with it and create RegistryKey objects
+            //save to DeletedRegistryKeys collection
+
+            var DeletedRegistryKeys = new Dictionary<long, RegistryKey>();
+
             foreach (var unreferencedNkCell in unreferencedNKCells)
             {
-                var nk = unreferencedNkCell.Value  as NKCellRecord;
-                if (CellRecords.ContainsKey(nk.ParentCellIndex))
+                try
                 {
-                    // unreferencedNKCell has a parent key that exists! Now to see if its referenced
-                    if (CellRecords.ContainsKey(nk.ParentCellIndex))
-                    {
-                           var parentNK = CellRecords[nk.ParentCellIndex] as NKCellRecord;
+var nk = unreferencedNkCell.Value as NKCellRecord;
 
-                        if (parentNK == null)
+                var regKey = new RegistryKey(nk, "");
+                regKey.IsDeleted = true;
+
+                //Build ValueOffsets for this NKRecord
+                if (regKey.NKRecord.ValueListCellIndex > 0)
+                {
+                    //there are values for this key, so get the offsets so we can pull them next
+
+                        DataNode offsetList = null;
+
+                    if (DataRecords.ContainsKey(regKey.NKRecord.ValueListCellIndex))
+                    {
+                             offsetList = DataRecords[regKey.NKRecord.ValueListCellIndex];
+                    }
+                    else
+                    {
+                        Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+                        //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
+                        //so we read it from the hive directly
+
+                        var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,4);
+
+                        var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,(int)BitConverter.ToUInt32(size,0));
+
+                        try
                         {
-                            //the data at that index is not an NKRecord
-                            continue;
+                            var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
+                            DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
+
+                            offsetList = dr;
+                        }
+                        catch (Exception)
+                        {
+                            //sometimes the data node doesnt have enough data to even do this
+                            Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+                            
                         }
 
-                            if (parentNK.IsReferenced)
-                            {
-                                //parent exists in our tree, so add unreferencedNkCell as a child but mark it deleted
-
-                            var pk = FindKey(nk.ParentCellIndex, Root);
-
-                            var key = new RegistryKey(nk, pk.KeyPath);
-                                //TODO code FIND method on root node. have an 'exact' flag and if set use contains vs ==
-                                //be sure to force to lower
-                            key.IsDeleted = true;
-                             
-                                pk.SubKeys.Add(key);
-                            restoredDeletedKeys += 1;
-                                
-
-                                //TODO  does nk.ValueListCellIndex point to an unreferenced vk object?
-                                //is this right? i think this is whats blanked to FFFFFFFF/0
-                                //Does it have to reference an unreferenced list?
-                             
-                                if (ListRecords.ContainsKey(nk.ValueListCellIndex))
-                                {
-                                    Debug.WriteLine(nk.ValueListCellIndex);
-                                }
-                            }
+                            
                     }
 
-                     
+                    if (offsetList != null)
+                    {
+                        offsetList.IsReferenced = true;
+
+                        for (var i = 0; i < regKey.NKRecord.ValueListCount; i++)
+                        {
+                            //use i * 4 so we get 4, 8, 12, 16, etc
+                            var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
+
+                            regKey.NKRecord.ValueOffsets.Add(os);
+                        }
+
+                        //TODO need a trap here in case we run out of data ? test it
+                    }
+
+                        
+               
+                        
+
                 }
+
+                foreach (var valueOffset in nk.ValueOffsets)
+                {
+                    if (CellRecords.ContainsKey((long) valueOffset))
+                    {
+                        var val = CellRecords[(long) valueOffset] as VKCellRecord;
+                        
+                        
+
+                        //we have a value for this key
+
+                        if (val != null)
+                        {
+                            //TODO should this check to see if the vk record IsFree?
+                            var kv = new KeyValue(val.ValueName, val.DataType.ToString(), val.ValueData.ToString(),
+                            BitConverter.ToString(val.ValueDataSlack), val.ValueDataSlack, val);
+
+                            regKey.Values.Add(kv);
+                        }
+
+                            
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found", nk.RelativeOffset, valueOffset);
+                    }
+
+                    
+
+                }
+
+                Console.WriteLine("\tAssociated {0:N0} value(s) for nk record at relative offset 0x{1:X}", regKey.Values.Count, nk.RelativeOffset);
+                DeletedRegistryKeys.Add(nk.RelativeOffset,regKey);
+                }
+                catch (Exception ex)
+                {
+                Debug.WriteLine(ex);
+                }
+                
+
+
+                //if (CellRecords.ContainsKey(nk.ParentCellIndex))
+                //{
+                //    // unreferencedNKCell has a parent key that exists! Now to see if its referenced
+                //    if (CellRecords.ContainsKey(nk.ParentCellIndex))
+                //    {
+                //           var parentNK = CellRecords[nk.ParentCellIndex] as NKCellRecord;
+
+                //        if (parentNK == null)
+                //        {
+                //            //the data at that index is not an NKRecord
+                //            continue;
+                //        }
+
+                //            if (parentNK.IsReferenced)
+                //            {
+                //                //parent exists in our tree, so add unreferencedNkCell as a child but mark it deleted
+
+                //            var pk = FindKey(nk.ParentCellIndex, Root);
+
+                //            var key = new RegistryKey(nk, pk.KeyPath);
+                //                //TODO code FIND method on root node. have an 'exact' flag and if set use contains vs ==
+                //                //be sure to force to lower
+                //            key.IsDeleted = true;
+                //             
+                //                pk.SubKeys.Add(key);
+                //            restoredDeletedKeys += 1;
+                //                
+
+                //                //TODO  does nk.ValueListCellIndex point to an unreferenced vk object?
+                //                //is this right? i think this is whats blanked to FFFFFFFF/0
+                //                //Does it have to reference an unreferenced list?
+                //             
+                //                if (ListRecords.ContainsKey(nk.ValueListCellIndex))
+                //                {
+                //                    Debug.WriteLine(nk.ValueListCellIndex);
+                //                }
+                //            }
+                //    }
+
+                //     
+                //}
             }
 
             //TODO reflect restoredDeletedKeys count somewhere, as well as whats left
            
 
+            
             if (HiveLength() != TotalBytesRead)
             {
               

@@ -32,7 +32,7 @@ namespace Registry.Cells
         public VKCellRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
-
+    
  
                 RawBytes = rawBytes;
 
@@ -133,9 +133,9 @@ namespace Registry.Cells
                 }
             }
 
-          
+      
 
-            byte[] datablockRaw;
+                byte[] datablockRaw;
             var dataBlockSize = 0;
 
             if (dataIsResident)

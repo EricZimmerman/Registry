@@ -23,7 +23,7 @@ namespace Registry.Other
         {
             RelativeOffset = relativeOffset;
 
-            Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
+                Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
             Check.That(Signature).IsEqualTo("hbin");
 
@@ -184,7 +184,20 @@ namespace Registry.Other
 
                 if (dataRecord != null)
                 {
-                    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                    if (dataRecord.IsFree)
+                    {
+                        //if the record is free, we have to do more to ensure we find other recoverable records
+                        //we do not need to add the record to the DataRecords collection as ExtractRecordsFromSlack does that for us
+                        Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
+                    }
+                    else
+                    {
+                        RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                    }
+                        
+
+
+                        
                     //   Debug.WriteLine(dataRecord);
                 }
 
