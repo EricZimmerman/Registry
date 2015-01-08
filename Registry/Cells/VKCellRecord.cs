@@ -364,8 +364,6 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                         break;
                 }
 
-
-
                 var paddingOffset = 0x18 + NameLength;
 
                 var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);

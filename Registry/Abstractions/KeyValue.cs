@@ -35,31 +35,11 @@ namespace Registry.Abstractions
             InternalGUID = Guid.NewGuid().ToString();
         }
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-
-            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
-            sb.AppendLine(string.Format("Value Type: {0}", ValueType));
-            sb.AppendLine(string.Format("Value Data: {0}", ValueData));
-            sb.AppendLine(string.Format("Value Slack: {0}", ValueSlack));
-          
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("VK Record: {0}", VKRecord));
-
-            return sb.ToString();
-        }
-
         // public properties...
         /// <summary>
         /// A unique value that can be used to find this key in a collection
         /// </summary>
         public string InternalGUID { get; set; }
-        
         /// <summary>
         /// The normalized representation of the value's value.
         /// </summary>
@@ -85,5 +65,25 @@ namespace Registry.Abstractions
         /// The underlying VKRecord for this Key. This allows access to all info about the VK Record 
         /// </summary>
         public VKCellRecord VKRecord { get; private set; }
+
+        // public methods...
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
+            sb.AppendLine(string.Format("Value Type: {0}", ValueType));
+            sb.AppendLine(string.Format("Value Data: {0}", ValueData));
+            sb.AppendLine(string.Format("Value Slack: {0}", ValueSlack));
+
+            sb.AppendLine();
+
+            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
+            sb.AppendLine();
+
+            sb.AppendLine(string.Format("VK Record: {0}", VKRecord));
+
+            return sb.ToString();
+        }
     }
 }

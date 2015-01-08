@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Collections;
+
 using Registry.Other;
 
 // namespaces...
@@ -29,6 +30,9 @@ namespace Registry.Cells
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
+            //if (AbsoluteOffset == 0x000000000005e268)
+            //    System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
+            
             ValueOffsets = new List<ulong>();
 
             _size = BitConverter.ToInt32(rawBytes, 0);

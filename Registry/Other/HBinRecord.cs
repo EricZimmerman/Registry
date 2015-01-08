@@ -3,7 +3,6 @@ using Registry.Cells;
 using Registry.Lists;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,14 +22,14 @@ namespace Registry.Other
         {
             RelativeOffset = relativeOffset;
 
-                Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
+            Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
             Check.That(Signature).IsEqualTo("hbin");
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
             Size = BitConverter.ToUInt32(rawBytes, 0x8);
-      
+
             Reserved = BitConverter.ToUInt32(rawBytes, 0xc);
 
             var ts = BitConverter.ToInt64(rawBytes, 0x14);
@@ -48,14 +47,14 @@ namespace Registry.Other
             {
                 //very rarely you get a 'Not a valid Win32 FileTime' error, so trap it if thats the case
             }
-            
+
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
 
             //additional cell data starts 32 bytes (0x20) in
             var offsetInHbin = 0x20;
 
             RegistryHive.TotalBytesRead += 0x20;
-            
+
             while (offsetInHbin < Size)
             {
                 var recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
@@ -109,7 +108,7 @@ namespace Registry.Other
 
                         case "ri":
                             listRecord = new RIListRecord(rawRecord, offsetInHbin + relativeOffset);
-                            
+
                             break;
 
                         case "db":
@@ -124,7 +123,7 @@ namespace Registry.Other
 
                         case "nk":
                             cellRecord = new NKCellRecord(rawRecord, offsetInHbin + relativeOffset);
-                            
+
                             break;
                         case "sk":
                             cellRecord = new SKCellRecord(rawRecord, offsetInHbin + relativeOffset);
@@ -153,7 +152,7 @@ namespace Registry.Other
                     {
                         RegistryHive._hardParsingErrors += 1;
                         //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
-                        
+
                         Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + relativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
                         Console.WriteLine();
@@ -173,6 +172,7 @@ namespace Registry.Other
                 if (cellRecord != null)
                 {
                     RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+
                     //   Debug.WriteLine(cellRecord);
                 }
 
@@ -194,10 +194,7 @@ namespace Registry.Other
                     {
                         RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
                     }
-                        
 
-
-                        
                     //   Debug.WriteLine(dataRecord);
                 }
 
@@ -218,12 +215,10 @@ namespace Registry.Other
         }
 
         // public properties...
-
         /// <summary>
         /// The relative offset to this record
         /// </summary>
         public uint FileOffset { get; private set; }
-
         /// <summary>
         /// The last write time of this key
         /// </summary>
@@ -233,13 +228,11 @@ namespace Registry.Other
         /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
         public long RelativeOffset { get; private set; }
-
         public uint Reserved { get; private set; }
         /// <summary>
         /// The signature of the hbin record. Should always be "hbin"
         /// </summary>
         public string Signature { get; private set; }
-
         /// <summary>
         /// The size of the hive
         /// <remarks>This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a negative size)</remarks>
@@ -262,7 +255,7 @@ namespace Registry.Other
             {
                 sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
             }
-            
+
             sb.AppendLine();
 
             sb.AppendLine();
