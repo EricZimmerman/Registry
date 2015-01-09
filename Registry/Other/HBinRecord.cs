@@ -10,6 +10,10 @@ using System.Text.RegularExpressions;
 // namespaces...
 namespace Registry.Other
 {
+
+    //TODO get rid of calls to Console.WriteLine in favor of an event
+    //May need to move processing out of constructor and add a "ParseBytes" method
+
     // public classes...
     public class HBinRecord
     {

@@ -92,6 +92,12 @@ namespace ExampleApp
 
                     try
                     {
+                        fName1Test.Message += (ss, ee) =>
+                        {
+                            Console.WriteLine(ee.Detail);
+                            
+                        };
+
                         fName1Test.ParseHive();
 
                         Console.WriteLine("Finished processing '{0}'", testFile);
@@ -241,5 +247,10 @@ namespace ExampleApp
                 }
             }
         }
+
+        //private void OnMessage(MessageEventArgs ee)
+        //{
+        //    Console.WriteLine(ee.Detail);
+        //}
     }
 }

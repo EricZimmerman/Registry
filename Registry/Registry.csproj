@@ -49,6 +49,7 @@
     <Compile Include="Abstractions\KeyValue.cs" />
     <Compile Include="Abstractions\RegistryKey.cs" />
     <Compile Include="Cells\LKCellRecord.cs" />
+    <Compile Include="MessageEventArgs.cs" />
     <Compile Include="Other\ACERecord.cs" />
     <Compile Include="Cells\NKCellRecord.cs" />
     <Compile Include="Cells\SKCellRecord.cs" />

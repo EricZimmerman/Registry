@@ -242,10 +242,7 @@ namespace Registry.Cells
                 //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
             }
 
-            //TODO DO I NEED TO USE DataNode here?
-            //http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Main%20V4.pdf
-            // TODO page 64 data node? it would encapsulate ValueData, ValueSlack, and ValueDataRaw
-
+            
             //Testing trap
             //if (ValueName == "(Default)" && DataTypeRaw == 1)
             //{
@@ -391,14 +388,14 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                     if (RecordSlack.Length > 0)
                     {
                             var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
-                            if (found > 0)
-                            {
-                                if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                                {
-                                    Console.WriteLine("Recovered {0:N0} records from free space in vk cell record at relative offset 0x{1:x}!", found, relativeOffset);
-                                }
+                            //if (found > 0)
+                            //{
+                            //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                            //    {
+                            //        Console.WriteLine("Recovered {0:N0} records from free space in vk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+                            //    }
                                 
-                            }
+                            //}
                     }
                 }                   
        

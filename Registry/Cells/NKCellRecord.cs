@@ -110,10 +110,11 @@ namespace Registry.Cells
             MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
 
             var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
+
+            //TODO is this a flag enum somewhere?
+            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); 
             
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4 )); //TODO is this a flag enum somewhere?
-            
-            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));//TODO is this a flag enum somewhere?
+            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));
 
             UserFlags = userInt;
             VirtualControlFlags = virtInt;
@@ -168,14 +169,14 @@ namespace Registry.Cells
                 if (RecordSlack.Length > 0)
                 {
                     var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
-                    if (found > 0)
-                    {
-                        if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                        {
-                            Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!", found, relativeOffset);
-                        }
+                    //if (found > 0)
+                    //{
+                    //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                    //    {
+                    //        Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+                    //    }
                         
-                    }
+                    //}
                 }
             }
                 

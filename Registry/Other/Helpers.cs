@@ -454,14 +454,16 @@ namespace Registry.Other
 
                 var sig = Encoding.ASCII.GetString(rawRecord, 4, 2);
 
-                if (_goodSigs.Contains(sig))
-                {
-                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                    {
-Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
-                    }
+
+                
+//                if (_goodSigs.Contains(sig))
+//                {
+//                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+//                    {
+//Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
+//                    }
                     
-                }
+//                }
 
 
                     switch (sig)

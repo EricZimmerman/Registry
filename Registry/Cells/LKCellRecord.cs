@@ -91,9 +91,10 @@ namespace Registry.Cells
 
             var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
 
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4)); //TODO is this a flag enum somewhere?
+            //TODO is this a flag enum somewhere?
+            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4)); 
 
-            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));//TODO is this a flag enum somewhere?
+            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));
 
             UserFlags = userInt;
             VirtualControlFlags = virtInt;

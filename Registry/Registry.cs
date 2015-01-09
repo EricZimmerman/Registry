@@ -41,6 +41,19 @@ namespace Registry
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
+        public event EventHandler<MessageEventArgs> Message;
+
+        private MessageEventArgs _msgArgs;
+
+        protected virtual void OnMessage(MessageEventArgs e)
+        {
+            EventHandler<MessageEventArgs> handler = Message;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
         // public constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="Registry"/> class.
@@ -175,7 +188,17 @@ namespace Registry
         {
             if (Verbosity == VerbosityEnum.Full)
             {
-                Console.WriteLine("Getting subkeys for {0}", key.KeyPath);
+                var args = new MessageEventArgs
+                {
+                    Detail = string.Format("Getting subkeys for {0}", key.KeyPath),
+                    Exception = null,
+                    Message = string.Format("Getting subkeys for {0}", key.KeyPath),
+                    MsgType = MessageEventArgs.MsgTypeEnum.Info
+
+                };
+
+                OnMessage(args);
+
             }
 
             var keys = new List<RegistryKey>();
@@ -212,7 +235,20 @@ namespace Registry
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
                 //todo This needs to be a stronger warning since we will not have all data
-                Console.WriteLine("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
+
+                var args = new MessageEventArgs
+                {
+                    Detail = string.Format("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count),
+                    Exception = null,
+                    Message = string.Format("Value count mismatch!"),
+                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                };
+
+                OnMessage(args);
+
+
+                
             }
 
             //TODO need to add check on each vk record below
@@ -573,7 +609,18 @@ namespace Registry
 
                 if (hbinSig != hbinHeader)
                 {
-                    Console.WriteLine("hbin header incorrect at offset 0x{0:X}!!!\t\t\t\tPercent done: {1:P}", offsetInHive, (double)offsetInHive / hivelen);
+                    var args = new MessageEventArgs
+                    {
+                        Detail = string.Format("Percent done: {0:P}", (double)offsetInHive / hivelen),
+                        Exception = null,
+                        Message = string.Format("hbin header incorrect at offset 0x{0:X}!!!",offsetInHive),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Error
+
+                    };
+
+                    OnMessage(args);
+
+                    
                     break;
                 }
 
@@ -581,27 +628,64 @@ namespace Registry
 
                 if (Verbosity == VerbosityEnum.Full)
                 {
-                    Console.WriteLine("Pulling hbin at offset 0x{0:X}. Size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize, (double)offsetInHive / hivelen);
+                    var args = new MessageEventArgs
+                    {
+                        Detail = string.Format("Size 0x{0:X}\t\t\t\tPercent done: {1:P}", hbinSize, (double)offsetInHive / hivelen),
+                        Exception = null,
+                        Message = string.Format("Pulling hbin at offset 0x{0:X}.", offsetInHive),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Info
+
+                    };
+
+                    OnMessage(args);
+
+                 
                 }
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
 
                 try
                 {
+                    
+
                     var h = new HBinRecord(rawhbin, offsetInHive - 4096);
+
+
 
                     HBinRecords.Add(h.RelativeOffset, h);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("********Error processing hbin at offset 0x{0:X}. Error: {1}, Stack: {2}", offsetInHive, ex.Message, ex.StackTrace);
+                     _msgArgs = new MessageEventArgs
+                    {
+                        Detail = string.Format("Error: {0}, Stack: {1}", ex.Message, ex.StackTrace),
+                        Exception = ex,
+                        Message = string.Format("Error processing hbin at offset 0x{0:X}.", offsetInHive),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Error
+
+                    };
+
+                    OnMessage(_msgArgs);
+
+                 
                 }
 
                 offsetInHive += hbinSize;
             }
 
 
-            Console.WriteLine("Initial processing complete. Building tree...");
+            _msgArgs = new MessageEventArgs
+            {
+                Detail = string.Format("Initial processing complete. Building tree..."),
+                Exception = null,
+                Message = string.Format("Initial processing complete. Building tree..."),
+                MsgType = MessageEventArgs.MsgTypeEnum.Info
+
+            };
+
+            OnMessage(_msgArgs);
+
+           
 
             //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
             //here we are looking for the flag
@@ -617,7 +701,19 @@ namespace Registry
 
             rootNode.IsReferenced = true;
 
-            Console.WriteLine("Found root node! Getting subkeys...");
+            _msgArgs = new MessageEventArgs
+            {
+                Detail = string.Format("Found root node! Getting subkeys..."),
+                Exception = null,
+                Message = string.Format("Found root node! Getting subkeys..."),
+                MsgType = MessageEventArgs.MsgTypeEnum.Info
+
+            };
+
+            OnMessage(_msgArgs);
+
+
+           
 
             Root = new RegistryKey(rootNode, null);
 
@@ -625,7 +721,18 @@ namespace Registry
 
             Root.SubKeys.AddRange(keys);
 
-            Console.WriteLine("Initial processing complete! Associating deleted keys and values...");
+             _msgArgs = new MessageEventArgs
+            {
+                Detail = string.Format("Initial processing complete! Associating deleted keys and values..."),
+                Exception = null,
+                Message = string.Format("Initial processing complete! Associating deleted keys and values..."),
+                MsgType = MessageEventArgs.MsgTypeEnum.Info
+
+            };
+
+            OnMessage(_msgArgs);
+
+      
 
             //TODO MOVE THE stuff from program.cs inside the class so we have access to the kinds of things calculated there.
             //copy pasted for now
@@ -670,9 +777,21 @@ namespace Registry
                         {
                             if (Verbosity == VerbosityEnum.Full)
                             {
-                                Console.WriteLine(
-                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
-                                    nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+                                 _msgArgs = new MessageEventArgs
+                                {
+                                    Detail = string.Format("When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                    nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    Exception = null,
+                                    Message = string.Format("When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                    nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                                };
+
+                                OnMessage(_msgArgs);
+
+
+                                
                             }
 
 
@@ -693,7 +812,18 @@ namespace Registry
                             catch (Exception)
                             {
                                 //sometimes the data node doesnt have enough data to even do this
-                                Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+
+                                 _msgArgs = new MessageEventArgs
+                                {
+                                    Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    Exception = null,
+                                    Message = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                                };
+
+                                OnMessage(_msgArgs);
+                              
                             }
                         }
 
@@ -735,18 +865,41 @@ namespace Registry
                         {
                             if (Verbosity == VerbosityEnum.Full)
                             {
-                                Console.WriteLine(
-                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found",
-                                    nk.RelativeOffset, valueOffset);
+                                 _msgArgs = new MessageEventArgs
+                                {
+                                    Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found",
+                                    nk.RelativeOffset, valueOffset),
+                                    Exception = null,
+                                    Message = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found",
+                                    nk.RelativeOffset, valueOffset),
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                                };
+
+                                OnMessage(_msgArgs);
+
+
+                                
                             }
                         }
                     }
                     
                     if (Verbosity == VerbosityEnum.Full)
                     {
-                        Console.WriteLine(
-                            "\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}",
-                            regKey.Values.Count, nk.ValueListCount, nk.RelativeOffset);
+                         _msgArgs = new MessageEventArgs
+                        {
+                            Detail = string.Format("\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}",
+                            regKey.Values.Count, nk.ValueListCount, nk.RelativeOffset),
+                            Exception = null,
+                            Message = string.Format("\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}",
+                            regKey.Values.Count, nk.ValueListCount, nk.RelativeOffset),
+                            MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                        };
+
+                        OnMessage(_msgArgs);
+
+                        
                         }
 
 
@@ -872,9 +1025,20 @@ namespace Registry
 
                         if (Verbosity == VerbosityEnum.Full)
                         {
-                            Console.WriteLine(
-                                "\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
-                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset);
+                             _msgArgs = new MessageEventArgs
+                            {
+                                Detail = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+                                Exception = null,
+                                Message = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+                                MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                            };
+
+                            OnMessage(_msgArgs);
+
+                            
                         }
 
 
@@ -888,11 +1052,7 @@ namespace Registry
 
 
             DeletedRegistryKeys = _deletedRegistryKeys.Values.ToList();
-
-
-            //TODO reflect restoredDeletedKeys count somewhere, as well as whats left
-
-
+            
             //All processing is complete, so we do some tests to see if we really saw everything
             if (HiveLength() != TotalBytesRead)
             {
@@ -901,7 +1061,17 @@ namespace Registry
                 //Sometimes the remainder of the file is all zeros, which is useless, so check for that
                 if (!Array.TrueForAll(remainingHive, a => a == 0))
                 {
-                    Console.WriteLine("***** Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength());
+                     _msgArgs = new MessageEventArgs
+                    {
+                        Detail = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
+                        Exception = null,
+                        Message = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                    };
+
+                    OnMessage(_msgArgs);
+
                 }
 
                 //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
@@ -911,15 +1081,29 @@ namespace Registry
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead);
+                     _msgArgs = new MessageEventArgs
+                    {
+                        Detail = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
+                        Exception = null,
+                        Message = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                    };
+
+                    OnMessage(_msgArgs);
+
+
+                 
                 }
             }
 
 
-
+            
 
             return true;
         }
+
+    
 
         /// <summary>
         /// Given a file, confirm it is a registry hive and that hbin headers are found every 4096 * (size of hbin) bytes.
