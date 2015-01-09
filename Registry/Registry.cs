@@ -32,6 +32,11 @@ namespace Registry
         public static long TotalBytesRead;
 
         /// <summary>
+        /// The number of deleted keys that were reassociated with a key in the active registry
+        /// </summary>
+        public int RestoredDeletedKeyCount { get; private set; }
+
+        /// <summary>
         /// Contains all recovered 
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
@@ -40,7 +45,7 @@ namespace Registry
         /// <summary>
         /// Initializes a new instance of the <see cref="Registry"/> class.
         /// </summary>
-        public RegistryHive(string fileName, bool autoParse = false, bool verboseOutput = false)
+        public RegistryHive(string fileName, bool autoParse = false)
         {
             _filename = fileName;
 
@@ -65,9 +70,11 @@ namespace Registry
 
             DeletedRegistryKeys= new List<RegistryKey>();
 
+            Verbosity = VerbosityEnum.Normal;
+
             if (autoParse)
             {
-                ParseHive(verboseOutput);
+                ParseHive();
             }
         }
 
@@ -118,7 +125,13 @@ namespace Registry
             }
         }
 
-        public static bool VerboseOutput { get; private set; }
+        public enum VerbosityEnum
+        {
+            Normal,
+            Full
+        }
+
+        public static VerbosityEnum Verbosity { get; private set; }
 
         // private methods...
         private void DumpKeyWilli(RegistryKey key, StreamWriter sw, bool includeOffsets = false)
@@ -160,7 +173,7 @@ namespace Registry
         //TODO this needs refactored to remove duplicated code
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
-            if (VerboseOutput)
+            if (Verbosity == VerbosityEnum.Full)
             {
                 Console.WriteLine("Getting subkeys for {0}", key.KeyPath);
             }
@@ -512,7 +525,7 @@ namespace Registry
         //    if (key.NKRecord.RelativeOffset )
         //}
         // public methods...
-        public bool ParseHive(bool verboseOutput)
+        public bool ParseHive()
         {
             if (_filename == null)
             {
@@ -532,7 +545,7 @@ namespace Registry
             
             Header = new RegistryHeader(header);
 
-            VerboseOutput = verboseOutput;
+        
 
             _softParsingErrors = 0;
             _hardParsingErrors = 0;
@@ -566,7 +579,7 @@ namespace Registry
 
                 Check.That(hbinSig).IsEqualTo(hbinHeader);
 
-                if (VerboseOutput)
+                if (Verbosity == VerbosityEnum.Full)
                 {
                     Console.WriteLine("Pulling hbin at offset 0x{0:X}. Size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize, (double)offsetInHive / hivelen);
                 }
@@ -608,13 +621,12 @@ namespace Registry
 
             Root = new RegistryKey(rootNode, null);
 
-            //TODO Build FullPath or Path property as this is being built
-
             var keys = GetSubKeysAndValues(Root);
 
             Root.SubKeys.AddRange(keys);
 
             Console.WriteLine("Initial processing complete! Associating deleted keys and values...");
+
             //TODO MOVE THE stuff from program.cs inside the class so we have access to the kinds of things calculated there.
             //copy pasted for now
 
@@ -656,7 +668,14 @@ namespace Registry
                         }
                         else
                         {
-                            Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+                            if (Verbosity == VerbosityEnum.Full)
+                            {
+                                Console.WriteLine(
+                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                    nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex);
+                            }
+
+
                             //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
                             //so we read it from the hive directly
 
@@ -714,11 +733,21 @@ namespace Registry
                         }
                         else
                         {
-                            Console.WriteLine("\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found", nk.RelativeOffset, valueOffset);
+                            if (Verbosity == VerbosityEnum.Full)
+                            {
+                                Console.WriteLine(
+                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} was not found",
+                                    nk.RelativeOffset, valueOffset);
+                            }
                         }
                     }
-
-                    Console.WriteLine("\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}", regKey.Values.Count,nk.ValueListCount, nk.RelativeOffset);
+                    
+                    if (Verbosity == VerbosityEnum.Full)
+                    {
+                        Console.WriteLine(
+                            "\tAssociated {0:N0} value(s) out of {1:N0} possible values for nk record at relative offset 0x{2:X}",
+                            regKey.Values.Count, nk.ValueListCount, nk.RelativeOffset);
+                        }
 
 
                     _deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
@@ -807,7 +836,7 @@ namespace Registry
             }
 
 
-            var restoredDeletedKeys = 0;
+            RestoredDeletedKeyCount = 0;
 
             //Phase 3 is looking at top level keys from Phase 2 and seeing if any of those can be assigned to non-deleted keys in the main tree
             foreach (var deletedRegistryKey in _deletedRegistryKeys)
@@ -841,12 +870,15 @@ namespace Registry
                         pk.SubKeys.Add(deletedRegistryKey.Value);
 
 
+                        if (Verbosity == VerbosityEnum.Full)
+                        {
+                            Console.WriteLine(
+                                "\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset);
+                        }
 
-                        Console.WriteLine("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}", deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset);
 
-
-
-                        restoredDeletedKeys += 1;
+                        RestoredDeletedKeyCount += 1;
                     }
               
 

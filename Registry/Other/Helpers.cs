@@ -456,7 +456,11 @@ namespace Registry.Other
 
                 if (_goodSigs.Contains(sig))
                 {
-                    Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
+                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                    {
+Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
+                    }
+                    
                 }
 
 

@@ -92,7 +92,7 @@ namespace ExampleApp
 
                     try
                     {
-                        fName1Test.ParseHive(false);
+                        fName1Test.ParseHive();
 
                         Console.WriteLine("Finished processing '{0}'", testFile);
                         Console.Title = string.Format("Finished processing '{0}'", testFile);

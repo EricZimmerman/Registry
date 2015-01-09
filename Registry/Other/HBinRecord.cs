@@ -81,7 +81,7 @@ namespace Registry.Other
                 }
 
                 //only process records with 2 letter signatures. this avoids crazy output for data cells
-                if (foundMatch && RegistryHive.VerboseOutput)
+                if (foundMatch && RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
                 {
                     Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
                         cellSignature, offsetInHbin, offsetInHbin + relativeOffset);

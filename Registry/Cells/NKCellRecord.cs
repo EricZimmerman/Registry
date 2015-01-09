@@ -170,7 +170,11 @@ namespace Registry.Cells
                     var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
                     if (found > 0)
                     {
-                        Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!",found,relativeOffset);
+                        if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                        {
+                            Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+                        }
+                        
                     }
                 }
             }
