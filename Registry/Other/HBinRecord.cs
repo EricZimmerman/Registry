@@ -1,18 +1,17 @@
-﻿using NFluent;
-using Registry.Cells;
-using Registry.Lists;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using NFluent;
+using Registry.Cells;
+using Registry.Lists;
 
 // namespaces...
 namespace Registry.Other
 {
 
     //TODO get rid of calls to Console.WriteLine in favor of an event
-    //May need to move processing out of constructor and add a "ParseBytes" method
+    //May need to move processing out of constructor and add a "ParseBytes" or "initialize" method
 
     // public classes...
     public class HBinRecord

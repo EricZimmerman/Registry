@@ -1,14 +1,14 @@
-﻿using NFluent;
-using Registry.Abstractions;
-using Registry.Cells;
-using Registry.Lists;
-using Registry.Other;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using NFluent;
+using Registry.Abstractions;
+using Registry.Cells;
+using Registry.Lists;
+using Registry.Other;
 
 // namespaces...
 namespace Registry
@@ -176,7 +176,12 @@ namespace Registry
                         osVal = string.Format("|Rel off: 0x{0:X}, Abs off: 0x{1:X}", val.VKRecord.RelativeOffset, val.VKRecord.AbsoluteOffset);
                     }
 
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "), osVal);
+                    //if (subkey.KeyPath.Contains("profile-google-com") && val.VKRecord.DataTypeRaw == 1 )
+                    //{
+                    //    Debug.Write("VK testing trap hit");
+                    //}
+
+                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " ") + "", osVal);
                 }
 
                 DumpKeyWilli(subkey, sw, includeOffsets);

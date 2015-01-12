@@ -1,6 +1,4 @@
-﻿using NFluent;
-using Registry.Lists;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,6 +6,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using NFluent;
+using Registry.Lists;
 using Registry.Other;
 
 // namespaces...
@@ -244,10 +244,11 @@ namespace Registry.Cells
 
             
             //Testing trap
-            //if (ValueName == "(Default)" && DataTypeRaw == 1)
+            //if (DataTypeRaw == 1 && AbsoluteOffset == 0x00000000000fd410)
             //{
             //    Debug.Write("VK testing trap hit");
             //}
+
 
             ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
 

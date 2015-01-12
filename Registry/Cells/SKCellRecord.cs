@@ -1,8 +1,8 @@
-﻿using NFluent;
-using Registry.Other;
-using System;
+﻿using System;
 using System.Linq;
 using System.Text;
+using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Cells

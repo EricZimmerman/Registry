@@ -1,12 +1,11 @@
-﻿using Registry.Cells;
-using Registry.Lists;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Registry.Cells;
+using Registry.Lists;
 
 // namespaces...
 namespace Registry.Other

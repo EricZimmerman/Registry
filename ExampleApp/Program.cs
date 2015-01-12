@@ -1,10 +1,11 @@
-﻿using Registry;
-using Registry.Cells;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using CommandLine;
+using Registry;
+using Registry.Cells;
 
 // namespaces...
 namespace ExampleApp
@@ -19,7 +20,7 @@ namespace ExampleApp
 
 
 
-            var result = CommandLine.Parser.Default.ParseArguments<Options>(args);
+            var result = Parser.Default.ParseArguments<Options>(args);
             if (!result.Errors.Any())
             {
                 if (result.Value.HiveName == null && result.Value.DirectoryName == null)
