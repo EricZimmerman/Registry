@@ -172,7 +172,7 @@ namespace Registry
                 }
                 else
                 {
-                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o")); sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o")); 
                 }
 
                    
@@ -810,7 +810,53 @@ namespace Registry
 
             OnMessage(_msgArgs);
 
+
+            //All processing is complete, so we do some tests to see if we really saw everything
+            if (HiveLength() != TotalBytesRead)
+            {
+                var remainingHive = ReadBytesFromHive(TotalBytesRead, (int)(HiveLength() - TotalBytesRead));
+
+                //Sometimes the remainder of the file is all zeros, which is useless, so check for that
+                if (!Array.TrueForAll(remainingHive, a => a == 0))
+                {
+                    _msgArgs = new MessageEventArgs
+                    {
+                        Detail = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
+                        Exception = null,
+                        Message = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                    };
+
+                    OnMessage(_msgArgs);
+
+                }
+
+                //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
+                try
+                {
+                    Check.That((long)Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
+                }
+                catch (Exception)
+                {
+                    _msgArgs = new MessageEventArgs
+                    {
+                        Detail = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
+                        Exception = null,
+                        Message = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                    };
+
+                    OnMessage(_msgArgs);
+
+                }
+            }
+
+
       
+
+            //TODO split this out into separate functions
 
             //TODO MOVE THE stuff from program.cs inside the class so we have access to the kinds of things calculated there.
             //copy pasted for now
@@ -1153,47 +1199,7 @@ namespace Registry
             
             DeletedRegistryKeys = _deletedRegistryKeys.Values.ToList();
             
-            //All processing is complete, so we do some tests to see if we really saw everything
-            if (HiveLength() != TotalBytesRead)
-            {
-                var remainingHive = ReadBytesFromHive(TotalBytesRead, (int)(HiveLength() - TotalBytesRead));
-
-                //Sometimes the remainder of the file is all zeros, which is useless, so check for that
-                if (!Array.TrueForAll(remainingHive, a => a == 0))
-                {
-                     _msgArgs = new MessageEventArgs
-                    {
-                        Detail = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
-                        Exception = null,
-                        Message = string.Format("Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!", HiveLength()),
-                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
-
-                    };
-
-                    OnMessage(_msgArgs);
-
-                }
-
-                //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
-                try
-                {
-                    Check.That((long)Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
-                }
-                catch (Exception)
-                {
-                     _msgArgs = new MessageEventArgs
-                    {
-                        Detail = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
-                        Exception = null,
-                        Message = string.Format("Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data", HiveLength(), TotalBytesRead),
-                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
-
-                    };
-
-                    OnMessage(_msgArgs);
-
-                }
-            }
+           
 
             return true;
         }

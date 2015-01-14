@@ -298,7 +298,7 @@ namespace Registry.Cells
                     case DataTypeEnum.RegExpandSz:
                     case DataTypeEnum.RegMultiSz:
                     case DataTypeEnum.RegSz:
-                        if ((int)dataLengthInternal > datablockRaw.Length)
+                        if ((int)dataLengthInternal > datablockRaw.Length || ValueDataRaw == null)
                         {
                             ValueData = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
                         }
@@ -397,7 +397,7 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                 {
                     if (RecordSlack.Length > 0)
                     {
-                            var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
+                           // var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
                             //if (found > 0)
                             //{
                             //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)

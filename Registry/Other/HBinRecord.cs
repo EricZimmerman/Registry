@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,7 +28,12 @@ namespace Registry.Other
 
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
-            Check.That(Signature).IsEqualTo("hbin");
+           // Debug.WriteLine("hbin abs 0x{0:x8}",AbsoluteOffset);
+
+            //if (AbsoluteOffset == 0x533000)
+            //   Debug.WriteLine("");
+
+                Check.That(Signature).IsEqualTo("hbin");
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -60,6 +66,11 @@ namespace Registry.Other
 
             while (offsetInHbin < Size)
             {
+                //Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
+                if (offsetInHbin == 0x00005B08)
+                    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
+
+
                 var recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
 
                 var readSize = (int)recordSize;
@@ -174,7 +185,16 @@ namespace Registry.Other
 
                 if (cellRecord != null)
                 {
-                    RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                    
+
+                    if (cellRecord.IsFree)
+                    {
+                        Helpers.ExtractRecordsFromSlack(cellRecord.RawBytes, cellRecord.RelativeOffset);
+                    }
+                    else
+                    {
+                        RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                    }
 
                     //   Debug.WriteLine(cellRecord);
                 }
@@ -182,21 +202,41 @@ namespace Registry.Other
                 if (listRecord != null)
                 {
                     RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+                    Helpers.ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+
+                    //if (listRecord.IsFree)
+                    //{
+                    //    Helpers.ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+                    //}
+                    //else
+                    //{
+                    //    RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);    
+                    //}
+                    
+
                     //   Debug.WriteLine(listRecord);
                 }
 
                 if (dataRecord != null)
                 {
-                    if (dataRecord.IsFree)
-                    {
-                        //if the record is free, we have to do more to ensure we find other recoverable records
-                        //we do not need to add the record to the DataRecords collection as ExtractRecordsFromSlack does that for us
-                        Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
-                    }
-                    else
-                    {
-                        RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
-                    }
+                    //if (RegistryHive.DataRecords.ContainsKey(dataRecord.RelativeOffset) == false)
+                    //{
+                    //    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                    //}
+
+                    Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
+
+                        //if (dataRecord.IsFree)
+                        //{
+                        //    //if the record is free, we have to do more to ensure we find other recoverable records
+                        //    //we do not need to add the record to the DataRecords collection as ExtractRecordsFromSlack does that for us
+
+                        //    Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
+                        //}
+                        //else
+                        //{
+                        //    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
+                        //}
 
                     //   Debug.WriteLine(dataRecord);
                 }

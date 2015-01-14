@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Registry.Cells;
@@ -410,14 +412,14 @@ namespace Registry.Other
             try
             {
                 //Find the index of the next vk or nk record in this chunk of data
-                var regexObj = new Regex("00-(6E|73|76)-6B");
+                var regexObj = new Regex("(00|FF)-(6E|73|76)-6B");
                 var pos = regexObj.Match(BitConverter.ToString(rawRecord)).Index;
 
                 if (pos > 0)
                 {
                     //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
                     //finaly go back 3 to get to the start of the record
-                    var actualStart = (pos / 3) - 3;
+                    var actualStart = (pos/3) - 3;
 
                     //get the rest of the data after our starting position
                     var extradata = rawRecord.Skip(actualStart).ToArray();
@@ -430,6 +432,10 @@ namespace Registry.Other
             {
                 // Syntax error in the regular expression
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
         }
 
         public static int ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
@@ -440,52 +446,117 @@ namespace Registry.Other
 
             var foundRecords = 0;
 
-            //get size from remaining data, then loop thru that chunk of data for records.
-            //anything left should get processed by the constructor for the new record except in special cases as shown below
+            var resultList = new List<int>();
 
-            var index = 0;
+            var valString = BitConverter.ToString(remainingData);
 
-            while (index < remainingData.Length)
+            var sig = string.Empty;
+            byte[] raw = null;
+
+            var outerLoopValue = 0;
+
+            try {
+	            Regex regexObj = new Regex("(00|FF)-(6E|73|76)-6B");
+	            Match matchResult = regexObj.Match(valString);
+	            while (matchResult.Success) {
+		            resultList.Add(matchResult.Index);
+		            matchResult = matchResult.NextMatch();
+	            } 
+            } catch (ArgumentException ex) {
+	            // Syntax error in the regular expression
+            }
+
+            if (resultList.Count == 0)
             {
-                var len = BitConverter.ToUInt32(remainingData, index);
+                //its a data record
 
-                var rawRecord = remainingData.Skip(index).Take((int)len).ToArray();
+                var dr1 = new DataNode(remainingData, relativeoffset);
 
-                var sig = Encoding.ASCII.GetString(rawRecord, 4, 2);
+                if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
+                {
+                    RegistryHive.DataRecords.Add(relativeoffset, dr1);
+                }
 
+              //  RegistryHive.DataRecords.Add(relativeoffset, dr1);
+                foundRecords += 1;
 
-                
-//                if (_goodSigs.Contains(sig))
-//                {
-//                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-//                    {
-//Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
-//                    }
-                    
-//                }
+            }
+            else
+            {
+                //is this a strange case where there are records at the end of a data block?
+                var actualStart = (resultList.First() / 3) - 3;
+                if (actualStart > 0)
+                {
+                    RegistryHive.DataRecords.Add(relativeoffset, new DataNode(remainingData, relativeoffset));
+                }
+            }
 
+                //resultList now has offset of every record signature we are interested in
+                foreach (var i in resultList)
+                {
+                outerLoopValue = i;
+                    try
+                    {
+//we found one, but since we converted it to a string, divide by 3 to get to the proper offset
+                    //finaly go back 3 to get to the start of the record
+                    var actualStart = (i / 3) - 3;
+
+                    var size = BitConverter.ToUInt32(remainingData, actualStart);
+
+                        if (size == 0 || remainingData.Length - actualStart < size)
+                        {
+                            //if its empty or the size is beyond the data that is left, bail
+                            continue;
+                            
+                        }
+
+                         raw = remainingData.Skip(actualStart).Take(Math.Abs((int)size)).ToArray();
+
+                    sig = Encoding.ASCII.GetString(raw, 4, 2);
 
                     switch (sig)
                     {
                         case "nk":
-                            var nk = new NKCellRecord(rawRecord, relativeoffset + index);
-                            RegistryHive.CellRecords.Add(relativeoffset + index, nk);
+                            var nk = new NKCellRecord(raw, relativeoffset + actualStart);
+                            if (nk.LastWriteTimestamp.Year > 1700)
+                            {
+                                RegistryHive.CellRecords.Add(relativeoffset + actualStart, nk);
+                            }
+                         
+                                
                             foundRecords += 1;
                             break;
                         case "vk":
-                            var vk = new VKCellRecord(rawRecord, relativeoffset + index);
-                            RegistryHive.CellRecords.Add(relativeoffset + index, vk);
+                            if (raw.Length < 0x18)
+                            {
+                                //cant have a record shorter than this, even when no name is present
+                                continue;
+                            }
+                                var vk = new VKCellRecord(raw, relativeoffset + actualStart);
+                            RegistryHive.CellRecords.Add(relativeoffset + actualStart, vk);
+                            foundRecords += 1;
+                            break;
+                        case "ri":
+                            var ri = new RIListRecord(raw, relativeoffset + actualStart);
+                            RegistryHive.ListRecords.Add(relativeoffset + actualStart, ri);
+                            foundRecords += 1;
+
+                            break;
+
+                        case "sk":
+                            var sk = new SKCellRecord(raw, relativeoffset + actualStart);
+                            RegistryHive.CellRecords.Add(relativeoffset + actualStart, sk);
                             foundRecords += 1;
                             break;
 
                         case "lf":
-                            var lf = new LxListRecord(rawRecord, relativeoffset + index);
-                            RegistryHive.ListRecords.Add(relativeoffset + index, lf);
+                            var lf = new LxListRecord(raw, relativeoffset + actualStart);
+                            RegistryHive.ListRecords.Add(relativeoffset + actualStart, lf);
                             foundRecords += 1;
 
                             // there are often more records in these, so find the first occurrance of a known record type
 
-                            ExtractRecordsFromSlackExtracted(relativeoffset+ index, rawRecord);
+                            //   ExtractRecordsFromSlackExtracted(relativeoffset + index, raw);
 
                             break;
 
@@ -494,25 +565,132 @@ namespace Registry.Other
                             var goodSigs2 = _goodSigs;
                             goodSigs2.Remove("nk");
                             goodSigs2.Remove("vk");
+                            goodSigs2.Remove("sk");
                             goodSigs2.Remove("li");
+                            goodSigs2.Remove("ri");
 
                             if (goodSigs2.Contains(sig))
                             {
                                 throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
                             }
 
-                            var dr = new DataNode(rawRecord, relativeoffset + index);
-                            RegistryHive.DataRecords.Add(relativeoffset + index, dr);
+                            var dr = new DataNode(raw, relativeoffset + actualStart);
+                            RegistryHive.DataRecords.Add(relativeoffset + actualStart, dr);
                             foundRecords += 1;
 
                             // there are often more records in these, so find the first occurrance of a known record type
-                            ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
+                            //    ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
 
                             break;
                     }
 
-                index += (int)len;
-            }
+                   // System.Diagnostics.Debug.WriteLine("Found rel offset at 0x{0:X}", relativeoffset + actualStart);
+                    }
+                    catch (Exception ex)
+                    {
+                        // this is a corrupted/unusable record
+                        //TODO do we add a placeholder here?
+                        Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}, outerLoopValue: {4}", sig, relativeoffset + (i / 3) - 3, ex.Message, raw.Length, outerLoopValue);
+                    }
+                    
+                }
+
+
+            //get size from remaining data, then loop thru that chunk of data for records.
+            //anything left should get processed by the constructor for the new record except in special cases as shown below
+
+           // var index = 0;
+
+//            while (index < remainingData.Length)
+//            {
+//                var len = BitConverter.ToUInt32(remainingData, index);
+
+//                if (len == 0)
+//                {
+//                    index += remainingData.Length;
+//                    continue;
+                    
+//                }
+
+//                    var rawRecord = remainingData.Skip(index).Take(Math.Abs((int)len)).ToArray();
+
+              
+//                    var sig = Encoding.ASCII.GetString(rawRecord, 4, 2);
+
+
+                
+////                if (_goodSigs.Contains(sig))
+////                {
+////                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+////                    {
+////Console.WriteLine("\tFound a {0} record at relative offset 0x{1:x}!", sig, relativeoffset + index);
+////                    }
+                    
+////                }
+
+
+//                    switch (sig)
+//                    {
+//                        case "nk":
+//                            var nk = new NKCellRecord(rawRecord, relativeoffset + index);
+//                            RegistryHive.CellRecords.Add(relativeoffset + index, nk);
+//                            foundRecords += 1;
+//                            break;
+//                        case "vk":
+//                            var vk = new VKCellRecord(rawRecord, relativeoffset + index);
+//                            RegistryHive.CellRecords.Add(relativeoffset + index, vk);
+//                            foundRecords += 1;
+//                            break;
+//                        case "ri":
+//                             var ri = new RIListRecord(rawRecord, relativeoffset + index);
+//                            RegistryHive.ListRecords.Add(relativeoffset + index, ri);
+//                            foundRecords += 1;
+
+//                            break;
+
+//                        case "sk":
+//                            var sk = new SKCellRecord(rawRecord, relativeoffset + index);
+//                            RegistryHive.CellRecords.Add(relativeoffset + index, sk);
+//                            foundRecords += 1;
+//                            break;
+
+//                        case "lf":
+//                            var lf = new LxListRecord(rawRecord, relativeoffset + index);
+//                            RegistryHive.ListRecords.Add(relativeoffset + index, lf);
+//                            foundRecords += 1;
+
+//                            // there are often more records in these, so find the first occurrance of a known record type
+
+//                            ExtractRecordsFromSlackExtracted(relativeoffset+ index, rawRecord);
+
+//                            break;
+
+//                        default:
+//                            //we know about these signatures, so remove them. if we see others, tell someone so support can be added
+//                            var goodSigs2 = _goodSigs;
+//                            goodSigs2.Remove("nk");
+//                            goodSigs2.Remove("vk");
+//                            goodSigs2.Remove("sk");
+//                            goodSigs2.Remove("li");
+//                            goodSigs2.Remove("ri");
+
+//                            if (goodSigs2.Contains(sig))
+//                            {
+//                                throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
+//                            }
+
+//                            var dr = new DataNode(rawRecord, relativeoffset + index);
+//                            RegistryHive.DataRecords.Add(relativeoffset + index, dr);
+//                            foundRecords += 1;
+
+//                            // there are often more records in these, so find the first occurrance of a known record type
+//                            ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
+
+//                            break;
+//                    }
+
+//                index += Math.Abs((int)len);
+//            }
 
             return foundRecords;
         }

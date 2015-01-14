@@ -28,7 +28,7 @@ namespace Registry.Cells
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
-            //if (AbsoluteOffset == 0x000000000005e268)
+            //if (AbsoluteOffset == 5525352)
             //    System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
             
             ValueOffsets = new List<ulong>();
@@ -166,7 +166,7 @@ namespace Registry.Cells
             {
                 if (RecordSlack.Length > 0)
                 {
-                    var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
+                    //var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
                     //if (found > 0)
                     //{
                     //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
