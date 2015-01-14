@@ -184,6 +184,15 @@ namespace Registry.Cells
 
                 //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
 
+                //sanity check the length. if its crazy big, make it managable
+                if (dataBlockSize < -2147483640)
+                {
+                    dataBlockSize = dataBlockSize - -2147483648;
+                }
+                    
+
+                  //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
+
                 //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
                 datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
 

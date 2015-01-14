@@ -176,15 +176,20 @@ namespace ExampleApp
                         Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
                         Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
                         Console.WriteLine("Data:  Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.DataRecords.Count == freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
-
-
-
+                        
                         #region TestStuffForViewingUnreferenced
-                        //      var baseDir1 = Path.GetDirectoryName(testFile);
-                        //      var baseFname1 = Path.GetFileName(testFile);
-                        //      var myName1 = "_unref-output.txt";
+                        //var baseDir1 = Path.GetDirectoryName(testFile);
+                        //var baseFname1 = Path.GetFileName(testFile);
+                        //var myName1 = "_unref-output.txt";
 
-                        //      var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
+                        //var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
+
+                        //File.WriteAllText(outfile1, "NK absoluteoffsets");
+                        //foreach (var source in RegistryHive.CellRecords.Where(q=>q.Value is NKCellRecord))
+                        //{
+                        //    File.AppendAllText(outfile1, string.Format("0x{0:X}\r\n", source.Value.AbsoluteOffset));
+                        //}
+
 
                         //      var unrefcells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced == false);
                         //
@@ -212,8 +217,7 @@ namespace ExampleApp
                         //              //    File.AppendAllText(outfile1, content);
                         //              //}
                         #endregion
-
-
+                        
 
                         if (result.Value.ExportHiveData)
                         {
@@ -222,7 +226,7 @@ namespace ExampleApp
                             var myName = "eric-output.txt";
 
                             var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
-                            fName1Test.ExportDataToWilliFormat(outfile,true);
+                            fName1Test.ExportDataToCommonFormat(outfile);
                         }
                     }
                     catch (Exception ex)

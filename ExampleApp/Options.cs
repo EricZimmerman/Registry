@@ -14,6 +14,7 @@ class Options {
 HelpText = "If true, export a file that can be compared to other Registry parsers")]
   public bool ExportHiveData { get; set; }
 
+
   
   public string GetUsage()
   {
@@ -24,8 +25,9 @@ HelpText = "If true, export a file that can be compared to other Registry parser
       usage.AppendLine("-d <directory>: Process files found in <directory>");
       usage.AppendLine("-f <file>: Process <file>");
       usage.AppendLine("-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
+  
       usage.AppendLine("");
-      usage.AppendLine("-d or f must be specified, but not both");
+      usage.AppendLine("-d or -f must be specified, but not both");
       return usage.ToString();
   }
 }

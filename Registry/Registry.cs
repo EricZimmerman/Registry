@@ -9,6 +9,7 @@ using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
 using Registry.Other;
+using RegistryValueKind = Microsoft.Win32.RegistryValueKind;
 
 // namespaces...
 namespace Registry
@@ -23,6 +24,8 @@ namespace Registry
         private static FileStream _fileStream;
         private static int KeyCount;
         private static int ValueCount;
+        private static int KeyCountDeleted;
+        private static int ValueCountDeleted;
 
         // internal fields...
         internal static int _hardParsingErrors;
@@ -147,44 +150,65 @@ namespace Registry
         public static VerbosityEnum Verbosity { get; private set; }
 
         // private methods...
-        private void DumpKeyWilli(RegistryKey key, StreamWriter sw, bool includeOffsets = false)
+        private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw)
         {
-            KeyCount += key.SubKeys.Count;
+            if (key.IsDeleted)
+            {
+                KeyCountDeleted += key.SubKeys.Count;
+            }
+            else
+            {
+                KeyCount += key.SubKeys.Count;
+            }
+               
 
             foreach (var subkey in key.SubKeys)
             {
                 // dump key format here "key"|path/path/path|<timestamp as iso8601, like 2014-12-16T00:00:00.00>
 
-                var osKey = "";
-                if (includeOffsets)
+                if (key.IsDeleted)
                 {
-                    osKey = string.Format("|Rel off: 0x{0:X}, Abs off: 0x{1:X}", key.NKRecord.RelativeOffset,
-                        key.NKRecord.AbsoluteOffset);
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyName, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                }
+                else
+                {
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o")); sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A", subkey.NKRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
                 }
 
-                sw.WriteLine("key|{0}|{1}{2}{3}", subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"), subkey.IsDeleted ? "|(deleted)" : "",osKey);
+                   
+               // sw.WriteLine("key|{0}|{1}{2}{3}{4}", subkey.KeyPath, subkey.LastWriteTime.Value.UtcDateTime.ToString("o"), delKey, isRef,osKey);
 
-                ValueCount += subkey.Values.Count;
+                if (subkey.IsDeleted)
+                {
+                    ValueCountDeleted += subkey.Values.Count;
+                    
+                }
+                else
+                {
+                    ValueCount += subkey.Values.Count;
 
+                }
+
+                    
                 foreach (var val in subkey.Values)
                 {
                     //dump value format here
 
-                    var osVal = "";
-                    if (includeOffsets)
+                    if (subkey.IsDeleted)
                     {
-                        osVal = string.Format("|Rel off: 0x{0:X}, Abs off: 0x{1:X}", val.VKRecord.RelativeOffset, val.VKRecord.AbsoluteOffset);
+                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A", val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                        
+                    }
+                    else
+                    {
+                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A", val.VKRecord.AbsoluteOffset, subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                 
                     }
 
-                    //if (subkey.KeyPath.Contains("profile-google-com") && val.VKRecord.DataTypeRaw == 1 )
-                    //{
-                    //    Debug.Write("VK testing trap hit");
-                    //}
-
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " ") + "", osVal);
+                         //  sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " ") + "", osVal);
                 }
 
-                DumpKeyWilli(subkey, sw, includeOffsets);
+                DumpKeyCommonFormat(subkey, sw);
             }
         }
 
@@ -501,32 +525,81 @@ namespace Registry
             }
         }
 
-        public void ExportDataToWilliFormat(string outfile, bool includeOffsets = false)
+        public void ExportDataToCommonFormat(string outfile)
         {
             KeyCount = 1; //root key
             ValueCount = 0;
+            KeyCountDeleted = 0;
+            ValueCountDeleted = 0;
 
             using (var sw = new StreamWriter(outfile, false))
             {
                 sw.AutoFlush = true;
 
+
                 if (Root.LastWriteTime != null)
                 {
-                    sw.WriteLine("key|{0}|{1}", Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", Root.NKRecord.IsFree ? "U" : "A",Root.NKRecord.AbsoluteOffset, Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
                 }
 
                 ValueCount += Root.Values.Count;
 
                 foreach (var val in Root.Values)
                 {
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}", Root.KeyPath, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}",val.VKRecord.IsFree ? "U": "A", val.VKRecord.AbsoluteOffset, Root.KeyPath, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                 }
 
 
-                DumpKeyWilli(Root, sw, includeOffsets);
+                DumpKeyCommonFormat(Root, sw);
+
+                //dump recovered keys and values not associated with anything else
+
+                foreach (var source in DeletedRegistryKeys) //.Where(t=>t.NKRecord.IsReferenced == false))
+                {
+                    KeyCountDeleted += 1;
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A", source.NKRecord.AbsoluteOffset, source.KeyName, source.LastWriteTime.Value.UtcDateTime.ToString("o"));
+
+
+                    foreach (var val in source.Values)
+                    {
+                        //dump value format here
+
+                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A", val.VKRecord.AbsoluteOffset, source.KeyName, val.ValueName, (int)val.VKRecord.DataType, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                        //  sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " ") + "", osVal);
+                    }
+
+                    DumpKeyCommonFormat(source, sw);
+                }
+
+                //TODO here we need to look at whats left in CellRecords that arent referenced?
+                var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
+                //may not need to if we do not care about orphaned values
+
+                foreach (var keyValuePair in theRest)
+                {
+                    if (keyValuePair.Value.Signature == "vk")
+                    {
+                        ValueCountDeleted += 1;
+                        var val = keyValuePair.Value as VKCellRecord;
+                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "", val.ValueName, (int)val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
+               
+                    }
+
+                    if (keyValuePair.Value.Signature == "nk")
+                    {
+                        var nk = keyValuePair.Value as NKCellRecord;
+                        var key = new RegistryKey(nk, null);
+
+
+                        DumpKeyCommonFormat(key,sw);
+                    }
+                }
+
 
                 sw.WriteLine("total_keys|{0}", KeyCount);
                 sw.WriteLine("total_values|{0}", ValueCount);
+                sw.WriteLine("total_deleted_keys|{0}", KeyCountDeleted);
+                sw.WriteLine("total_deleted_values|{0}", ValueCountDeleted);
             }
         }
 
@@ -728,9 +801,9 @@ namespace Registry
 
              _msgArgs = new MessageEventArgs
             {
-                Detail = string.Format("Initial processing complete! Associating deleted keys and values..."),
+                Detail = "Initial processing complete! Associating deleted keys and values...",
                 Exception = null,
-                Message = string.Format("Initial processing complete! Associating deleted keys and values..."),
+                Message = "Initial processing complete! Associating deleted keys and values...",
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
 
             };
@@ -757,96 +830,101 @@ namespace Registry
                 {
                     var nk = unreferencedNkCell.Value as NKCellRecord;
 
+                    //System.Diagnostics.Debug.WriteLine("reloffset: 0x{0}", nk.RelativeOffset);
+
+                    //if (nk.RelativeOffset == 0x2620B0)
+                    //    System.Diagnostics.Debug.WriteLine("reloffset: 0x{0}", nk.RelativeOffset);
+                    
+
                     var regKey = new RegistryKey(nk, string.Empty)
                     {
                         IsDeleted = true
                     };
-
-                    //if (nk.Name.Contains("ZA102692154.png"))
-                    //{
-                    //    Debug.Write(1);
-                    //}
-
-                    //Build ValueOffsets for this NKRecord
-                    if (regKey.NKRecord.ValueListCellIndex > 0)
-                    {
-                        //there are values for this key, so get the offsets so we can pull them next
-
-                        DataNode offsetList = null;
-
-                        if (DataRecords.ContainsKey(regKey.NKRecord.ValueListCellIndex))
+                                 
+                        //Build ValueOffsets for this NKRecord
+                        if (regKey.NKRecord.ValueListCellIndex > 0)
                         {
-                            offsetList = DataRecords[regKey.NKRecord.ValueListCellIndex];
-                        }
-                        else
-                        {
-                            if (Verbosity == VerbosityEnum.Full)
+                            //there are values for this key, so get the offsets so we can pull them next
+
+                            DataNode offsetList = null;
+
+                            if (DataRecords.ContainsKey(regKey.NKRecord.ValueListCellIndex))
                             {
-                                 _msgArgs = new MessageEventArgs
+                                offsetList = DataRecords[regKey.NKRecord.ValueListCellIndex];
+                                offsetList.IsReferenced = true;
+                            }
+                            else
+                            {
+                                if (Verbosity == VerbosityEnum.Full)
                                 {
-                                    Detail = string.Format("When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                    _msgArgs = new MessageEventArgs { Detail = string.Format("When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
                                     nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     Exception = null,
                                     Message = string.Format("When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
                                     nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning };
 
-                                };
-
-                                OnMessage(_msgArgs);
-
-
-                                
-                            }
+                                    OnMessage(_msgArgs);
+                                }
 
 
-                            //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
-                            //so we read it from the hive directly
+                                //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
+                                //so we read it from the hive directly
 
-                            var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
+                                var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
 
-                            var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, (int)BitConverter.ToUInt32(size, 0));
-
-                            try
-                            {
-                                var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
-                                DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
-
-                                offsetList = dr;
-                            }
-                            catch (Exception)
-                            {
-                                //sometimes the data node doesnt have enough data to even do this
-
-                                 _msgArgs = new MessageEventArgs
+                                try
                                 {
-                                    Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, (int)BitConverter.ToUInt32(size, 0));
+
+                                    var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
+                                    dr.IsReferenced = true;
+                                    DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
+
+
+                                    offsetList = dr;
+                                }
+                                catch (Exception)
+                                {
+                                    //sometimes the data node doesnt have enough data to even do this, or its wrong data
+
+                                    _msgArgs = new MessageEventArgs { Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     Exception = null,
-                                    Message = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
+                                                                      Message = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning };
 
-                                };
-
-                                OnMessage(_msgArgs);
-                              
+                                    OnMessage(_msgArgs);
+                                }
                             }
-                        }
 
-                        if (offsetList != null)
-                        {
-                            offsetList.IsReferenced = true;
-
-                            for (var i = 0; i < regKey.NKRecord.ValueListCount; i++)
+                            if (offsetList != null)
                             {
-                                //use i * 4 so we get 4, 8, 12, 16, etc
-                                var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
+                                offsetList.IsReferenced = true;
 
-                                regKey.NKRecord.ValueOffsets.Add(os);
+
+                                try
+                                {
+                                    for (var i = 0; i < regKey.NKRecord.ValueListCount; i++)
+                                    {
+
+                                        //use i * 4 so we get 4, 8, 12, 16, etc
+                                        var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
+
+                                        regKey.NKRecord.ValueOffsets.Add(os);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    //we are out of Data
+                                    _msgArgs = new MessageEventArgs { Detail = string.Format("\t**** When getting value offsets for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    Exception = null,
+                                    Message = string.Format("\t**** When getting value offsets for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning };
+
+                                    OnMessage(_msgArgs);
+                                }
                             }
-
-                            //TODO need a trap here in case we run out of data ? test it
                         }
-                    }
 
                     //For each value offset, get the vk record if it exists, create a KeyValue, and assign it to the current RegistryKey
                     foreach (var valueOffset in nk.ValueOffsets)
@@ -859,6 +937,16 @@ namespace Registry
 
                             if (val != null)
                             {
+                                val.IsReferenced = true;
+
+                                foreach (var dataOffset in val.DataOffets)
+                                {
+                                    if (DataRecords.ContainsKey((long) dataOffset))
+                                    {
+                                        DataRecords[(long) dataOffset].IsReferenced = true;
+                                    }
+                                }
+
                                 //TODO should this check to see if the vk record IsFree? probably not a bad idea
                                 var kv = new KeyValue(val.ValueName, val.DataType.ToString(), val.ValueData.ToString(),
                                 BitConverter.ToString(val.ValueDataSlack), val.ValueDataSlack, val);
@@ -883,8 +971,6 @@ namespace Registry
 
                                 OnMessage(_msgArgs);
 
-
-                                
                             }
                         }
                     }
@@ -912,7 +998,22 @@ namespace Registry
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
+                       _msgArgs = new MessageEventArgs
+                        {
+                            Detail = string.Format("\tError {0} for nk record at relative offset 0x{1:X}",
+                            ex.Message, unreferencedNkCell.Value.RelativeOffset),
+                            Exception = ex,
+                            Message = string.Format("\tError {0} for nk record at relative offset 0x{1:X}",
+                            ex.Message, unreferencedNkCell.Value.RelativeOffset),
+                      
+                            MsgType = MessageEventArgs.MsgTypeEnum.Warning
+
+                        };
+
+                        OnMessage(_msgArgs);
+
+                        
+                
                 }
 
             }
@@ -996,66 +1097,60 @@ namespace Registry
 
             RestoredDeletedKeyCount = 0;
 
+            //TODO  make this optional or not at all? perhaps just buuld the correct keypath and show them under the deleted nodes?
             //Phase 3 is looking at top level keys from Phase 2 and seeing if any of those can be assigned to non-deleted keys in the main tree
-            foreach (var deletedRegistryKey in _deletedRegistryKeys)
-            {
-                if (CellRecords.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
-                {
-                    //an parent key has been located, so get it
-                    var parentNK = CellRecords[deletedRegistryKey.Value.NKRecord.ParentCellIndex] as NKCellRecord;
+            //foreach (var deletedRegistryKey in _deletedRegistryKeys)
+            //{
+            //    if (CellRecords.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
+            //    {
+            //        //an parent key has been located, so get it
+            //        var parentNK = CellRecords[deletedRegistryKey.Value.NKRecord.ParentCellIndex] as NKCellRecord;
 
-                    if (parentNK == null)
-                            {
-                                //the data at that index is not an nkrecord
-                                continue;
-                            }
+            //        if (parentNK == null)
+            //                {
+            //                    //the data at that index is not an nkrecord
+            //                    continue;
+            //                }
 
-                    if (parentNK.IsReferenced)
-                    {
-                        //parent exists in our primary tree, so get that key
-                        var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex, Root);
+            //        if (parentNK.IsReferenced)
+            //        {
+            //            //parent exists in our primary tree, so get that key
+            //            var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex, Root);
 
-                        deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
-                           deletedRegistryKey.Value.KeyName);
+            //            deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
+            //               deletedRegistryKey.Value.KeyName);
 
-                        foreach (var sk in deletedRegistryKey.Value.SubKeys)
-                        {
-                            sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
-                           sk.KeyName);
-                        }
+            //            foreach (var sk in deletedRegistryKey.Value.SubKeys)
+            //            {
+            //                sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
+            //               sk.KeyName);
+            //            }
                         
-                        //add a copy of deletedRegistryKey under its original parent
-                        pk.SubKeys.Add(deletedRegistryKey.Value);
+            //            //add a copy of deletedRegistryKey under its original parent
+            //            pk.SubKeys.Add(deletedRegistryKey.Value);
 
 
-                        if (Verbosity == VerbosityEnum.Full)
-                        {
-                             _msgArgs = new MessageEventArgs
-                            {
-                                Detail = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
-                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
-                                Exception = null,
-                                Message = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
-                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
-                                MsgType = MessageEventArgs.MsgTypeEnum.Warning
+            //            if (Verbosity == VerbosityEnum.Full)
+            //            {
+            //                 _msgArgs = new MessageEventArgs
+            //                {
+            //                    Detail = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+            //                    deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+            //                    Exception = null,
+            //                    Message = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+            //                    deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+            //                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
 
-                            };
+            //                };
 
-                            OnMessage(_msgArgs);
+            //                OnMessage(_msgArgs);
+            //            }
 
-                            
-                        }
-
-
-                        RestoredDeletedKeyCount += 1;
-                    }
-              
-
-
-                }
-            }
-
-
+            //            RestoredDeletedKeyCount += 1;
+            //        }
+            //    }
+            //}
+            
             DeletedRegistryKeys = _deletedRegistryKeys.Values.ToList();
             
             //All processing is complete, so we do some tests to see if we really saw everything
@@ -1097,13 +1192,8 @@ namespace Registry
 
                     OnMessage(_msgArgs);
 
-
-                 
                 }
             }
-
-
-            
 
             return true;
         }
@@ -1130,8 +1220,7 @@ namespace Registry
             }
 
             var hiveMetadata = new HiveMetadata();
-
-
+            
             var fileHeaderSig = BitConverter.ToUInt32(ReadBytesFromHive(0, 4), 0);
 
             if (fileHeaderSig != regfHeader)
