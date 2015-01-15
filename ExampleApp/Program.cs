@@ -86,8 +86,8 @@ namespace ExampleApp
                 Console.WriteLine("Processing '{0}'", testFile);
                 Console.Title = string.Format( "Processing '{0}'", testFile);
 
-                using (var fName1Test = new RegistryHive(testFile, false))
-                {
+                var fName1Test = new RegistryHive(testFile);
+               
                     var sw = new Stopwatch();
                     sw.Start();
 
@@ -249,7 +249,7 @@ namespace ExampleApp
 
                     Console.WriteLine();
                     Console.WriteLine();
-                }
+                
             }
         }
 

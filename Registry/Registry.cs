@@ -15,13 +15,13 @@ using RegistryValueKind = Microsoft.Win32.RegistryValueKind;
 namespace Registry
 {
     // public classes...
-    public class RegistryHive : IDisposable
+    public class RegistryHive
     {
         // private fields...
-        private static BinaryReader _binaryReader;
+  
         // private fields...
         private readonly string _filename;
-        private static FileStream _fileStream;
+
         private static int KeyCount;
         private static int ValueCount;
         private static int KeyCountDeleted;
@@ -81,8 +81,15 @@ namespace Registry
             DataRecords = new Dictionary<long, DataNode>();
             HBinRecords = new Dictionary<long, HBinRecord>();
 
-            _fileStream = new FileStream(_filename, FileMode.Open);
-            _binaryReader = new BinaryReader(_fileStream);
+             var fileStream = new FileStream(_filename, FileMode.Open);
+             var binaryReader = new BinaryReader(fileStream);
+
+             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+             FileBytes = binaryReader.ReadBytes((int) binaryReader.BaseStream.Length);
+
+            binaryReader.Close();
+            fileStream.Close();
 
             DeletedRegistryKeys= new List<RegistryKey>();
 
@@ -496,9 +503,9 @@ namespace Registry
         /// <remarks>This is the length returned by the underlying stream used to open the file</remarks>
         /// </summary>
         /// <returns></returns>
-        protected internal static long HiveLength()
+        protected internal static int HiveLength()
         {
-            return _binaryReader.BaseStream.Length;
+            return FileBytes.Length;
         }
 
         /// <summary>
@@ -519,17 +526,7 @@ namespace Registry
         }
 
         // public methods...
-        public void Dispose()
-        {
-            if (_binaryReader != null)
-            {
-                _binaryReader.Close();
-            }
-            if (_fileStream != null)
-            {
-                _fileStream.Close();
-            }
-        }
+
 
         public void ExportDataToCommonFormat(string outfile)
         {
@@ -660,10 +657,7 @@ namespace Registry
                 throw new FileNotFoundException();
             }
 
-            _binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            FileBytes = _binaryReader.ReadBytes((int)HiveLength());
-
+          
          
 
             var header = ReadBytesFromHive(0, 4096);
