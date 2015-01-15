@@ -363,10 +363,12 @@ namespace Registry
                 }
 
 
-                var value = new KeyValue(vk.ValueName, vk.DataType.ToString(), valueDataString,
+                    var value = new KeyValue(vk.ValueName, vk.DataType.ToString(), valueDataString,
                     BitConverter.ToString(vk.ValueDataSlack), vk.ValueDataSlack, vk);
 
-                key.Values.Add(value);
+
+
+                    key.Values.Add(value);
             }
 
             var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
@@ -507,9 +509,13 @@ namespace Registry
         /// <returns></returns>
         protected internal static byte[] ReadBytesFromHive(long offset, int length)
         {
-            _binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
+            //_binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
 
-            return _binaryReader.ReadBytes(Math.Abs(length));
+            var retArray = new byte[length];
+
+            Array.Copy(FileBytes, offset, retArray, 0, length);
+
+            return retArray; //_binaryReader.ReadBytes(Math.Abs(length));
         }
 
         // public methods...
@@ -639,6 +645,9 @@ namespace Registry
         //    if (key.NKRecord.RelativeOffset )
         //}
         // public methods...
+
+        internal static byte[] FileBytes;
+
         public bool ParseHive()
         {
             if (_filename == null)
@@ -650,6 +659,12 @@ namespace Registry
             {
                 throw new FileNotFoundException();
             }
+
+            _binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            FileBytes = _binaryReader.ReadBytes((int)HiveLength());
+
+         
 
             var header = ReadBytesFromHive(0, 4096);
 
@@ -923,23 +938,28 @@ namespace Registry
                                 {
                                     var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, (int)BitConverter.ToUInt32(size, 0));
 
-                                    var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
-                                    dr.IsReferenced = true;
+                                    var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex)
+                                    {
+                                        IsReferenced = true
+                                    };
                                     DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
-
-
+                                    
                                     offsetList = dr;
                                 }
                                 catch (Exception)
                                 {
                                     //sometimes the data node doesnt have enough data to even do this, or its wrong data
-
-                                    _msgArgs = new MessageEventArgs { Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                if (Verbosity == VerbosityEnum.Full)
+                                {
+_msgArgs = new MessageEventArgs { Detail = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     Exception = null,
                                                                       Message = string.Format("\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     MsgType = MessageEventArgs.MsgTypeEnum.Warning };
 
                                     OnMessage(_msgArgs);
+
+                                }
+                                    
                                 }
                             }
 
@@ -961,13 +981,17 @@ namespace Registry
                                 }
                                 catch (Exception ex)
                                 {
-                                    //we are out of Data
+                                if (Verbosity == VerbosityEnum.Full)
+                                {
+//we are out of Data
                                     _msgArgs = new MessageEventArgs { Detail = string.Format("\t**** When getting value offsets for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     Exception = null,
                                     Message = string.Format("\t**** When getting value offsets for nk record at relative offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible", nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     MsgType = MessageEventArgs.MsgTypeEnum.Warning };
 
                                     OnMessage(_msgArgs);
+                                }
+                                    
                                 }
                             }
                         }

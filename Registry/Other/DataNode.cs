@@ -25,8 +25,13 @@ namespace Registry.Other
             _size = BitConverter.ToInt32(rawBytes, 0);
 
             IsFree = _size > 0;
+
+            Data = new byte[rawBytes.Length - 4];
             
-            Data = rawBytes.Skip(4).ToArray();
+
+            Array.Copy(rawBytes,4,Data,0,rawBytes.Length-4);
+
+           // Data = rawBytes.Skip(4).ToArray();
         }
 
         // public properties...

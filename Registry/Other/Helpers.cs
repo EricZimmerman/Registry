@@ -407,36 +407,7 @@ namespace Registry.Other
 
         private static List<string> _goodSigs = GetGoodSigs();
 
-        private static void ExtractRecordsFromSlackExtracted(long offset, byte[] rawRecord)
-        {
-            try
-            {
-                //Find the index of the next vk or nk record in this chunk of data
-                var regexObj = new Regex("(00|FF)-(6E|73|76)-6B");
-                var pos = regexObj.Match(BitConverter.ToString(rawRecord)).Index;
-
-                if (pos > 0)
-                {
-                    //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
-                    //finaly go back 3 to get to the start of the record
-                    var actualStart = (pos/3) - 3;
-
-                    //get the rest of the data after our starting position
-                    var extradata = rawRecord.Skip(actualStart).ToArray();
-
-                    //and now extract!
-                    ExtractRecordsFromSlack(extradata, offset + actualStart);
-                }
-            }
-            catch (ArgumentException)
-            {
-                // Syntax error in the regular expression
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
-            }
-        }
+        private static Regex recordPattern= new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
 
         public static int ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
@@ -453,11 +424,9 @@ namespace Registry.Other
             var sig = string.Empty;
             byte[] raw = null;
 
-            var outerLoopValue = 0;
-
+       
             try {
-	            Regex regexObj = new Regex("(00|FF)-(6E|73|76)-6B");
-	            Match matchResult = regexObj.Match(valString);
+                Match matchResult = recordPattern.Match(valString);
 	            while (matchResult.Success) {
 		            resultList.Add(matchResult.Index);
 		            matchResult = matchResult.NextMatch();
@@ -487,14 +456,17 @@ namespace Registry.Other
                 var actualStart = (resultList.First() / 3) - 3;
                 if (actualStart > 0)
                 {
-                    RegistryHive.DataRecords.Add(relativeoffset, new DataNode(remainingData, relativeoffset));
+                    if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
+                    {
+                        RegistryHive.DataRecords.Add(relativeoffset, new DataNode(remainingData, relativeoffset));
+                    }
                 }
             }
 
                 //resultList now has offset of every record signature we are interested in
                 foreach (var i in resultList)
                 {
-                outerLoopValue = i;
+              
                     try
                     {
 //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
@@ -503,14 +475,18 @@ namespace Registry.Other
 
                     var size = BitConverter.ToUInt32(remainingData, actualStart);
 
-                        if (size == 0 || remainingData.Length - actualStart < size)
+                        if (size < 3 || remainingData.Length - actualStart < size)
                         {
                             //if its empty or the size is beyond the data that is left, bail
                             continue;
                             
                         }
 
-                         raw = remainingData.Skip(actualStart).Take(Math.Abs((int)size)).ToArray();
+                        raw = new byte[Math.Abs((int) size)];
+
+                    Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int)size));
+
+                         //raw = remainingData.Skip(actualStart).Take(Math.Abs((int)size)).ToArray();
 
                     sig = Encoding.ASCII.GetString(raw, 4, 2);
 
@@ -590,7 +566,7 @@ namespace Registry.Other
                     {
                         // this is a corrupted/unusable record
                         //TODO do we add a placeholder here?
-                        Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}, outerLoopValue: {4}", sig, relativeoffset + (i / 3) - 3, ex.Message, raw.Length, outerLoopValue);
+                        Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig, relativeoffset + (i / 3) - 3, ex.Message, raw.Length);
                     }
                     
                 }

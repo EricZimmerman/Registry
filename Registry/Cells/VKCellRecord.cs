@@ -32,9 +32,10 @@ namespace Registry.Cells
         public VKCellRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
-    
- 
-                RawBytes = rawBytes;
+   
+
+
+            RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
@@ -46,13 +47,15 @@ namespace Registry.Cells
 
             DataOffets = new List<ulong>();
 
-            //TODO whats the minimum where this works? look for exceptions when free and support this better
-            //if (IsFree)
-            //{
-            //    return;
-            //}
+          
 
-            NameLength = BitConverter.ToUInt16(rawBytes, 0x06);
+                //TODO whats the minimum where this works? look for exceptions when free and support this better
+                //if (IsFree)
+                //{
+                //    return;
+                //}
+
+                NameLength = BitConverter.ToUInt16(rawBytes, 0x06);
             DataLength = BitConverter.ToUInt32(rawBytes, 0x08);
 
             var dataLengthInternal = DataLength;
@@ -106,18 +109,38 @@ namespace Registry.Cells
             {
                 if (NamePresentFlag > 0)
                 {
-                    ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
+                    if (IsFree)
+                    {
+                        //make sure we have enough data
+                        if (rawBytes.Length >= NameLength + 0x18)
+                        {
+                            ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
+                        }
+                        else
+                        {
+                            ValueName = "(Unable to determine name)";
+                        }
+                            
+                    }
+                    else
+                    {
+                        ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
+                    }
+                     
                 }
                 else
                 {
                     // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
-                    var valString = BitConverter.ToString(rawBytes,0x18,NameLength);
+                    var valString = BitConverter.ToString(rawBytes, 0x18, NameLength);
 
-                   bool foundMatch = false;
-                    try {
+                    bool foundMatch = false;
+                    try
+                    {
                         foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?"); // look for hex chars followed by 00 separators
-                    } catch (ArgumentException) {
-	                    // Syntax error in the regular expression
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Syntax error in the regular expression
                     }
 
                     if (foundMatch)
@@ -129,13 +152,12 @@ namespace Registry.Cells
                     {
                         ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
                     }
-
                 }
             }
 
-      
 
-                byte[] datablockRaw;
+
+            byte[] datablockRaw;
             var dataBlockSize = 0;
 
             if (dataIsResident)
@@ -154,7 +176,7 @@ namespace Registry.Cells
                     dataLengthInternal = 4;
                 }
                 //Since its resident, the data lives in the OffsetToData.
-                    datablockRaw = new byte[dataLengthInternal];
+                datablockRaw = new byte[dataLengthInternal];
 
                 //make a copy for processing below
                 //Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4); org
@@ -167,11 +189,31 @@ namespace Registry.Cells
                 }
             }
             else
-            {               
+            {
                 //We have to go look at the OffsetToData to see what we have so we can do the right thing
 
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
-                var datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
+
+                var datablockSizeRaw = new byte[0];
+
+                if (IsFree)
+                {
+                    try
+                    {
+                        datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
+                    }
+                    catch (Exception)
+                    {
+                        //crazy things can happen in IsFree records
+                    }
+                }
+                else
+                {
+                    datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
+                }
+
+
+                    
 
                 //add this offset so we can mark the data cells as referenced later
                 DataOffets.Add(OffsetToData);
@@ -182,23 +224,50 @@ namespace Registry.Cells
                     dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
                 }
 
-                //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
 
-                //sanity check the length. if its crazy big, make it managable
-                if (dataBlockSize < -2147483640)
+                if (IsFree && Math.Abs(dataBlockSize) > DataLength*10)
                 {
-                    dataBlockSize = dataBlockSize - -2147483648;
+                    //safety net to avoid crazy large reads that just fail
+                    //find out the next highest multiple of 8 based on DataLength for a best guess
+                    dataBlockSize = (int)(Math.Ceiling(((double)DataLength / 8)) * 8);
+                   // dataBlockSize = (int) (DataLength * 2);
+                }
+
+                    //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
+
+                    //sanity check the length. if its crazy big, make it managable
+                    if (dataBlockSize < -2147483640)
+                    {
+                        dataBlockSize = dataBlockSize - -2147483648;
+                    }
+
+
+                //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
+
+                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
+                if (IsFree)
+                {
+                    try
+                    {
+                        datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
+                    }
+                    catch (Exception)
+                    {
+                        //crazy things can happen in IsFree records
+                        datablockRaw = new byte[0];
+                       
+                        
+                    }
+                }
+                else
+                {
+                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
                 }
                     
 
-                  //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
-
-                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
-                datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
-
                 //datablockRaw now has our value AND slack space!
                 //value is dataLengthInternal long. rest is slack
-                
+
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
                 if (dataLengthInternal > 16344 && (RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3))
                 {
@@ -219,13 +288,13 @@ namespace Registry.Cells
 
                     //make a place to reassemble things
                     var bigDataRaw = new ArrayList((int)dataLengthInternal);
-                    
+
                     for (var i = 1; i <= db.NumberOfEntries; i++)
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
                         var os = BitConverter.ToUInt32(datablockRaw, i * 4);
 
-                       // in order to accurately mark data cells as Referenced later, add these offsets to a list
+                        // in order to accurately mark data cells as Referenced later, add these offsets to a list
                         DataOffets.Add(os);
 
                         var tempDataBlockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + os, 4);
@@ -251,7 +320,7 @@ namespace Registry.Cells
                 //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
             }
 
-            
+
             //Testing trap
             //if (DataTypeRaw == 1 && AbsoluteOffset == 0x00000000000fd410)
             //{
@@ -259,7 +328,31 @@ namespace Registry.Cells
             //}
 
 
-            ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
+            //ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
+            ValueDataRaw = new byte[dataLengthInternal];
+
+            if (dataLengthInternal + internalDataOffset > datablockRaw.Length)
+            {
+                //we dont have enough data to copy, so take what we can get
+                try
+                    {
+                        Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0, datablockRaw.Length - internalDataOffset);
+                    }
+                    catch (Exception)
+                    {
+              
+                        Array.Copy(datablockRaw, 0, ValueDataRaw, 0, datablockRaw.Length);
+                   
+                    }                
+            }
+            else
+            {
+                Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0, dataLengthInternal);
+            }
+
+                
+            
+            //datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
 
             //we can determine max slack size since all data cells are a multiple of 8 bytes long
             //we know how long our data should be from the vk record (dataLengthInternal).
@@ -267,21 +360,36 @@ namespace Registry.Cells
             //this number * 8 is the maximum size the data record should be to hold the value.
             //take away what we used (dataLengthInternal) and then account for our offset to said data (internalDataOffset)
             var maxSlackSize = Math.Ceiling((double)(dataLengthInternal + 4) / 8) * 8 - dataLengthInternal - internalDataOffset;
-            
-                ValueDataSlack =
-                datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
-                .Take((int)(Math.Abs(maxSlackSize)))
-                .ToArray();
 
-            if (IsFree)
+            //ValueDataSlack =
+            //    datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
+            //    .Take((int)(Math.Abs(maxSlackSize)))
+            //    .ToArray();
+
+            ValueDataSlack = new byte[0];
+
+            if (datablockRaw.Length > dataLengthInternal + internalDataOffset)
             {
-                // since its free but the data length is less than what we have, take what we do have and live with it
-                if (datablockRaw.Length < dataLengthInternal)
-                {
-                    ValueData = datablockRaw;
-                    return;
-                }
+                ValueDataSlack = new Byte[Math.Abs((int)maxSlackSize)];
+
+                Array.Copy(datablockRaw, (int)(dataLengthInternal + internalDataOffset), ValueDataSlack, 0, (int)(Math.Abs(maxSlackSize)));
             }
+          
+         
+
+                //datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
+                //.Take((int)(Math.Abs(maxSlackSize)))
+                //.ToArray();
+
+                if (IsFree)
+                {
+                    // since its free but the data length is less than what we have, take what we do have and live with it
+                    if (datablockRaw.Length < dataLengthInternal)
+                    {
+                        ValueData = datablockRaw;
+                        return;
+                    }
+                }
 
             //this is a failsafe for when IsFree == true. a lot of time the data is there, but if not, stick what we do have in the value and call it a day
             try
@@ -320,7 +428,13 @@ namespace Registry.Cells
                     case DataTypeEnum.RegResourceRequirementsList:
                     case DataTypeEnum.RegResourceList:
                     case DataTypeEnum.RegFullResourceDescription:
-                        ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
+
+                        ValueData = new byte[Math.Abs(dataLengthInternal)];
+
+                        Array.Copy(datablockRaw, internalDataOffset, (byte[])ValueData, 0, Math.Abs(dataLengthInternal));
+
+
+                        //ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
 
                         break;
 
@@ -339,14 +453,14 @@ namespace Registry.Cells
                             ValueData = BitConverter.ToUInt32(reversedBlock, 0);
                         }
 
-                            break;
+                        break;
 
                     case DataTypeEnum.RegQword:
                         ValueData = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
 
                         break;
 
-                   
+
 
                     case DataTypeEnum.RegUnknown:
                         ValueData = datablockRaw;
@@ -357,7 +471,7 @@ namespace Registry.Cells
 
                     case DataTypeEnum.RegLink:
                         ValueData =
-Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
+                        Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
                         break;
 
                     default:
@@ -385,39 +499,38 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
                 {
                     Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
                 }
-           
-                RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
+
+                //    RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
 
                 if (!IsFree)
                 {
                     //When records ARE free, different rules apply, so we process thsoe all at once later
                     Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
                 }
-                else
-                {
-                    if (RecordSlack.Length > 0)
-                    {
-                           // var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
-                            //if (found > 0)
-                            //{
-                            //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                            //    {
-                            //        Console.WriteLine("Recovered {0:N0} records from free space in vk cell record at relative offset 0x{1:x}!", found, relativeOffset);
-                            //    }
-                                
-                            //}
-                    }
-                }                   
-       
+                //else
+                //{
+                //    if (RecordSlack.Length > 0)
+                //    {
+                //           // var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
+                //            //if (found > 0)
+                //            //{
+                //            //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                //            //    {
+                //            //        Console.WriteLine("Recovered {0:N0} records from free space in vk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+                //            //    }
+                //                
+                //            //}
+                //    }
+                //}                   
             }
 
 
-         
+
 
             catch (Exception ex)
             {
                 //if its a free record, errors are expected, but if not, throw so the issue can be addressed
-                if (IsFree && ValueData == null)
+                if (IsFree)
                 {
                     ValueData = datablockRaw;
                 }
@@ -428,7 +541,7 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             }
         }
 
-        public byte[] RecordSlack { get; private set; }
+   
 
         public string Padding { get; private set; }
 
@@ -630,10 +743,10 @@ Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInte
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
-            if (RecordSlack != null && RecordSlack.Length > 0)
-            {
-                sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));
-            }
+            //if (RecordSlack != null && RecordSlack.Length > 0)
+            //{
+            //    sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));
+            //}
             
             return sb.ToString();
         }

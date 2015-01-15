@@ -67,8 +67,8 @@ namespace Registry.Other
             while (offsetInHbin < Size)
             {
                 //Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
-                if (offsetInHbin == 0x00005B08)
-                    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
+                //if (offsetInHbin == 0x00005B08)
+                //    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
 
 
                 var recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
@@ -78,7 +78,11 @@ namespace Registry.Other
                 readSize = Math.Abs(readSize);
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
 
-                var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
+                var rawRecord = new byte[readSize];
+
+                Array.Copy(rawBytes, offsetInHbin, rawRecord, 0, readSize);
+
+                //var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
 
                 RegistryHive.TotalBytesRead += readSize;
 
@@ -145,7 +149,12 @@ namespace Registry.Other
                             break;
 
                         case "vk":
-                            cellRecord = new VKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                            if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
+                            {
+                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                            }
+                      
+                                
 
                             break;
 

@@ -28,6 +28,9 @@ namespace Registry.Cells
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
+            //if (relativeOffset == 0x0023B860)
+            //    System.Diagnostics.Debug.Write("nk trap");
+
             //if (AbsoluteOffset == 5525352)
             //    System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
             
@@ -130,11 +133,43 @@ namespace Registry.Cells
 
             if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
             {
-                Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+                if (IsFree)
+                {
+                    if (rawBytes.Length >= 0x50 + NameLength)
+                    {
+                        Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+                    }
+                    else
+                    {
+                        Name = "(Unable to determine name)";
+                    }
+                        
+                }
+                else
+                {
+                    Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);   
+                }
+                 
             }
             else
             {
-                Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
+                if (IsFree)
+                {
+                    if (rawBytes.Length >= 0x50 + NameLength)
+                    {
+                        Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
+                    }
+                    else
+                    {
+                        Name = "(Unable to determine name)";
+                    }
+                    
+                }
+                else
+                {
+                    Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
+                }
+                    
             }
             
             var paddingOffset = 0x50 + NameLength;
@@ -147,12 +182,12 @@ namespace Registry.Cells
 
             Padding = string.Empty;
 
-            if (paddingLength > 0)
+            if (paddingLength > 0 & !IsFree)
             {
                 Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
         
-            RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
+            //RecordSlack = rawBytes.Skip(actualPaddingOffset).ToArray();
 
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
@@ -162,21 +197,21 @@ namespace Registry.Cells
                 //When records ARE free, different rules apply, so we process thsoe all at once later
                 Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
             }
-            else
-            {
-                if (RecordSlack.Length > 0)
-                {
-                    //var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
-                    //if (found > 0)
-                    //{
-                    //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                    //    {
-                    //        Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!", found, relativeOffset);
-                    //    }
-                        
-                    //}
-                }
-            }
+            //else
+            //{
+            //    if (RecordSlack.Length > 0)
+            //    {
+            //        //var found = Helpers.ExtractRecordsFromSlack(RecordSlack, actualPaddingOffset + relativeOffset);
+            //        //if (found > 0)
+            //        //{
+            //        //    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+            //        //    {
+            //        //        Console.WriteLine("Recovered {0:N0} records from free space in nk cell record at relative offset 0x{1:x}!", found, relativeOffset);
+            //        //    }
+            //            
+            //        //}
+            //    }
+            //}
                 
 
         }
@@ -218,7 +253,6 @@ namespace Registry.Cells
         // public properties...
 
 
-        public byte[] RecordSlack { get; private set; }
         /// <summary>
         /// The relative offset to a data node containing the classname
         /// <remarks>Use ClassLength to get the correct classname vs using the entire contents of the data node. There is often slack slace in the data node when they hold classnames</remarks>
@@ -378,10 +412,10 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
-            if (RecordSlack != null && RecordSlack.Length > 0)
-            {
-                sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));    
-            }
+            //if (RecordSlack != null && RecordSlack.Length > 0)
+            //{
+            //    sb.AppendLine(string.Format("Record Slack: {0}", BitConverter.ToString(RecordSlack)));    
+            //}
             
             
             return sb.ToString();
