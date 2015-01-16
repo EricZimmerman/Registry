@@ -125,7 +125,7 @@ namespace Registry
         }
 
         public  Dictionary<long, HBinRecord> HBinRecords { get; private set; }
-        public static RegistryHeader Header { get; private set; }
+        public RegistryHeader Header { get; private set; }
         /// <summary>
         /// List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
@@ -653,7 +653,7 @@ namespace Registry
 
             Header = new RegistryHeader(header);
 
-
+            var version = float.Parse(string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion));
 
             _softParsingErrors = 0;
             _hardParsingErrors = 0;
@@ -714,9 +714,11 @@ namespace Registry
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int)hbinSize);
 
+             
+
                 try
                 {
-                    var h = new HBinRecord(rawhbin, offsetInHive - 4096);
+                    var h = new HBinRecord(rawhbin, offsetInHive - 4096, version);
 
                     var records = h.Process();
 

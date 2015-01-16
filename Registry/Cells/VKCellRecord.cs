@@ -29,7 +29,7 @@ namespace Registry.Cells
         /// <summary>
         /// Initializes a new instance of the <see cref="VKCellRecord"/> class.
         /// </summary>
-        public VKCellRecord(byte[] rawBytes, long relativeOffset)
+        public VKCellRecord(byte[] rawBytes, long relativeOffset, float version)
         {
             RelativeOffset = relativeOffset;
    
@@ -269,7 +269,7 @@ namespace Registry.Cells
                 //value is dataLengthInternal long. rest is slack
 
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
-                if (dataLengthInternal > 16344 && (RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3))
+                if (dataLengthInternal > 16344 && version > 1.3) // RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3)
                 {
                     // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType data
 

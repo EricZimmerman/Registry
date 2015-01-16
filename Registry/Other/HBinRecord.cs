@@ -20,14 +20,19 @@ namespace Registry.Other
     // public classes...
     public class HBinRecord
     {
+
+        private float _version = 0.0f;
+
         // protected internal constructors...
         /// <summary>
         /// Initializes a new instance of the <see cref="HBinRecord"/> class.
         /// <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
-        protected internal HBinRecord(byte[] rawBytes, long relativeOffset)
+        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, float version)
         {
             RelativeOffset = relativeOffset;
+
+            _version = version;
 
             _rawBytes = rawBytes;
 
@@ -165,7 +170,7 @@ namespace Registry.Other
                         case "vk":
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
-                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset, _version);
                             }
 
 
@@ -250,7 +255,8 @@ namespace Registry.Other
 
         private List<string> _goodSigs =  new List<string> { "lf", "lh", "li", "ri", "db", "lk", "nk", "sk", "vk" };
 
-        private  Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
+        // this is static because its a lot faster than when its not!
+        private static readonly Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
         private byte[] _rawBytes;
 
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
@@ -363,7 +369,7 @@ namespace Registry.Other
                                 //cant have a record shorter than this, even when no name is present
                                 continue;
                             }
-                            var vk = new VKCellRecord(raw, relativeoffset + actualStart);
+                            var vk = new VKCellRecord(raw, relativeoffset + actualStart, _version);
                             records.Add(vk);
                           //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, vk);
                            
