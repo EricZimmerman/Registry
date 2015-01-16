@@ -5,19 +5,18 @@ using NFluent;
 using Registry.Other;
 
 // namespaces...
+
 namespace Registry.Lists
 {
     // internal classes...
     internal class LxListRecord : IListTemplate, IRecordBase
     {
         // private fields...
-        private Dictionary<uint, string> _offsets;
         private readonly int _size;
-
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="LFListRecord"/> or <see cref="LHListRecord"/>  class.
-        /// <remarks>The signature determines how the hash is calculated/verified</remarks>
+        ///     Initializes a new instance of the <see cref="LFListRecord" /> or <see cref="LHListRecord" />  class.
+        ///     <remarks>The signature determines how the hash is calculated/verified</remarks>
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
@@ -35,7 +34,7 @@ namespace Registry.Lists
 
             Check.That(Signature).IsOneOfThese("lh", "lf");
 
-            _offsets = new Dictionary<uint, string>();
+            Offsets = new Dictionary<uint, string>();
 
             var index = 0x8;
             var counter = 0;
@@ -62,49 +61,37 @@ namespace Registry.Lists
                     //numerical hash
                     hash = BitConverter.ToUInt32(rawBytes, index).ToString();
                 }
-                
+
                 index += 4;
 
-                _offsets.Add(os, hash);
+                Offsets.Add(os, hash);
 
                 counter += 1;
             }
         }
 
-        // public properties...
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
-        }
-        
+        /// <summary>
+        ///     A dictionary of relative offsets and hashes to other records
+        ///     <remarks>The offset is the key and the hash value is the value</remarks>
+        /// </summary>
+        public Dictionary<uint, string> Offsets { get; private set; }
+
         public bool IsFree { get; private set; }
         public bool IsReferenced { get; internal set; }
         public int NumberOfEntries { get; private set; }
-
-        /// <summary>
-        /// A dictionary of relative offsets and hashes to other records
-        /// <remarks>The offset is the key and the hash value is the value</remarks>
-        /// </summary>
-        public Dictionary<uint, string> Offsets
-        {
-            get
-            {
-                return _offsets;
-            }
-        }
-
         public byte[] RawBytes { get; private set; }
         public long RelativeOffset { get; private set; }
         public string Signature { get; private set; }
+
         public int Size
         {
-            get
-            {
-                return Math.Abs(_size);
-            }
+            get { return Math.Abs(_size); }
+        }
+
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
         }
 
         // public methods...
@@ -128,7 +115,7 @@ namespace Registry.Lists
 
             var i = 0;
 
-            foreach (var offset in _offsets)
+            foreach (var offset in Offsets)
             {
                 sb.AppendLine(string.Format("------------ Offset/hash record #{0} ------------", i));
                 sb.AppendLine(string.Format("Offset: 0x{0:X}, Hash: {1}", offset.Key, offset.Value));
@@ -141,10 +128,10 @@ namespace Registry.Lists
             if (IsFree)
             {
                 sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
-                    sb.AppendLine();
+                sb.AppendLine();
             }
-                
-            
+
+
             return sb.ToString();
         }
     }

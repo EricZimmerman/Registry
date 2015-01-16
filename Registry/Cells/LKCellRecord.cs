@@ -5,22 +5,44 @@ using NFluent;
 using Registry.Other;
 
 // namespaces...
+
 namespace Registry.Cells
 {
     // public classes...
     public class LKCellRecord : ICellTemplate, IRecordBase
     {
+        // public enums...
+        [Flags]
+        public enum FlagEnum
+        {
+            CompressedName = 0x0020,
+            HiveEntryRootKey = 0x0004,
+            HiveExit = 0x0002,
+            NoDelete = 0x0008,
+            PredefinedHandle = 0x0040,
+            SymbolicLink = 0x0010,
+            Unused0400 = 0x0400,
+            Unused0800 = 0x0800,
+            Unused1000 = 0x1000,
+            Unused2000 = 0x2000,
+            Unused4000 = 0x4000,
+            Unused8000 = 0x8000,
+            UnusedVolatileKey = 0x0001,
+            VirtMirrored = 0x0080,
+            VirtTarget = 0x0100,
+            VirtualStore = 0x0200
+        }
+
         // private fields...
         private readonly int _size;
         // protected internal constructors...
 
         // public fields...
         public List<ulong> ValueOffsets;
-
         // protected internal constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="NKCellRecord"/> class.
-        /// <remarks>Represents a Key Node Record</remarks>
+        ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
+        ///     <remarks>Represents a Key Node Record</remarks>
         /// </summary>
         protected internal LKCellRecord(byte[] rawBytes, long relativeOffset)
         {
@@ -37,7 +59,7 @@ namespace Registry.Cells
 
             Check.That(Signature).IsEqualTo("lk");
 
-            Flags = (FlagEnum)BitConverter.ToUInt16(rawBytes, 6);
+            Flags = (FlagEnum) BitConverter.ToUInt16(rawBytes, 6);
 
             var ts = BitConverter.ToInt64(rawBytes, 0x8);
 
@@ -73,7 +95,7 @@ namespace Registry.Cells
                 HivePointer = num;
             }
 
-   
+
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 
             //ClassCellIndex
@@ -93,7 +115,7 @@ namespace Registry.Cells
             var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
 
             //TODO is this a flag enum somewhere?
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4)); 
+            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4));
 
             var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));
 
@@ -135,65 +157,30 @@ namespace Registry.Cells
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
             Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
-
-        }
-
-        // public enums...
-        [Flags]
-        public enum FlagEnum
-        {
-            CompressedName = 0x0020,
-            HiveEntryRootKey = 0x0004,
-            HiveExit = 0x0002,
-            NoDelete = 0x0008,
-            PredefinedHandle = 0x0040,
-            SymbolicLink = 0x0010,
-            Unused0400 = 0x0400,
-            Unused0800 = 0x0800,
-            Unused1000 = 0x1000,
-            Unused2000 = 0x2000,
-            Unused4000 = 0x4000,
-            Unused8000 = 0x8000,
-            UnusedVolatileKey = 0x0001,
-            VirtMirrored = 0x0080,
-            VirtTarget = 0x0100,
-            VirtualStore = 0x0200
-        }
-
-        // public properties...
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
         }
 
         // public properties...
         /// <summary>
-        /// The relative offset to a data node containing the classname
-        /// <remarks>Use ClassLength to get the correct classname vs using the entire contents of the data node. There is often slack slace in the data node when they hold classnames</remarks>
+        ///     The relative offset to a data node containing the classname
+        ///     <remarks>
+        ///         Use ClassLength to get the correct classname vs using the entire contents of the data node. There is often
+        ///         slack slace in the data node when they hold classnames
+        ///     </remarks>
         /// </summary>
         public uint ClassCellIndex { get; private set; }
 
         /// <summary>
-        /// The length of the classname in the data node referenced by ClassCellIndex. 
+        ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
         public ushort ClassLength { get; private set; }
+
         public byte Debug { get; private set; }
         public FlagEnum Flags { get; private set; }
 
-
-        public bool IsFree { get; private set; }
-
-
-        public bool IsReferenced { get; internal set; }
-
         /// <summary>
-        /// The last write time of this key
+        ///     The last write time of this key
         /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; private set; }
-
 
         public uint MaximumClassLength { get; private set; }
         public ushort MaximumNameLength { get; private set; }
@@ -201,7 +188,7 @@ namespace Registry.Cells
         public uint MaximumValueNameLength { get; private set; }
 
         /// <summary>
-        /// The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
+        ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
         public string Name { get; private set; }
 
@@ -209,58 +196,56 @@ namespace Registry.Cells
         public string Padding { get; private set; }
 
         /// <summary>
-        /// The relative offset to the parent key for this record
+        ///     The relative offset to the parent key for this record
         /// </summary>
         public uint ParentCellIndex { get; private set; }
 
-        public byte[] RawBytes { get; private set; }
-
-
-        public long RelativeOffset { get; private set; }
-
         /// <summary>
-        /// The relative offset to the security record for this record
+        ///     The relative offset to the security record for this record
         /// </summary>
         public uint SecurityCellIndex { get; private set; }
 
-        public string Signature { get; private set; }
-
-
-        public int Size
-        {
-            get
-            {
-                return Math.Abs(_size);
-            }
-        }
-
         /// <summary>
-        /// When true, this key has been deleted
-        /// <remarks>The parent key is determined by checking whether ParentCellIndex 1) exists and 2) ParentCellIndex.IsReferenced == true. </remarks>
+        ///     When true, this key has been deleted
+        ///     <remarks>
+        ///         The parent key is determined by checking whether ParentCellIndex 1) exists and 2)
+        ///         ParentCellIndex.IsReferenced == true.
+        ///     </remarks>
         /// </summary>
         public bool IsDeleted { get; internal set; }
 
-
         /// <summary>
-        /// The number of subkeys this key contains
+        ///     The number of subkeys this key contains
         /// </summary>
         public uint SubkeyCountsStable { get; private set; }
-
 
         public uint SubkeyCountsVolatile { get; private set; }
 
         /// <summary>
-        /// The relative offset to the root cell this record is linked to.
+        ///     The relative offset to the root cell this record is linked to.
         /// </summary>
         public uint RootCellIndex { get; private set; }
 
         public uint HivePointer { get; private set; }
-
         public int UserFlags { get; private set; }
-
-        
         public int VirtualControlFlags { get; private set; }
         public uint WorkVar { get; private set; }
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
+        }
+
+        public bool IsFree { get; private set; }
+        public bool IsReferenced { get; internal set; }
+        public byte[] RawBytes { get; private set; }
+        public long RelativeOffset { get; private set; }
+        public string Signature { get; private set; }
+
+        public int Size
+        {
+            get { return Math.Abs(_size); }
+        }
 
         // public methods...
         public override string ToString()
@@ -316,7 +301,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Virtual Control Flags: 0x{0:X}", VirtualControlFlags));
             sb.AppendLine(string.Format("Work Var: 0x{0:X}", WorkVar));
 
-  
+
             sb.AppendLine();
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 

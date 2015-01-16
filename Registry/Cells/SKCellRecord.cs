@@ -5,6 +5,7 @@ using NFluent;
 using Registry.Other;
 
 // namespaces...
+
 namespace Registry.Cells
 {
     // public classes...
@@ -12,11 +13,10 @@ namespace Registry.Cells
     {
         // private fields...
         private readonly int _size;
-
         // protected internal constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="SKCellRecord"/> class.
-        /// <remarks>Represents a Key Security Record</remarks>
+        ///     Initializes a new instance of the <see cref="SKCellRecord" /> class.
+        ///     <remarks>Represents a Key Security Record</remarks>
         /// </summary>
         protected internal SKCellRecord(byte[] rawBytes, long relativeOffset)
         {
@@ -40,7 +40,7 @@ namespace Registry.Cells
 
             DescriptorLength = BitConverter.ToUInt32(rawBytes, 0x14);
 
-            var rawDescriptor = rawBytes.Skip(0x18).Take((int)DescriptorLength).ToArray();
+            var rawDescriptor = rawBytes.Skip(0x18).Take((int) DescriptorLength).ToArray();
 
             if (rawDescriptor.Length > 0)
             {
@@ -56,69 +56,54 @@ namespace Registry.Cells
             {
                 var padding = rawBytes.Skip((int) paddingOffset).Take((int) paddingLength).ToArray();
 
-                Check.That(Array.TrueForAll(padding, a => a == 0));               
+                Check.That(Array.TrueForAll(padding, a => a == 0));
             }
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-            Check.That(0x18 + (int)DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
-        }
-
-        // public properties...
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
+            Check.That(0x18 + (int) DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
         }
 
         // public properties...
 
         /// <summary>
-        /// A relative offset to the previous SK record
+        ///     A relative offset to the previous SK record
         /// </summary>
         public uint BLink { get; private set; }
+
         public uint DescriptorLength { get; private set; }
 
         /// <summary>
-        /// A relative offset to the next SK record
+        ///     A relative offset to the next SK record
         /// </summary>
-        /// 
         public uint FLink { get; private set; }
 
-   
-        public bool IsFree { get; private set; }
-
-
-      
-        public bool IsReferenced { get; internal set; }
-      
-        public byte[] RawBytes { get; private set; }
-
         /// <summary>
-        /// A count of how many keys this security record applies to
+        ///     A count of how many keys this security record applies to
         /// </summary>
         public uint ReferenceCount { get; private set; }
-
-      
-        public long RelativeOffset { get; private set; }
 
         public ushort Reserved { get; private set; }
 
         /// <summary>
-        /// The security descriptor object for this record
+        ///     The security descriptor object for this record
         /// </summary>
         public SKSecurityDescriptor SecurityDescriptor { get; private set; }
-        
+
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
+        }
+
+        public bool IsFree { get; private set; }
+        public bool IsReferenced { get; internal set; }
+        public byte[] RawBytes { get; private set; }
+        public long RelativeOffset { get; private set; }
         public string Signature { get; private set; }
 
-   
         public int Size
         {
-            get
-            {
-                return Math.Abs(_size);
-            }
+            get { return Math.Abs(_size); }
         }
 
         // public methods...
@@ -145,7 +130,7 @@ namespace Registry.Cells
 
             sb.AppendLine();
             sb.AppendLine(string.Format("Security descriptor: {0}", SecurityDescriptor));
-            
+
             return sb.ToString();
         }
     }

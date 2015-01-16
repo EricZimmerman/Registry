@@ -5,14 +5,22 @@ using System.Text;
 using NFluent;
 
 // namespaces...
+
 namespace Registry.Other
 {
     // public classes...
     public class xACLRecord
     {
+        // public enums...
+        public enum ACLTypeEnum
+        {
+            Security,
+            Discretionary
+        }
+
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="xACLRecord"/> class.
+        ///     Initializes a new instance of the <see cref="xACLRecord" /> class.
         /// </summary>
         public xACLRecord(byte[] rawBytes, ACLTypeEnum aclTypetype)
         {
@@ -22,7 +30,7 @@ namespace Registry.Other
 
             AclRevision = rawBytes[0];
 
-            var rev = (int)AclRevision;
+            var rev = (int) AclRevision;
 
             Check.That(rev.ToString()).IsOneOfThese("1", "2", "4");
 
@@ -55,19 +63,15 @@ namespace Registry.Other
 
             foreach (var chunk in chunks)
             {
-                if (chunk.Length <= 0) continue;
+                if (chunk.Length <= 0)
+                {
+                    continue;
+                }
 
                 var ace = new ACERecord(chunk);
 
                 ACERecords.Add(ace);
             }
-        }
-
-        // public enums...
-        public enum ACLTypeEnum
-        {
-            Security,
-            Discretionary
         }
 
         // public properties...
@@ -79,7 +83,6 @@ namespace Registry.Other
         public byte[] RawBytes { get; private set; }
         public byte Sbz1 { get; private set; }
         public ushort Sbz2 { get; private set; }
-
         // public methods...
         public override string ToString()
         {
@@ -87,9 +90,9 @@ namespace Registry.Other
 
             sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclRevision));
             sb.AppendLine(string.Format("ACL Type: {0}", ACLType));
-            
+
             sb.AppendLine(string.Format("ACE Records Count: {0}", AceCount));
-            
+
             sb.AppendLine();
 
             var i = 0;

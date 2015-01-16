@@ -8,6 +8,7 @@ using Registry;
 using Registry.Cells;
 
 // namespaces...
+
 namespace ExampleApp
 {
     // internal classes...
@@ -19,7 +20,6 @@ namespace ExampleApp
             var testFiles = new List<string>();
 
 
-
             var result = Parser.Default.ParseArguments<Options>(args);
             if (!result.Errors.Any())
             {
@@ -29,7 +29,7 @@ namespace ExampleApp
                     Environment.Exit(1);
                 }
 
-                if (!string.IsNullOrEmpty(result.Value.HiveName) )
+                if (!string.IsNullOrEmpty(result.Value.HiveName))
                 {
                     if (!string.IsNullOrEmpty(result.Value.DirectoryName))
                     {
@@ -74,7 +74,6 @@ namespace ExampleApp
             }
 
 
-
             foreach (var testFile in testFiles)
             {
                 if (File.Exists(testFile) == false)
@@ -84,178 +83,203 @@ namespace ExampleApp
                 }
 
                 Console.WriteLine("Processing '{0}'", testFile);
-                Console.Title = string.Format( "Processing '{0}'", testFile);
+                Console.Title = string.Format("Processing '{0}'", testFile);
 
                 var fName1Test = new RegistryHive(testFile);
-               
-                    var sw = new Stopwatch();
-                    sw.Start();
 
-                    try
+                var sw = new Stopwatch();
+                sw.Start();
+
+                try
+                {
+                    fName1Test.Message += (ss, ee) => { Console.WriteLine(ee.Detail); };
+
+                    fName1Test.ParseHive();
+
+                    Console.WriteLine("Finished processing '{0}'", testFile);
+                    Console.Title = string.Format("Finished processing '{0}'", testFile);
+
+                    sw.Stop();
+
+                    var freeCells = fName1Test.CellRecords.Where(t => t.Value.IsFree);
+                    var referencedCells = fName1Test.CellRecords.Where(t => t.Value.IsReferenced);
+
+                    var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
+                    var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
+                    var skFree = freeCells.Count(t => t.Value is SKCellRecord);
+                    var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
+
+
+                    var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
+                    var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
+
+                    var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
+                    var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
+
+                    //need to change these to public classes first
+                    //var dbFree = freeData.Count(t => t.Value is DBListRecord);
+                    //var liFree = freeLists.Count(t => t.Value is lilistrecord);
+                    //var riFree = freeLists.Count(t => t.Value is SKCellRecord);
+                    //var lhFree = freeLists.Count(t => t.Value is SKCellRecord);
+                    //var lfFree = freeLists.Count(t => t.Value is SKCellRecord);
+
+
+                    //we can look thru records marked in use but not referenced to see if things are broken
+                    //records marked as in use but not referenced by anything (should be 0?)
+                    var goofyCellsShouldBeUsed =
+                        fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+
+                    //referenced by another record somewhere, but marked as free based on size
+                    var goofyCellsShouldBeAllocated =
+                        fName1Test.CellRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+
+                    var goofyListsShouldBeUsed =
+                        fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+                    var goofyListsShouldBeAllocated =
+                        fName1Test.ListRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+
+                    var goofyDataShouldBeUsed =
+                        fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+                    var goofyDataShouldBeAllocated =
+                        fName1Test.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Found {0:N0} hbin records", fName1Test.HBinRecords.Count);
+                    Console.WriteLine("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+                        fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
+                        fName1Test.CellRecords.Count(w => w.Value is VKCellRecord),
+                        fName1Test.CellRecords.Count(w => w.Value is SKCellRecord),
+                        fName1Test.CellRecords.Count(w => w.Value is LKCellRecord));
+                    Console.WriteLine("Found {0:N0} List records", fName1Test.ListRecords.Count);
+                    Console.WriteLine("Found {0:N0} Data records", fName1Test.DataRecords.Count);
+
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+                        freeCells.Count(), nkFree, vkFree, skFree, lkFree);
+                    Console.WriteLine("Found {0:N0} free List records", freeLists.Count());
+                    Console.WriteLine("Found {0:N0} free Data records", freeData.Count());
+
+                    Console.WriteLine();
+                    Console.WriteLine("There are {0:N0} cell records marked as being referenced ({1:P})",
+                        referencedCells.Count(), referencedCells.Count()/(double) fName1Test.CellRecords.Count);
+                    Console.WriteLine("There are {0:N0} list records marked as being referenced ({1:P})",
+                        referencedList.Count(), referencedList.Count()/(double) fName1Test.ListRecords.Count);
+                    Console.WriteLine("There are {0:N0} data records marked as being referenced ({1:P})",
+                        referencedData.Count(), referencedData.Count()/(double) fName1Test.DataRecords.Count);
+
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "There were {0:N0} cell records marked as in use but not referenced by anything in the registry tree",
+                        goofyCellsShouldBeUsed.Count());
+                    Console.WriteLine(
+                        "There were {0:N0} cell records referenced by another record somewhere, but marked as free based on size in the registry tree",
+                        goofyCellsShouldBeAllocated.Count());
+                    Console.WriteLine(
+                        "There were {0:N0} list records marked as in use but not referenced by anything in the registry tree",
+                        goofyListsShouldBeUsed.Count());
+                    Console.WriteLine(
+                        "There were {0:N0} list records referenced by another record somewhere, but marked as free based on size in the registry tree",
+                        goofyListsShouldBeAllocated.Count());
+                    Console.WriteLine(
+                        "There were {0:N0} data records marked as in use but not referenced by anything in the registry tree",
+                        goofyDataShouldBeUsed.Count());
+                    Console.WriteLine(
+                        "There were {0:N0} data records referenced by another record somewhere, but marked as free based on size in the registry tree",
+                        goofyDataShouldBeAllocated.Count());
+
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
+                        fName1Test.HardParsingErrors);
+                    Console.WriteLine(
+                        "There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
+                        fName1Test.SoftParsingErrors);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
+                        fName1Test.CellRecords.Count ==
+                        freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
+                    Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
+                        fName1Test.ListRecords.Count ==
+                        freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
+                    Console.WriteLine("Data:  Free + referenced + marked as in use but not referenced == Total? {0}",
+                        fName1Test.DataRecords.Count ==
+                        freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
+
+                    #region TestStuffForViewingUnreferenced
+
+                    //var baseDir1 = Path.GetDirectoryName(testFile);
+                    //var baseFname1 = Path.GetFileName(testFile);
+                    //var myName1 = "_unref-output.txt";
+
+                    //var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
+
+                    //File.WriteAllText(outfile1, "NK absoluteoffsets");
+                    //foreach (var source in RegistryHive.CellRecords.Where(q=>q.Value is NKCellRecord))
+                    //{
+                    //    File.AppendAllText(outfile1, string.Format("0x{0:X}\r\n", source.Value.AbsoluteOffset));
+                    //}
+
+
+                    //      var unrefcells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced == false);
+                    //
+
+                    //          if (unrefcells.Any())
+                    //          {
+                    //              File.WriteAllText(outfile1,string.Format("Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})\r\n", freeCells.Count(), nkFree, vkFree, skFree, lkFree));
+                    //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free List records\r\n", freeLists.Count()));
+                    //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free Data records\r\n\r\n", freeData.Count()));
+                    //          }
+
+                    //              foreach (var keyValuePair in unrefcells)
+                    //              {
+                    //              var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
+
+                    //                  //TODO add a check here into referenced cells to see if an active parent exists if its an nk record
+
+                    //                  File.AppendAllText(outfile1, content);
+                    //              }
+
+                    //          // lists dont really do anything for us since free lists have their # of entries set to 0
+                    //              //foreach (var keyValuePair in unrefLists)
+                    //              //{
+                    //              //    var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
+                    //              //    File.AppendAllText(outfile1, content);
+                    //              //}
+
+                    #endregion
+
+                    if (result.Value.ExportHiveData)
                     {
-                        fName1Test.Message += (ss, ee) =>
-                        {
-                            Console.WriteLine(ee.Detail);
-                            
-                        };
+                        var baseDir = Path.GetDirectoryName(testFile);
+                        var baseFname = Path.GetFileName(testFile);
+                        var myName = "eric-output.txt";
 
-                        fName1Test.ParseHive();
-
-                        Console.WriteLine("Finished processing '{0}'", testFile);
-                        Console.Title = string.Format("Finished processing '{0}'", testFile);
-
-                        sw.Stop();
-
-                        var freeCells = fName1Test.CellRecords.Where(t => t.Value.IsFree);
-                        var referencedCells = fName1Test.CellRecords.Where(t => t.Value.IsReferenced);
-
-                        var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
-                        var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
-                        var skFree = freeCells.Count(t => t.Value is SKCellRecord);
-                        var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
-
-
-                        var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
-                        var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
-
-                        var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
-                        var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
-
-                        //need to change these to public classes first
-                        //var dbFree = freeData.Count(t => t.Value is DBListRecord);
-                        //var liFree = freeLists.Count(t => t.Value is lilistrecord);
-                        //var riFree = freeLists.Count(t => t.Value is SKCellRecord);
-                        //var lhFree = freeLists.Count(t => t.Value is SKCellRecord);
-                        //var lfFree = freeLists.Count(t => t.Value is SKCellRecord);
-
-
-
-
-                        //we can look thru records marked in use but not referenced to see if things are broken
-                        //records marked as in use but not referenced by anything (should be 0?)
-                        var goofyCellsShouldBeUsed = fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-
-                        //referenced by another record somewhere, but marked as free based on size
-                        var goofyCellsShouldBeAllocated = fName1Test.CellRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
-
-                        var goofyListsShouldBeUsed = fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                        var goofyListsShouldBeAllocated = fName1Test.ListRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
-
-                        var goofyDataShouldBeUsed = fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                        var goofyDataShouldBeAllocated = fName1Test.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
-
-                        Console.WriteLine();
-                        Console.WriteLine("Found {0:N0} hbin records", fName1Test.HBinRecords.Count);
-                        Console.WriteLine("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})", fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord), fName1Test.CellRecords.Count(w => w.Value is VKCellRecord), fName1Test.CellRecords.Count(w => w.Value is SKCellRecord), fName1Test.CellRecords.Count(w => w.Value is LKCellRecord));
-                        Console.WriteLine("Found {0:N0} List records", fName1Test.ListRecords.Count);
-                        Console.WriteLine("Found {0:N0} Data records", fName1Test.DataRecords.Count);
-
-                        Console.WriteLine();
-                        Console.WriteLine("Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})", freeCells.Count(), nkFree, vkFree, skFree, lkFree);
-                        Console.WriteLine("Found {0:N0} free List records",  freeLists.Count());
-                        Console.WriteLine("Found {0:N0} free Data records", freeData.Count());
-
-                        Console.WriteLine();
-                        Console.WriteLine("There are {0:N0} cell records marked as being referenced ({1:P})", referencedCells.Count(), (double)referencedCells.Count() / (double)fName1Test.CellRecords.Count);
-                        Console.WriteLine("There are {0:N0} list records marked as being referenced ({1:P})", referencedList.Count(), (double)referencedList.Count() / (double)fName1Test.ListRecords.Count);
-                        Console.WriteLine("There are {0:N0} data records marked as being referenced ({1:P})", referencedData.Count(), (double)referencedData.Count() / (double)fName1Test.DataRecords.Count);
-
-                        Console.WriteLine();
-                        Console.WriteLine("There were {0:N0} cell records marked as in use but not referenced by anything in the registry tree", goofyCellsShouldBeUsed.Count());
-                        Console.WriteLine("There were {0:N0} cell records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyCellsShouldBeAllocated.Count());
-                        Console.WriteLine("There were {0:N0} list records marked as in use but not referenced by anything in the registry tree", goofyListsShouldBeUsed.Count());
-                        Console.WriteLine("There were {0:N0} list records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyListsShouldBeAllocated.Count());
-                        Console.WriteLine("There were {0:N0} data records marked as in use but not referenced by anything in the registry tree", goofyDataShouldBeUsed.Count());
-                        Console.WriteLine("There were {0:N0} data records referenced by another record somewhere, but marked as free based on size in the registry tree", goofyDataShouldBeAllocated.Count());
-
-                        Console.WriteLine();
-                        Console.WriteLine("There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)", fName1Test.HardParsingErrors);
-                        Console.WriteLine("There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)", fName1Test.SoftParsingErrors);
-
-                        Console.WriteLine();
-                        Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
-                        Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
-                        Console.WriteLine("Data:  Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.DataRecords.Count == freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
-                        
-                        #region TestStuffForViewingUnreferenced
-                        //var baseDir1 = Path.GetDirectoryName(testFile);
-                        //var baseFname1 = Path.GetFileName(testFile);
-                        //var myName1 = "_unref-output.txt";
-
-                        //var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
-
-                        //File.WriteAllText(outfile1, "NK absoluteoffsets");
-                        //foreach (var source in RegistryHive.CellRecords.Where(q=>q.Value is NKCellRecord))
-                        //{
-                        //    File.AppendAllText(outfile1, string.Format("0x{0:X}\r\n", source.Value.AbsoluteOffset));
-                        //}
-
-
-                        //      var unrefcells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced == false);
-                        //
-
-                        //          if (unrefcells.Any())
-                        //          {
-                        //              File.WriteAllText(outfile1,string.Format("Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})\r\n", freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-                        //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free List records\r\n", freeLists.Count()));
-                        //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free Data records\r\n\r\n", freeData.Count()));
-                        //          }
-
-                        //              foreach (var keyValuePair in unrefcells)
-                        //              {
-                        //              var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
-
-                        //                  //TODO add a check here into referenced cells to see if an active parent exists if its an nk record
-
-                        //                  File.AppendAllText(outfile1, content);
-                        //              }
-
-                        //          // lists dont really do anything for us since free lists have their # of entries set to 0
-                        //              //foreach (var keyValuePair in unrefLists)
-                        //              //{
-                        //              //    var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
-                        //              //    File.AppendAllText(outfile1, content);
-                        //              //}
-                        #endregion
-                        
-
-                        if (result.Value.ExportHiveData)
-                        {
-                            var baseDir = Path.GetDirectoryName(testFile);
-                            var baseFname = Path.GetFileName(testFile);
-                            var myName = "eric-output.txt";
-
-                            var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
-                            fName1Test.ExportDataToCommonFormat(outfile);
-                        }
+                        var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
+                        fName1Test.ExportDataToCommonFormat(outfile);
                     }
-                    catch (Exception ex)
-                    {
-                 
-                        Console.WriteLine("There was an error: {0}", ex.Message);
-                    }
-                    
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("There was an error: {0}", ex.Message);
+                }
 
-                    Console.WriteLine();
-                    Console.WriteLine();
-                  
 
-                    Console.WriteLine("Processing took {0:N4} seconds", sw.Elapsed.TotalSeconds);
+                Console.WriteLine();
+                Console.WriteLine();
 
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    Console.WriteLine("Press any key to continue to next file");
-                    Console.ReadKey();
 
-                    Console.WriteLine();
-                    Console.WriteLine();
-                
+                Console.WriteLine("Processing took {0:N4} seconds", sw.Elapsed.TotalSeconds);
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue to next file");
+                Console.ReadKey();
+
+                Console.WriteLine();
+                Console.WriteLine();
             }
         }
-
-        //private void OnMessage(MessageEventArgs ee)
-        //{
-        //    Console.WriteLine(ee.Detail);
-        //}
     }
 }

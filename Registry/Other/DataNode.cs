@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 
 // namespaces...
+
 namespace Registry.Other
 {
     // internal classes...
     // public classes...
-    public class DataNode:IRecordBase
+    public class DataNode : IRecordBase
     {
         // private fields...
         private readonly int _size;
-
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataNode"/> class.
+        ///     Initializes a new instance of the <see cref="DataNode" /> class.
         /// </summary>
         public DataNode(byte[] rawBytes, long relativeOffset)
         {
@@ -29,50 +28,48 @@ namespace Registry.Other
             Data = new byte[rawBytes.Length - 4];
 
             Signature = "";
-            
 
-            Array.Copy(rawBytes,4,Data,0,rawBytes.Length-4);
 
-           // Data = rawBytes.Skip(4).ToArray();
+            Array.Copy(rawBytes, 4, Data, 0, rawBytes.Length - 4);
+
+            // Data = rawBytes.Skip(4).ToArray();
         }
-
-        // public properties...
-        /// <summary>
-        /// The offset to this record from the beginning of the hive, in bytes
-        /// </summary>
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
-        }
-
-        public string Signature { get; private set; }
 
         // public properties...
         public byte[] Data { get; private set; }
         public bool IsFree { get; private set; }
         public byte[] RawBytes { get; private set; }
+
         /// <summary>
-        /// Set to true when a record is referenced by another referenced record.
-        /// <remarks>This flag allows for determining records that are marked 'in use' by their size but never actually referenced by another record in a hive</remarks>
+        ///     Set to true when a record is referenced by another referenced record.
+        ///     <remarks>
+        ///         This flag allows for determining records that are marked 'in use' by their size but never actually
+        ///         referenced by another record in a hive
+        ///     </remarks>
         /// </summary>
         public bool IsReferenced { get; internal set; }
 
         /// <summary>
-        /// The offset as stored in other records to a given record
-        /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
+        ///     The offset as stored in other records to a given record
+        ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
         public long RelativeOffset { get; private set; }
+
         public int Size
         {
-            get
-            {
-                return Math.Abs(_size);
-            }
+            get { return Math.Abs(_size); }
         }
 
+        // public properties...
+        /// <summary>
+        ///     The offset to this record from the beginning of the hive, in bytes
+        /// </summary>
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
+        }
+
+        public string Signature { get; private set; }
         // public methods...
         public override string ToString()
         {

@@ -3,58 +3,12 @@ using System.Linq;
 using System.Text;
 
 // namespaces...
+
 namespace Registry.Other
 {
     // public classes...
     public class SKSecurityDescriptor
     {
-        // public constructors...
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SKSecurityDescriptor"/> class.
-        /// </summary>
-        public SKSecurityDescriptor(byte[] rawBytes)
-        {
-            RawBytes = rawBytes;
-
-            Revision = rawBytes[0];
-
-            Control = (ControlEnum)BitConverter.ToUInt16(rawBytes, 0x02);
-
-            OwnerOffset = BitConverter.ToUInt32(rawBytes, 0x04);
-            GroupOffset = BitConverter.ToUInt32(rawBytes, 0x08);
-
-            SaclOffset = BitConverter.ToUInt32(rawBytes, 0x0c);
-            DaclOffset = BitConverter.ToUInt32(rawBytes, 0x10);
-
-            var sizeSacl = DaclOffset - SaclOffset;
-            var sizeDacl = OwnerOffset - DaclOffset;
-            var sizeOwnerSid = GroupOffset - OwnerOffset;
-            var sizeGroupSid = rawBytes.Length - GroupOffset;
-
-            var rawOwner = rawBytes.Skip((int)OwnerOffset).Take((int)sizeOwnerSid).ToArray();
-            var rawGroup = rawBytes.Skip((int)GroupOffset).Take((int)sizeGroupSid).ToArray();
-
-            OwnerSID = Helpers.ConvertHexStringToSidString(rawOwner);
-            GroupSID = Helpers.ConvertHexStringToSidString(rawGroup);
-
-            OwnerSIDType = Helpers.GetSIDTypeFromSIDString(OwnerSID);
-            GroupSIDType = Helpers.GetSIDTypeFromSIDString(GroupSID);
-
-            if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
-            {
-                var rawDacl = rawBytes.Skip((int)DaclOffset).Take((int)sizeDacl).ToArray();
-                DACL = new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
-            }
-
-            if ((Control & ControlEnum.SeSaclPresent) == ControlEnum.SeSaclPresent)
-            {
-                var rawSacl = rawBytes.Skip((int)SaclOffset).Take((int)sizeSacl).ToArray();
-                SACL = new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
-            }
-            
-            Padding = String.Empty; //TODO VERIFY ITS ALWAYS ZEROs
-        }
-
         // public enums...
         [Flags]
         public enum ControlEnum
@@ -75,6 +29,53 @@ namespace Registry.Other
             SeSelfRelative = 0x8000
         }
 
+        // public constructors...
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="SKSecurityDescriptor" /> class.
+        /// </summary>
+        public SKSecurityDescriptor(byte[] rawBytes)
+        {
+            RawBytes = rawBytes;
+
+            Revision = rawBytes[0];
+
+            Control = (ControlEnum) BitConverter.ToUInt16(rawBytes, 0x02);
+
+            OwnerOffset = BitConverter.ToUInt32(rawBytes, 0x04);
+            GroupOffset = BitConverter.ToUInt32(rawBytes, 0x08);
+
+            SaclOffset = BitConverter.ToUInt32(rawBytes, 0x0c);
+            DaclOffset = BitConverter.ToUInt32(rawBytes, 0x10);
+
+            var sizeSacl = DaclOffset - SaclOffset;
+            var sizeDacl = OwnerOffset - DaclOffset;
+            var sizeOwnerSid = GroupOffset - OwnerOffset;
+            var sizeGroupSid = rawBytes.Length - GroupOffset;
+
+            var rawOwner = rawBytes.Skip((int) OwnerOffset).Take((int) sizeOwnerSid).ToArray();
+            var rawGroup = rawBytes.Skip((int) GroupOffset).Take((int) sizeGroupSid).ToArray();
+
+            OwnerSID = Helpers.ConvertHexStringToSidString(rawOwner);
+            GroupSID = Helpers.ConvertHexStringToSidString(rawGroup);
+
+            OwnerSIDType = Helpers.GetSIDTypeFromSIDString(OwnerSID);
+            GroupSIDType = Helpers.GetSIDTypeFromSIDString(GroupSID);
+
+            if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
+            {
+                var rawDacl = rawBytes.Skip((int) DaclOffset).Take((int) sizeDacl).ToArray();
+                DACL = new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
+            }
+
+            if ((Control & ControlEnum.SeSaclPresent) == ControlEnum.SeSaclPresent)
+            {
+                var rawSacl = rawBytes.Skip((int) SaclOffset).Take((int) sizeSacl).ToArray();
+                SACL = new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
+            }
+
+            Padding = String.Empty; //TODO VERIFY ITS ALWAYS ZEROs
+        }
+
         // public properties...
         public ControlEnum Control { get; private set; }
         public xACLRecord DACL { get; private set; }
@@ -90,7 +91,6 @@ namespace Registry.Other
         public byte Revision { get; private set; }
         public xACLRecord SACL { get; private set; }
         public uint SaclOffset { get; private set; }
-
         // public methods...
         public override string ToString()
         {
@@ -122,8 +122,6 @@ namespace Registry.Other
                 sb.AppendLine(string.Format("Sacl Offset: 0x{0:X}", SaclOffset));
                 sb.AppendLine(string.Format("SACL: {0}", SACL));
             }
-
-
 
 
             return sb.ToString();

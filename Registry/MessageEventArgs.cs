@@ -12,11 +12,8 @@ namespace Registry
         }
 
         public string Message { get; set; }
-
         public string Detail { get; set; }
-
         public MsgTypeEnum MsgType { get; set; }
-
         public Exception Exception { get; set; }
     }
 }

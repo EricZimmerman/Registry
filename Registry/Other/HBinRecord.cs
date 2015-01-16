@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,24 +8,38 @@ using Registry.Cells;
 using Registry.Lists;
 
 // namespaces...
+
 namespace Registry.Other
 {
-
     //TODO get rid of calls to Console.WriteLine in favor of an event
     //May need to move processing out of constructor and add a "ParseBytes" or "initialize" method
 
-   
 
     // public classes...
     public class HBinRecord
     {
+        // this is static because its a lot faster than when its not!
+        private static readonly Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
 
-        private float _version = 0.0f;
+        private readonly List<string> _goodSigs = new List<string>
+        {
+            "lf",
+            "lh",
+            "li",
+            "ri",
+            "db",
+            "lk",
+            "nk",
+            "sk",
+            "vk"
+        };
 
+        private readonly byte[] _rawBytes;
+        private readonly float _version;
         // protected internal constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="HBinRecord"/> class.
-        /// <remarks>Represents a Hive Bin Record</remarks>
+        ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
+        ///     <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
         protected internal HBinRecord(byte[] rawBytes, long relativeOffset, float version)
         {
@@ -38,12 +51,12 @@ namespace Registry.Other
 
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
-           // Debug.WriteLine("hbin abs 0x{0:x8}",AbsoluteOffset);
+            // Debug.WriteLine("hbin abs 0x{0:x8}",AbsoluteOffset);
 
             //if (AbsoluteOffset == 0x533000)
             //   Debug.WriteLine("");
 
-                Check.That(Signature).IsEqualTo("hbin");
+            Check.That(Signature).IsEqualTo("hbin");
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -68,15 +81,56 @@ namespace Registry.Other
             }
 
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
-
-          
         }
+
+        // public properties...
+        /// <summary>
+        ///     The offset to this record from the beginning of the hive, in bytes
+        /// </summary>
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
+        }
+
+        // public properties...
+        /// <summary>
+        ///     The relative offset to this record
+        /// </summary>
+        public uint FileOffset { get; private set; }
+
+        /// <summary>
+        ///     The last write time of this key
+        /// </summary>
+        public DateTimeOffset? LastWriteTimestamp { get; private set; }
+
+        /// <summary>
+        ///     The offset to this record as stored by other records
+        ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
+        /// </summary>
+        public long RelativeOffset { get; private set; }
+
+        public uint Reserved { get; private set; }
+
+        /// <summary>
+        ///     The signature of the hbin record. Should always be "hbin"
+        /// </summary>
+        public string Signature { get; private set; }
+
+        /// <summary>
+        ///     The size of the hive
+        ///     <remarks>
+        ///         This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a
+        ///         negative size)
+        ///     </remarks>
+        /// </summary>
+        public uint Size { get; private set; }
+
+        public uint Spare { get; private set; }
 
         public List<IRecordBase> Process()
         {
             var records = new List<IRecordBase>();
 
-         
 
             //additional cell data starts 32 bytes (0x20) in
             var offsetInHbin = 0x20;
@@ -92,7 +146,7 @@ namespace Registry.Other
 
                 var recordSize = BitConverter.ToUInt32(_rawBytes, offsetInHbin);
 
-                var readSize = (int)recordSize;
+                var readSize = (int) recordSize;
 
                 readSize = Math.Abs(readSize);
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
@@ -174,7 +228,6 @@ namespace Registry.Other
                             }
 
 
-
                             break;
 
                         default:
@@ -186,7 +239,7 @@ namespace Registry.Other
                 catch (Exception ex)
                 {
                     //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
-                    //TODO store it somewhere else
+                    //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
 
                     var size = BitConverter.ToInt32(rawRecord, 0);
 
@@ -195,7 +248,10 @@ namespace Registry.Other
                         RegistryHive._hardParsingErrors += 1;
                         //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
-                        Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                        Console.WriteLine(
+                            "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
+                            cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
+                            BitConverter.ToString(rawRecord));
 
                         Console.WriteLine();
                         Console.WriteLine();
@@ -214,7 +270,6 @@ namespace Registry.Other
 
                 if (cellRecord != null)
                 {
-
                     if (cellRecord.IsFree)
                     {
                         carvedRecords = ExtractRecordsFromSlack(cellRecord.RawBytes, cellRecord.RelativeOffset);
@@ -222,24 +277,20 @@ namespace Registry.Other
                     else
                     {
                         records.Add((IRecordBase) cellRecord);
-                      //  RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                        //  RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
                     }
-
                 }
 
                 if (listRecord != null)
                 {
-                    records.Add((IRecordBase)listRecord);
-                   // RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+                    records.Add((IRecordBase) listRecord);
+                    // RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
                     carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
-
                 }
 
                 if (dataRecord != null)
                 {
-
                     carvedRecords = ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
-
                 }
 
                 if (carvedRecords != null)
@@ -253,16 +304,9 @@ namespace Registry.Other
             return records;
         }
 
-        private List<string> _goodSigs =  new List<string> { "lf", "lh", "li", "ri", "db", "lk", "nk", "sk", "vk" };
-
-        // this is static because its a lot faster than when its not!
-        private static readonly Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
-        private byte[] _rawBytes;
-
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
             // a list of our known signatures, so we can only show when these are found vs data cells
-
 
 
             var records = new List<IRecordBase>();
@@ -297,41 +341,27 @@ namespace Registry.Other
 
                 records.Add(dr1);
 
-                //if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
-                //{
-
-                //    RegistryHive.DataRecords.Add(relativeoffset, dr1);
-                //}
-
-                //  RegistryHive.DataRecords.Add(relativeoffset, dr1);
-               
-
             }
             else
             {
                 //is this a strange case where there are records at the end of a data block?
-                var actualStart = (offsetList.First() / 3) - 3;
+                var actualStart = (offsetList.First()/3) - 3;
                 if (actualStart > 0)
                 {
                     var dr = new DataNode(remainingData, relativeoffset);
                     records.Add(dr);
 
-                    //if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
-                    //{
-                    //    RegistryHive.DataRecords.Add(relativeoffset, new DataNode(remainingData, relativeoffset));
-                    //}
                 }
             }
 
             //resultList now has offset of every record signature we are interested in
             foreach (var i in offsetList)
             {
-
                 try
                 {
                     //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
                     //finaly go back 3 to get to the start of the record
-                    var actualStart = (i / 3) - 3;
+                    var actualStart = (i/3) - 3;
 
                     var size = BitConverter.ToUInt32(remainingData, actualStart);
 
@@ -339,15 +369,13 @@ namespace Registry.Other
                     {
                         //if its empty or the size is beyond the data that is left, bail
                         continue;
-
                     }
 
-                    raw = new byte[Math.Abs((int)size)];
+                    raw = new byte[Math.Abs((int) size)];
 
-                    Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int)size));
+                    Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
 
-                    //raw = remainingData.Skip(actualStart).Take(Math.Abs((int)size)).ToArray();
-
+                 
                     sig = Encoding.ASCII.GetString(raw, 4, 2);
 
                     switch (sig)
@@ -357,11 +385,8 @@ namespace Registry.Other
                             if (nk.LastWriteTimestamp.Year > 1700)
                             {
                                 records.Add(nk);
-                              //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, nk);
                             }
 
-
-                           
                             break;
                         case "vk":
                             if (raw.Length < 0x18)
@@ -371,32 +396,24 @@ namespace Registry.Other
                             }
                             var vk = new VKCellRecord(raw, relativeoffset + actualStart, _version);
                             records.Add(vk);
-                          //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, vk);
-                           
+
                             break;
                         case "ri":
                             var ri = new RIListRecord(raw, relativeoffset + actualStart);
                             records.Add(ri);
-                           // RegistryHive.ListRecords.Add(relativeoffset + actualStart, ri);
-                         break;
+
+                            break;
 
                         case "sk":
                             var sk = new SKCellRecord(raw, relativeoffset + actualStart);
                             records.Add(sk);
-                          //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, sk);
-                          
+                            
                             break;
 
                         case "lf":
                             var lf = new LxListRecord(raw, relativeoffset + actualStart);
                             records.Add(lf);
-                            //RegistryHive.ListRecords.Add(relativeoffset + actualStart, lf);
-                          
-
-                            // there are often more records in these, so find the first occurrance of a known record type
-
-                            //   ExtractRecordsFromSlackExtracted(relativeoffset + index, raw);
-
+                        
                             break;
 
                         default:
@@ -410,18 +427,13 @@ namespace Registry.Other
 
                             if (goodSigs2.Contains(sig))
                             {
-                                throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
+                                throw new Exception(
+                                    "Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
                             }
 
                             var dr = new DataNode(raw, relativeoffset + actualStart);
 
                             records.Add(dr);
-
-                            //RegistryHive.DataRecords.Add(relativeoffset + actualStart, dr);
-                           
-
-                            // there are often more records in these, so find the first occurrance of a known record type
-                            //    ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
 
                             break;
                     }
@@ -431,53 +443,15 @@ namespace Registry.Other
                 catch (Exception ex)
                 {
                     // this is a corrupted/unusable record
-                    //TODO do we add a placeholder here?
-                    Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig, relativeoffset + (i / 3) - 3, ex.Message, raw.Length);
+                    //TODO do we add a placeholder here? probably not since its free
+                    Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
+                        relativeoffset + (i/3) - 3, ex.Message, raw.Length);
                 }
-
             }
 
 
             return records;
         }
-
-        // public properties...
-        /// <summary>
-        /// The offset to this record from the beginning of the hive, in bytes
-        /// </summary>
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
-        }
-
-        // public properties...
-        /// <summary>
-        /// The relative offset to this record
-        /// </summary>
-        public uint FileOffset { get; private set; }
-        /// <summary>
-        /// The last write time of this key
-        /// </summary>
-        public DateTimeOffset? LastWriteTimestamp { get; private set; }
-        /// <summary>
-        /// The offset to this record as stored by other records
-        /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
-        /// </summary>
-        public long RelativeOffset { get; private set; }
-        public uint Reserved { get; private set; }
-        /// <summary>
-        /// The signature of the hbin record. Should always be "hbin"
-        /// </summary>
-        public string Signature { get; private set; }
-        /// <summary>
-        /// The size of the hive
-        /// <remarks>This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a negative size)</remarks>
-        /// </summary>
-        public uint Size { get; private set; }
-        public uint Spare { get; private set; }
 
         // public methods...
         public override string ToString()

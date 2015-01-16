@@ -5,6 +5,7 @@ using NFluent;
 using Registry.Other;
 
 // namespaces...
+
 namespace Registry.Lists
 {
     // internal classes...
@@ -13,10 +14,9 @@ namespace Registry.Lists
         // private fields...
         private readonly List<uint> _offsets;
         private readonly int _size;
-
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="LIListRecord"/>  class.
+        ///     Initializes a new instance of the <see cref="LIListRecord" />  class.
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
@@ -42,7 +42,7 @@ namespace Registry.Lists
 
             var index = 0x8;
             var counter = 0;
-            
+
             while (counter < NumberOfEntries)
             {
                 var os = BitConverter.ToUInt32(rawBytes, index);
@@ -53,57 +53,39 @@ namespace Registry.Lists
                     //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
                     break;
                 }
-                
+
                 _offsets.Add(os);
 
                 counter += 1;
             }
         }
 
-        // public properties...
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
-        }
-
-        // public properties...
-        
-        public bool IsFree { get; private set; }
-
-        
-        public bool IsReferenced { get; internal set; }
-
-        
-        public int NumberOfEntries { get; private set; }
-        
         /// <summary>
-        /// A list of relative offsets to other records
+        ///     A list of relative offsets to other records
         /// </summary>
         public List<uint> Offsets
         {
-            get
-            {
-                return _offsets;
-            }
+            get { return _offsets; }
         }
 
-        
+        // public properties...
+
+        public bool IsFree { get; private set; }
+        public bool IsReferenced { get; internal set; }
+        public int NumberOfEntries { get; private set; }
         public byte[] RawBytes { get; private set; }
-        
         public long RelativeOffset { get; private set; }
-        
         public string Signature { get; private set; }
 
-        
         public int Size
         {
-            get
-            {
-                return Math.Abs(_size);
-            }
+            get { return Math.Abs(_size); }
+        }
+
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
         }
 
         // public methods...

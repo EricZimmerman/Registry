@@ -5,18 +5,17 @@ using NFluent;
 using Registry.Other;
 
 // namespaces...
+
 namespace Registry.Lists
 {
     // internal classes...
     internal class RIListRecord : IListTemplate, IRecordBase
     {
         // private fields...
-        private List<uint> _offsets;
         private readonly int _size;
-
         // public constructors...
         /// <summary>
-        /// Initializes a new instance of the <see cref="RIListRecord"/>  class.
+        ///     Initializes a new instance of the <see cref="RIListRecord" />  class.
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
@@ -32,14 +31,14 @@ namespace Registry.Lists
             {
                 return;
             }
-            
+
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("ri");
 
             NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
 
-            _offsets = new List<uint>();
+            Offsets = new List<uint>();
 
             var index = 0x8;
             var counter = 0;
@@ -54,47 +53,35 @@ namespace Registry.Lists
 
                 var os = BitConverter.ToUInt32(rawBytes, index);
                 index += 4;
-                
-                _offsets.Add(os);
+
+                Offsets.Add(os);
 
                 counter += 1;
             }
         }
 
-        // public properties...
-        public long AbsoluteOffset
-        {
-            get
-            {
-                return RelativeOffset + 4096;
-            }
-        }
+        /// <summary>
+        ///     A list of relative offsets to other records
+        /// </summary>
+        public List<uint> Offsets { get; private set; }
 
         // public properties...
         public bool IsFree { get; private set; }
         public bool IsReferenced { get; internal set; }
         public int NumberOfEntries { get; private set; }
-
-        /// <summary>
-        /// A list of relative offsets to other records
-        /// </summary>
-        public List<uint> Offsets
-        {
-            get
-            {
-                return _offsets;
-            }
-        }
-
         public byte[] RawBytes { get; private set; }
         public long RelativeOffset { get; private set; }
         public string Signature { get; private set; }
+
         public int Size
         {
-            get
-            {
-                return Math.Abs(_size);
-            }
+            get { return Math.Abs(_size); }
+        }
+
+        // public properties...
+        public long AbsoluteOffset
+        {
+            get { return RelativeOffset + 4096; }
         }
 
         // public methods...
@@ -118,7 +105,7 @@ namespace Registry.Lists
 
             var i = 0;
 
-            foreach (var offset in _offsets)
+            foreach (var offset in Offsets)
             {
                 sb.AppendLine(string.Format("------------ Offset/hash record #{0} ------------", i));
                 sb.AppendLine(string.Format("Offset: 0x{0:X}", offset));
