@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text;
 using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Lists
 {
     // internal classes...
-    internal class DBListRecord : IListTemplate
+    internal class DBListRecord : IListTemplate,IRecordBase
     {
         // private fields...
         private readonly int _size;

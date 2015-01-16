@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Lists
 {
     // internal classes...
-    internal class LxListRecord : IListTemplate
+    internal class LxListRecord : IListTemplate, IRecordBase
     {
         // private fields...
         private Dictionary<uint, string> _offsets;

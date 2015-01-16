@@ -7,7 +7,7 @@ namespace Registry.Other
 {
     // internal classes...
     // public classes...
-    public class DataNode
+    public class DataNode:IRecordBase
     {
         // private fields...
         private readonly int _size;
@@ -27,6 +27,8 @@ namespace Registry.Other
             IsFree = _size > 0;
 
             Data = new byte[rawBytes.Length - 4];
+
+            Signature = "";
             
 
             Array.Copy(rawBytes,4,Data,0,rawBytes.Length-4);
@@ -45,6 +47,8 @@ namespace Registry.Other
                 return RelativeOffset + 4096;
             }
         }
+
+        public string Signature { get; private set; }
 
         // public properties...
         public byte[] Data { get; private set; }

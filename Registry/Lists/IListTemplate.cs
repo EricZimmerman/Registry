@@ -5,10 +5,7 @@ namespace Registry.Lists
     public interface IListTemplate
     {
         // properties...
-        /// <summary>
-        /// The offset in the registry hive file to a record
-        /// </summary>
-        long AbsoluteOffset { get; }
+      
         // properties...
         bool IsFree { get; }
         /// <summary>
@@ -30,9 +27,9 @@ namespace Registry.Lists
         /// <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
         long RelativeOffset { get; }
-        string Signature { get; }
+     
         // properties...
-
+        string Signature { get; }
         /// <summary>
         /// The size of the hive
         /// <remarks>This value will always be positive. See IsFree to determine whether or not this cell is in use (it has a negative size)</remarks>

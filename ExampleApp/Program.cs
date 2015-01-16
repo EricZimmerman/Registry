@@ -106,8 +106,8 @@ namespace ExampleApp
 
                         sw.Stop();
 
-                        var freeCells = RegistryHive.CellRecords.Where(t => t.Value.IsFree);
-                        var referencedCells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced);
+                        var freeCells = fName1Test.CellRecords.Where(t => t.Value.IsFree);
+                        var referencedCells = fName1Test.CellRecords.Where(t => t.Value.IsReferenced);
 
                         var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
                         var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
@@ -115,11 +115,11 @@ namespace ExampleApp
                         var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
 
 
-                        var freeLists = RegistryHive.ListRecords.Where(t => t.Value.IsFree);
-                        var referencedList = RegistryHive.ListRecords.Where(t => t.Value.IsReferenced);
+                        var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
+                        var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
 
-                        var referencedData = RegistryHive.DataRecords.Where(t => t.Value.IsReferenced);
-                        var freeData = RegistryHive.DataRecords.Where(t => t.Value.IsFree);
+                        var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
+                        var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
 
                         //need to change these to public classes first
                         //var dbFree = freeData.Count(t => t.Value is DBListRecord);
@@ -133,22 +133,22 @@ namespace ExampleApp
 
                         //we can look thru records marked in use but not referenced to see if things are broken
                         //records marked as in use but not referenced by anything (should be 0?)
-                        var goofyCellsShouldBeUsed = RegistryHive.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+                        var goofyCellsShouldBeUsed = fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
                         //referenced by another record somewhere, but marked as free based on size
-                        var goofyCellsShouldBeAllocated = RegistryHive.CellRecords.Where(t => t.Value.IsFree  && t.Value.IsReferenced);
+                        var goofyCellsShouldBeAllocated = fName1Test.CellRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
 
-                        var goofyListsShouldBeUsed = RegistryHive.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                        var goofyListsShouldBeAllocated = RegistryHive.ListRecords.Where(t => t.Value.IsFree  && t.Value.IsReferenced );
+                        var goofyListsShouldBeUsed = fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+                        var goofyListsShouldBeAllocated = fName1Test.ListRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
 
-                        var goofyDataShouldBeUsed = RegistryHive.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                        var goofyDataShouldBeAllocated = RegistryHive.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+                        var goofyDataShouldBeUsed = fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+                        var goofyDataShouldBeAllocated = fName1Test.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
 
                         Console.WriteLine();
-                        Console.WriteLine("Found {0:N0} hbin records", RegistryHive.HBinRecords.Count);
-                        Console.WriteLine("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})", RegistryHive.CellRecords.Count, RegistryHive.CellRecords.Count(w => w.Value is NKCellRecord), RegistryHive.CellRecords.Count(w => w.Value is VKCellRecord), RegistryHive.CellRecords.Count(w => w.Value is SKCellRecord), RegistryHive.CellRecords.Count(w => w.Value is LKCellRecord));
-                        Console.WriteLine("Found {0:N0} List records", RegistryHive.ListRecords.Count);
-                        Console.WriteLine("Found {0:N0} Data records", RegistryHive.DataRecords.Count);
+                        Console.WriteLine("Found {0:N0} hbin records", fName1Test.HBinRecords.Count);
+                        Console.WriteLine("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})", fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord), fName1Test.CellRecords.Count(w => w.Value is VKCellRecord), fName1Test.CellRecords.Count(w => w.Value is SKCellRecord), fName1Test.CellRecords.Count(w => w.Value is LKCellRecord));
+                        Console.WriteLine("Found {0:N0} List records", fName1Test.ListRecords.Count);
+                        Console.WriteLine("Found {0:N0} Data records", fName1Test.DataRecords.Count);
 
                         Console.WriteLine();
                         Console.WriteLine("Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})", freeCells.Count(), nkFree, vkFree, skFree, lkFree);
@@ -156,9 +156,9 @@ namespace ExampleApp
                         Console.WriteLine("Found {0:N0} free Data records", freeData.Count());
 
                         Console.WriteLine();
-                        Console.WriteLine("There are {0:N0} cell records marked as being referenced ({1:P})", referencedCells.Count(), (double)referencedCells.Count() / (double)RegistryHive.CellRecords.Count);
-                        Console.WriteLine("There are {0:N0} list records marked as being referenced ({1:P})", referencedList.Count(), (double)referencedList.Count() / (double)RegistryHive.ListRecords.Count);
-                        Console.WriteLine("There are {0:N0} data records marked as being referenced ({1:P})", referencedData.Count(), (double)referencedData.Count() / (double)RegistryHive.DataRecords.Count);
+                        Console.WriteLine("There are {0:N0} cell records marked as being referenced ({1:P})", referencedCells.Count(), (double)referencedCells.Count() / (double)fName1Test.CellRecords.Count);
+                        Console.WriteLine("There are {0:N0} list records marked as being referenced ({1:P})", referencedList.Count(), (double)referencedList.Count() / (double)fName1Test.ListRecords.Count);
+                        Console.WriteLine("There are {0:N0} data records marked as being referenced ({1:P})", referencedData.Count(), (double)referencedData.Count() / (double)fName1Test.DataRecords.Count);
 
                         Console.WriteLine();
                         Console.WriteLine("There were {0:N0} cell records marked as in use but not referenced by anything in the registry tree", goofyCellsShouldBeUsed.Count());
@@ -173,9 +173,9 @@ namespace ExampleApp
                         Console.WriteLine("There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)", fName1Test.SoftParsingErrors);
 
                         Console.WriteLine();
-                        Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
-                        Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
-                        Console.WriteLine("Data:  Free + referenced + marked as in use but not referenced == Total? {0}", RegistryHive.DataRecords.Count == freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
+                        Console.WriteLine("Cells: Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count());
+                        Console.WriteLine("Lists: Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count());
+                        Console.WriteLine("Data:  Free + referenced + marked as in use but not referenced == Total? {0}", fName1Test.DataRecords.Count == freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count());
                         
                         #region TestStuffForViewingUnreferenced
                         //var baseDir1 = Path.GetDirectoryName(testFile);

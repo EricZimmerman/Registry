@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using NFluent;
+using Registry.Other;
 
 // namespaces...
 namespace Registry.Cells
 {
     // public classes...
-    public class LKCellRecord : ICellTemplate
+    public class LKCellRecord : ICellTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,8 @@ namespace Registry.Other
     //TODO get rid of calls to Console.WriteLine in favor of an event
     //May need to move processing out of constructor and add a "ParseBytes" or "initialize" method
 
+   
+
     // public classes...
     public class HBinRecord
     {
@@ -25,6 +28,8 @@ namespace Registry.Other
         protected internal HBinRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
+
+            _rawBytes = rawBytes;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
@@ -59,6 +64,15 @@ namespace Registry.Other
 
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
 
+          
+        }
+
+        public List<IRecordBase> Process()
+        {
+            var records = new List<IRecordBase>();
+
+         
+
             //additional cell data starts 32 bytes (0x20) in
             var offsetInHbin = 0x20;
 
@@ -71,7 +85,7 @@ namespace Registry.Other
                 //    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
 
 
-                var recordSize = BitConverter.ToUInt32(rawBytes, offsetInHbin);
+                var recordSize = BitConverter.ToUInt32(_rawBytes, offsetInHbin);
 
                 var readSize = (int)recordSize;
 
@@ -80,7 +94,7 @@ namespace Registry.Other
 
                 var rawRecord = new byte[readSize];
 
-                Array.Copy(rawBytes, offsetInHbin, rawRecord, 0, readSize);
+                Array.Copy(_rawBytes, offsetInHbin, rawRecord, 0, readSize);
 
                 //var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
 
@@ -102,7 +116,7 @@ namespace Registry.Other
                 if (foundMatch && RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
                 {
                     Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                        cellSignature, offsetInHbin, offsetInHbin + relativeOffset);
+                        cellSignature, offsetInHbin, offsetInHbin + RelativeOffset);
                 }
 
                 ICellTemplate cellRecord = null;
@@ -115,51 +129,51 @@ namespace Registry.Other
                     {
                         case "lf":
                         case "lh":
-                            listRecord = new LxListRecord(rawRecord, offsetInHbin + relativeOffset);
+                            listRecord = new LxListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "li":
-                            listRecord = new LIListRecord(rawRecord, offsetInHbin + relativeOffset);
+                            listRecord = new LIListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "ri":
-                            listRecord = new RIListRecord(rawRecord, offsetInHbin + relativeOffset);
+                            listRecord = new RIListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "db":
-                            listRecord = new DBListRecord(rawRecord, offsetInHbin + relativeOffset);
+                            listRecord = new DBListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "lk":
-                            cellRecord = new LKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                            cellRecord = new LKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "nk":
-                            cellRecord = new NKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                            cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
                         case "sk":
-                            cellRecord = new SKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                            cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
                         case "vk":
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
-                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + relativeOffset);
+                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
-                      
-                                
+
+
 
                             break;
 
                         default:
-                            dataRecord = new DataNode(rawRecord, offsetInHbin + relativeOffset);
+                            dataRecord = new DataNode(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
                     }
@@ -176,7 +190,7 @@ namespace Registry.Other
                         RegistryHive._hardParsingErrors += 1;
                         //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
-                        Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + relativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
+                        Console.WriteLine("Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}", cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
                         Console.WriteLine();
                         Console.WriteLine();
@@ -191,67 +205,234 @@ namespace Registry.Other
                     }
                 }
 
+                List<IRecordBase> carvedRecords = null;
 
                 if (cellRecord != null)
                 {
-                    
 
                     if (cellRecord.IsFree)
                     {
-                        Helpers.ExtractRecordsFromSlack(cellRecord.RawBytes, cellRecord.RelativeOffset);
+                        carvedRecords = ExtractRecordsFromSlack(cellRecord.RawBytes, cellRecord.RelativeOffset);
                     }
                     else
                     {
-                        RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+                        records.Add((IRecordBase) cellRecord);
+                      //  RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
                     }
 
-                    //   Debug.WriteLine(cellRecord);
                 }
 
                 if (listRecord != null)
                 {
-                    RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
-                    Helpers.ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+                    records.Add((IRecordBase)listRecord);
+                   // RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+                    carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
 
-                    //if (listRecord.IsFree)
-                    //{
-                    //    Helpers.ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
-                    //}
-                    //else
-                    //{
-                    //    RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);    
-                    //}
-                    
-
-                    //   Debug.WriteLine(listRecord);
                 }
 
                 if (dataRecord != null)
                 {
-                    //if (RegistryHive.DataRecords.ContainsKey(dataRecord.RelativeOffset) == false)
-                    //{
-                    //    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
-                    //}
 
-                    Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
+                    carvedRecords = ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
 
-                        //if (dataRecord.IsFree)
-                        //{
-                        //    //if the record is free, we have to do more to ensure we find other recoverable records
-                        //    //we do not need to add the record to the DataRecords collection as ExtractRecordsFromSlack does that for us
+                }
 
-                        //    Helpers.ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
-                        //}
-                        //else
-                        //{
-                        //    RegistryHive.DataRecords.Add(dataRecord.RelativeOffset, dataRecord);
-                        //}
-
-                    //   Debug.WriteLine(dataRecord);
+                if (carvedRecords != null)
+                {
+                    records.AddRange(carvedRecords);
                 }
 
                 offsetInHbin += readSize;
             }
+
+            return records;
+        }
+
+        private List<string> _goodSigs =  new List<string> { "lf", "lh", "li", "ri", "db", "lk", "nk", "sk", "vk" };
+
+        private  Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
+        private byte[] _rawBytes;
+
+        private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
+        {
+            // a list of our known signatures, so we can only show when these are found vs data cells
+
+
+
+            var records = new List<IRecordBase>();
+
+            var offsetList = new List<int>();
+
+            var valString = BitConverter.ToString(remainingData);
+
+            var sig = string.Empty;
+            byte[] raw = null;
+
+
+            try
+            {
+                var matchResult = _recordPattern.Match(valString);
+                while (matchResult.Success)
+                {
+                    offsetList.Add(matchResult.Index);
+                    matchResult = matchResult.NextMatch();
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                // Syntax error in the regular expression
+            }
+
+            if (offsetList.Count == 0)
+            {
+                //its a data record
+
+                var dr1 = new DataNode(remainingData, relativeoffset);
+
+                records.Add(dr1);
+
+                //if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
+                //{
+
+                //    RegistryHive.DataRecords.Add(relativeoffset, dr1);
+                //}
+
+                //  RegistryHive.DataRecords.Add(relativeoffset, dr1);
+               
+
+            }
+            else
+            {
+                //is this a strange case where there are records at the end of a data block?
+                var actualStart = (offsetList.First() / 3) - 3;
+                if (actualStart > 0)
+                {
+                    var dr = new DataNode(remainingData, relativeoffset);
+                    records.Add(dr);
+
+                    //if (RegistryHive.DataRecords.ContainsKey(relativeoffset) == false)
+                    //{
+                    //    RegistryHive.DataRecords.Add(relativeoffset, new DataNode(remainingData, relativeoffset));
+                    //}
+                }
+            }
+
+            //resultList now has offset of every record signature we are interested in
+            foreach (var i in offsetList)
+            {
+
+                try
+                {
+                    //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
+                    //finaly go back 3 to get to the start of the record
+                    var actualStart = (i / 3) - 3;
+
+                    var size = BitConverter.ToUInt32(remainingData, actualStart);
+
+                    if (size < 3 || remainingData.Length - actualStart < size)
+                    {
+                        //if its empty or the size is beyond the data that is left, bail
+                        continue;
+
+                    }
+
+                    raw = new byte[Math.Abs((int)size)];
+
+                    Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int)size));
+
+                    //raw = remainingData.Skip(actualStart).Take(Math.Abs((int)size)).ToArray();
+
+                    sig = Encoding.ASCII.GetString(raw, 4, 2);
+
+                    switch (sig)
+                    {
+                        case "nk":
+                            var nk = new NKCellRecord(raw, relativeoffset + actualStart);
+                            if (nk.LastWriteTimestamp.Year > 1700)
+                            {
+                                records.Add(nk);
+                              //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, nk);
+                            }
+
+
+                           
+                            break;
+                        case "vk":
+                            if (raw.Length < 0x18)
+                            {
+                                //cant have a record shorter than this, even when no name is present
+                                continue;
+                            }
+                            var vk = new VKCellRecord(raw, relativeoffset + actualStart);
+                            records.Add(vk);
+                          //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, vk);
+                           
+                            break;
+                        case "ri":
+                            var ri = new RIListRecord(raw, relativeoffset + actualStart);
+                            records.Add(ri);
+                           // RegistryHive.ListRecords.Add(relativeoffset + actualStart, ri);
+                         break;
+
+                        case "sk":
+                            var sk = new SKCellRecord(raw, relativeoffset + actualStart);
+                            records.Add(sk);
+                          //  RegistryHive.CellRecords.Add(relativeoffset + actualStart, sk);
+                          
+                            break;
+
+                        case "lf":
+                            var lf = new LxListRecord(raw, relativeoffset + actualStart);
+                            records.Add(lf);
+                            //RegistryHive.ListRecords.Add(relativeoffset + actualStart, lf);
+                          
+
+                            // there are often more records in these, so find the first occurrance of a known record type
+
+                            //   ExtractRecordsFromSlackExtracted(relativeoffset + index, raw);
+
+                            break;
+
+                        default:
+                            //we know about these signatures, so remove them. if we see others, tell someone so support can be added
+                            var goodSigs2 = _goodSigs;
+                            goodSigs2.Remove("nk");
+                            goodSigs2.Remove("vk");
+                            goodSigs2.Remove("sk");
+                            goodSigs2.Remove("li");
+                            goodSigs2.Remove("ri");
+
+                            if (goodSigs2.Contains(sig))
+                            {
+                                throw new Exception("Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
+                            }
+
+                            var dr = new DataNode(raw, relativeoffset + actualStart);
+
+                            records.Add(dr);
+
+                            //RegistryHive.DataRecords.Add(relativeoffset + actualStart, dr);
+                           
+
+                            // there are often more records in these, so find the first occurrance of a known record type
+                            //    ExtractRecordsFromSlackExtracted(relativeoffset + index, rawRecord);
+
+                            break;
+                    }
+
+                    // System.Diagnostics.Debug.WriteLine("Found rel offset at 0x{0:X}", relativeoffset + actualStart);
+                }
+                catch (Exception ex)
+                {
+                    // this is a corrupted/unusable record
+                    //TODO do we add a placeholder here?
+                    Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig, relativeoffset + (i / 3) - 3, ex.Message, raw.Length);
+                }
+
+            }
+
+
+            return records;
         }
 
         // public properties...

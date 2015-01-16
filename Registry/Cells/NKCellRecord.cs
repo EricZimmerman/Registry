@@ -9,7 +9,7 @@ using Registry.Other;
 namespace Registry.Cells
 {
     // public classes...
-    public class NKCellRecord : ICellTemplate
+    public class NKCellRecord : ICellTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;

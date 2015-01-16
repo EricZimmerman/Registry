@@ -18,7 +18,7 @@ namespace Registry.Cells
     /// <summary>
     /// <remarks>Represents a Key Value Record</remarks>
     /// </summary>
-    public class VKCellRecord : ICellTemplate
+    public class VKCellRecord : ICellTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;

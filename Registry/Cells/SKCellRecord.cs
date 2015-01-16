@@ -8,7 +8,7 @@ using Registry.Other;
 namespace Registry.Cells
 {
     // public classes...
-    public class SKCellRecord : ICellTemplate
+    public class SKCellRecord : ICellTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;
