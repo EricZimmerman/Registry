@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -254,10 +255,39 @@ namespace ExampleApp
                     {
                         var baseDir = Path.GetDirectoryName(testFile);
                         var baseFname = Path.GetFileName(testFile);
-                        var myName = "eric-output.txt";
+
+                        //A file ending with "_fullpath.txt" can contain both allocated and unallocated named and value keys.
+                        //A file ending with "_recovered_fullpath.txt" is only recovered unallocated keys with the fullpath.
+                        //A file ending with "_recovered_nameonly.txt" is only recovered with just the name of the object.
+
+                        var myName = string.Empty;
+
+                        bool deletedOnly = false;
+                        bool fullpath = false;
+
+                        if (deletedOnly)
+                        {
+                            if (fullpath)
+                            {
+                                myName = "_EricZ_recovered_fullpath.txt";
+                            }
+                            else
+                            {
+                                myName = "_EricZ_recovered_nameonly.txt";
+                            }
+
+                        }
+                        else
+                        {
+                            myName = "_EricZ_fullpath.txt";  
+                        }
+                        
 
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
-                        fName1Test.ExportDataToCommonFormat(outfile);
+
+                        fName1Test.ExportDataToCommonFormat(outfile, deletedOnly, fullpath);
+
+
                     }
                 }
                 catch (Exception ex)
