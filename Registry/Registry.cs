@@ -22,27 +22,16 @@ namespace Registry
             Normal,
             Full
         }
-
-        // internal fields...
+        
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
-        // public fields...
-        public static long TotalBytesRead;
-        //private RegistryKey FindKeyByRelativeOffset(RegistryKey key,long relativeOffset)
-        //{
-        //    if (key.NKRecord.RelativeOffset )
-        //}
-        // public methods...
-
         internal static byte[] FileBytes;
-        // private fields...
 
-        // private fields...
+        public static long TotalBytesRead;
+        
         private readonly string _filename;
         private MessageEventArgs _msgArgs;
-    
-        // public constructors...
-        /// <summary>
+        // <summary>
         ///     Initializes a new instance of the <see cref="Registry" /> class.
         /// </summary>
         public RegistryHive(string fileName)
@@ -78,18 +67,13 @@ namespace Registry
 
             Verbosity = VerbosityEnum.Normal;
         }
-
-        /// <summary>
-        ///     The number of deleted keys that were reassociated with a key in the active registry
-        /// </summary>
-        public int RestoredDeletedKeyCount { get; private set; }
-
+        
         /// <summary>
         ///     Contains all recovered
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
-        // public properties...
+     
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
@@ -100,7 +84,7 @@ namespace Registry
         /// </summary>
         public Dictionary<long, DataNode> DataRecords { get; private set; }
 
-        // public properties...
+
         public string Filename
         {
             get { return _filename; }
@@ -144,24 +128,15 @@ namespace Registry
             }
         }
 
-        // private methods...
-        private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, bool fullPath, ref int keyCount, ref int valueCount)
+
+        private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, bool fullPath, ref int keyCount,
+            ref int valueCount)
         {
-          
             foreach (var subkey in key.SubKeys)
             {
                 keyCount += 1;
 
-                //if (key.IsDeleted)
-                //{
-                //    KeyCountDeleted += 1; //key.SubKeys.Count;
-                //}
-                //else
-                //{
-                //    KeyCount += 1;//key.SubKeys.Count;
-                //}
-
-                if (!fullPath) //key.IsDeleted
+                if (!fullPath)
                 {
                     sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
                         subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
@@ -177,21 +152,11 @@ namespace Registry
 
                 foreach (var val in subkey.Values)
                 {
-
                     valueCount += 1;
-                    //if (subkey.IsDeleted)
-                    //{
-                    //    ValueCountDeleted += 1; //subkey.Values.Count;
-                    //}
-                    //else
-                    //{
-                    //    ValueCount += 1; //subkey.Values.Count;
-                    //}
-
-
+              
                     //dump value format here
 
-                    if (!fullPath) //subkey.IsDeleted
+                    if (!fullPath)
                     {
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
                             val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
@@ -203,7 +168,6 @@ namespace Registry
                             val.VKRecord.AbsoluteOffset, subkey.KeyPath, val.ValueName, (int) val.VKRecord.DataType,
                             BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                     }
-
                 }
 
                 DumpKeyCommonFormat(subkey, sw, fullPath, ref keyCount, ref valueCount);
@@ -477,8 +441,6 @@ namespace Registry
             return keys;
         }
 
-        // protected internal methods...
-        // public methods...
         /// <summary>
         ///     Returns the length, in bytes, of the file being processed
         ///     <remarks>This is the length returned by the underlying stream used to open the file</remarks>
@@ -497,13 +459,9 @@ namespace Registry
         /// <returns></returns>
         protected internal static byte[] ReadBytesFromHive(long offset, int length)
         {
-            //_binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
-
             var retArray = new byte[length];
-
             Array.Copy(FileBytes, offset, retArray, 0, length);
-
-            return retArray; //_binaryReader.ReadBytes(Math.Abs(length));
+            return retArray;
         }
 
         // public methods...
@@ -511,27 +469,24 @@ namespace Registry
 
         public void ExportDataToCommonFormat(string outfile, bool deletedOnly, bool fullPath)
         {
-            
             var KeyCount = 0; //root key
-           var  ValueCount = 0;
-         var    KeyCountDeleted = 0;
-        var    ValueCountDeleted = 0;
-
-    
+            var ValueCount = 0;
+            var KeyCountDeleted = 0;
+            var ValueCountDeleted = 0;
+            
             using (var sw = new StreamWriter(outfile, false))
             {
                 sw.AutoFlush = true;
 
                 if (!deletedOnly)
                 {
-                     if (Root.LastWriteTime != null)
+                    if (Root.LastWriteTime != null)
                     {
                         KeyCount = 1;
-                        sw.WriteLine("key|{0}|{1}|{2}|{3}", Root.NKRecord.IsFree ? "U" : "A", Root.NKRecord.AbsoluteOffset,
+                        sw.WriteLine("key|{0}|{1}|{2}|{3}", Root.NKRecord.IsFree ? "U" : "A",
+                            Root.NKRecord.AbsoluteOffset,
                             Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
                     }
-
-                   // ValueCount += Root.Values.Count;
 
                     foreach (var val in Root.Values)
                     {
@@ -542,33 +497,27 @@ namespace Registry
                     }
 
 
-                    DumpKeyCommonFormat(Root, sw, true, ref KeyCount, ref ValueCount);   
+                    DumpKeyCommonFormat(Root, sw, true, ref KeyCount, ref ValueCount);
                 }
-                
 
-                     //dump recovered keys and values not associated with anything else
 
-                foreach (var source in DeletedRegistryKeys) //.Where(t=>t.NKRecord.IsReferenced == false))
+                //dump recovered keys and values not associated with anything else
+
+                foreach (var source in DeletedRegistryKeys) 
                 {
                     KeyCountDeleted += 1;
-
                     
-
-                        sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A",
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A",
                         source.NKRecord.AbsoluteOffset, source.KeyName,
                         source.LastWriteTime.Value.UtcDateTime.ToString("o"));
-
-
+                    
                     foreach (var val in source.Values)
                     {
-                        //dump value format here
-
                         ValueCountDeleted += 1;
 
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
                             val.VKRecord.AbsoluteOffset, source.KeyName, val.ValueName, (int) val.VKRecord.DataType,
                             BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                        //  sw.WriteLine(@"value|{0}|{1}|{2}|{3}{4}", subkey.KeyPath, val.ValueName, (int)val.VKRecord.DataTypeRaw, BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " ") + "", osVal);
                     }
 
                     DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
@@ -590,23 +539,19 @@ namespace Registry
 
                     if (keyValuePair.Value.Signature == "nk")
                     {
-
                         //this should never be once we re-enable deleted key rebuilding
-                        
+
                         KeyCountDeleted += 1;
                         var nk = keyValuePair.Value as NKCellRecord;
                         var key = new RegistryKey(nk, null);
 
                         sw.WriteLine("key|{0}|{1}|{2}|{3}", key.NKRecord.IsFree ? "U" : "A",
-                  key.NKRecord.AbsoluteOffset, key.KeyName,
-                  key.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                            key.NKRecord.AbsoluteOffset, key.KeyName,
+                            key.LastWriteTime.Value.UtcDateTime.ToString("o"));
 
                         DumpKeyCommonFormat(key, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
                     }
-                }  
-
-               
-             
+                }
 
 
                 sw.WriteLine("total_keys|{0}", KeyCount);
@@ -658,8 +603,7 @@ namespace Registry
             {
                 throw new FileNotFoundException();
             }
-
-
+            
             var header = ReadBytesFromHive(0, 4096);
 
             TotalBytesRead = 0;
@@ -734,10 +678,7 @@ namespace Registry
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 4096, version);
 
-                    h.Message += (ss, ee) =>
-                    {
-                        OnMessage(ee);
-                    };
+                    h.Message += (ss, ee) => { OnMessage(ee); };
 
                     var records = h.Process();
 
@@ -792,9 +733,9 @@ namespace Registry
 
             _msgArgs = new MessageEventArgs
             {
-                Detail = string.Format("Initial processing complete. Building tree..."),
+                Detail = ("Initial processing complete. Building tree..."),
                 Exception = null,
-                Message = string.Format("Initial processing complete. Building tree..."),
+                Message = ("Initial processing complete. Building tree..."),
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
             };
 
@@ -820,15 +761,14 @@ namespace Registry
 
             _msgArgs = new MessageEventArgs
             {
-                Detail = string.Format("Found root node! Getting subkeys..."),
+                Detail = ("Found root node! Getting subkeys..."),
                 Exception = null,
-                Message = string.Format("Found root node! Getting subkeys..."),
+                Message = ("Found root node! Getting subkeys..."),
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
             };
 
             OnMessage(_msgArgs);
-
-
+            
             Root = new RegistryKey(rootNode, null);
 
             var keys = GetSubKeysAndValues(Root);
@@ -844,7 +784,6 @@ namespace Registry
             };
 
             OnMessage(_msgArgs);
-
 
             //All processing is complete, so we do some tests to see if we really saw everything
             if (HiveLength() != TotalBytesRead)

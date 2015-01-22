@@ -34,7 +34,6 @@ namespace Registry.Other
 
         private readonly byte[] _rawBytes;
         private readonly float _version;
-        private MessageEventArgs _msgArgs;
 
         public event EventHandler<MessageEventArgs> Message;
 
@@ -195,8 +194,7 @@ namespace Registry.Other
 
                     OnMessage(args);
 
-                    //Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                    //    cellSignature, offsetInHbin, offsetInHbin + RelativeOffset);
+
                 }
 
                 ICellTemplate cellRecord = null;
@@ -285,15 +283,9 @@ namespace Registry.Other
                         };
 
                         OnMessage(args);
-
-
-                        //Console.WriteLine(
-                        //    "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
-                        //    cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                        //    BitConverter.ToString(rawRecord));
-
-                        Console.WriteLine();
-                        Console.WriteLine();
+                        
+                        //Console.WriteLine();
+                        //Console.WriteLine();
                         //Console.WriteLine("Press a key to continue");
 
                         //Console.ReadKey();
@@ -316,14 +308,14 @@ namespace Registry.Other
                     else
                     {
                         records.Add((IRecordBase) cellRecord);
-                        //  RegistryHive.CellRecords.Add(cellRecord.RelativeOffset, cellRecord);
+        
                     }
                 }
 
                 if (listRecord != null)
                 {
                     records.Add((IRecordBase) listRecord);
-                    // RegistryHive.ListRecords.Add(listRecord.RelativeOffset, listRecord);
+ 
                     carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
                 }
 
@@ -483,8 +475,6 @@ namespace Registry.Other
                 {
                     // this is a corrupted/unusable record
                     //TODO do we add a placeholder here? probably not since its free
-                    //Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
-                    //    relativeoffset + (i/3) - 3, ex.Message, raw.Length);
 
                     var args = new MessageEventArgs
                     {
