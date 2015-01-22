@@ -11,8 +11,6 @@ using Registry.Lists;
 
 namespace Registry.Other
 {
-    //TODO get rid of calls to Console.WriteLine in favor of an event
-    //May need to move processing out of constructor and add a "ParseBytes" or "initialize" method
 
 
     // public classes...
@@ -36,6 +34,18 @@ namespace Registry.Other
 
         private readonly byte[] _rawBytes;
         private readonly float _version;
+        private MessageEventArgs _msgArgs;
+
+        public event EventHandler<MessageEventArgs> Message;
+
+        protected virtual void OnMessage(MessageEventArgs e)
+        {
+            var handler = Message;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
@@ -174,8 +184,19 @@ namespace Registry.Other
                 //only process records with 2 letter signatures. this avoids crazy output for data cells
                 if (foundMatch && RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
                 {
-                    Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                        cellSignature, offsetInHbin, offsetInHbin + RelativeOffset);
+                    var args = new MessageEventArgs
+                    {
+                        Detail =
+                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                        Exception = null,
+                        Message = string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})", cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Info
+                    };
+
+                    OnMessage(args);
+
+                    //Console.WriteLine("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                    //    cellSignature, offsetInHbin, offsetInHbin + RelativeOffset);
                 }
 
                 ICellTemplate cellRecord = null;
@@ -248,10 +269,28 @@ namespace Registry.Other
                         RegistryHive._hardParsingErrors += 1;
                         //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
-                        Console.WriteLine(
+                        var args = new MessageEventArgs
+                        {
+                            Detail =
+                                string.Format(
                             "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
                             cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                            BitConverter.ToString(rawRecord));
+                            BitConverter.ToString(rawRecord)),
+                            Exception = ex,
+                            Message = string.Format(
+                            "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
+                            cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
+                            BitConverter.ToString(rawRecord)),
+                            MsgType = MessageEventArgs.MsgTypeEnum.Error
+                        };
+
+                        OnMessage(args);
+
+
+                        //Console.WriteLine(
+                        //    "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
+                        //    cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
+                        //    BitConverter.ToString(rawRecord));
 
                         Console.WriteLine();
                         Console.WriteLine();
@@ -444,8 +483,21 @@ namespace Registry.Other
                 {
                     // this is a corrupted/unusable record
                     //TODO do we add a placeholder here? probably not since its free
-                    Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
-                        relativeoffset + (i/3) - 3, ex.Message, raw.Length);
+                    //Console.WriteLine("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
+                    //    relativeoffset + (i/3) - 3, ex.Message, raw.Length);
+
+                    var args = new MessageEventArgs
+                    {
+                        Detail =
+                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
+                        relativeoffset + (i / 3) - 3, ex.Message, raw.Length),
+                        Exception = ex,
+                        Message = string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
+                        relativeoffset + (i/3) - 3, ex.Message, raw.Length),
+                        MsgType = MessageEventArgs.MsgTypeEnum.Error
+                    };
+
+                    OnMessage(args);
                 }
             }
 

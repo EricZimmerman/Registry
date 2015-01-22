@@ -590,6 +590,9 @@ namespace Registry
 
                     if (keyValuePair.Value.Signature == "nk")
                     {
+
+                        //this should never be once we re-enable deleted key rebuilding
+                        
                         KeyCountDeleted += 1;
                         var nk = keyValuePair.Value as NKCellRecord;
                         var key = new RegistryKey(nk, null);
@@ -730,6 +733,11 @@ namespace Registry
                 try
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 4096, version);
+
+                    h.Message += (ss, ee) =>
+                    {
+                        OnMessage(ee);
+                    };
 
                     var records = h.Process();
 
@@ -912,8 +920,7 @@ namespace Registry
             //    {
             //        var nk = unreferencedNkCell.Value as NKCellRecord;
             //        
-            //        //new
-            //        nk.IsReferenced = true;
+            //      nk.IsReferenced = true;
             //        
             //        //System.Diagnostics.Debug.WriteLine("reloffset: 0x{0}", nk.RelativeOffset);
 
@@ -1186,6 +1193,7 @@ namespace Registry
 
             //            deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
             //                deletedRegistryKey.Value.KeyName);
+            //          deletedRegistryKey.IsReferenced = true;
 
             //            parent.SubKeys.Add(deletedRegistryKey.Value);
 
@@ -1222,7 +1230,7 @@ namespace Registry
             ////                    continue;
             ////                }
 
-            ////        if (parentNK.IsReferenced)
+            ////        if (parentNK.IsReferenced && parentNK.IsFree == false)
             ////        {
             ////            //parent exists in our primary tree, so get that key
             ////            var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex, Root);
