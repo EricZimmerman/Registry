@@ -38,7 +38,7 @@ namespace Registry.Lists
 
             OffsetToOffsets = BitConverter.ToUInt32(rawBytes, 0x8);
 
-            //TODO add slack support here (or is it always 00 00 00 00)
+           
         }
 
         /// <summary>

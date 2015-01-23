@@ -220,13 +220,11 @@ namespace Registry
                     key.NKRecord.ValueOffsets.Add(os);
                 }
 
-                //TODO need a trap here in case we run out of data ? test it
             }
 
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
-                //todo This needs to be a stronger warning since we will not have all data
-
+           
                 var args = new MessageEventArgs
                 {
                     Detail =
@@ -234,31 +232,22 @@ namespace Registry
                             "Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
                             key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count),
                     Exception = null,
-                    Message = string.Format("Value count mismatch!"),
+                    Message = ("Value count mismatch!"),
                     MsgType = MessageEventArgs.MsgTypeEnum.Warning
                 };
 
                 OnMessage(args);
             }
 
-            //TODO need to add check on each vk record below
-            //for each d in dataoffsets, get data from datarecords and set isreferenced to true
-            //in vkrecord, add dataoffsets list and then set them to referenced here
-            //this keeps processing of datas in the vk class
-            //
-
-
-            // look for values in this key HERE
+            // look for values in this key 
             foreach (var valueOffset in key.NKRecord.ValueOffsets)
             {
                 var vc = CellRecords[(long) valueOffset];
 
                 var vk = vc as VKCellRecord;
-
-
+                
                 vk.IsReferenced = true;
-
-
+                
                 var dbListProcessed = false;
 
                 foreach (var dataOffet in vk.DataOffets)
@@ -330,7 +319,7 @@ namespace Registry
             var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
             sk.IsReferenced = true;
 
-            //TODo THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
+            //TODO THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
             if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
             {
                 return keys;
@@ -527,7 +516,7 @@ namespace Registry
                 //    DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
                 //}
 
-                //TODO here we need to look at whats left in CellRecords that arent referenced?
+         
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
                 //may not need to if we do not care about orphaned values
 
@@ -861,9 +850,6 @@ namespace Registry
 
             var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NKCellRecord);
 
-            //TODO update things in this list, then you can look for unreferenced vks at the end so people can browse unassociated vk records
-
-
             var associatedVKRecordOffsets = new List<long>();
 
             var _deletedRegistryKeys = new Dictionary<long, RegistryKey>();
@@ -1016,8 +1002,6 @@ namespace Registry
 
                             if (val != null)
                             {
-                                //TODO should this check to see if the vk record IsFree? probably not a bad idea
-
                                 //if its an in use record AND referenced, warn
                                 if (val.IsFree == false && val.IsReferenced)
                                 {
@@ -1115,7 +1099,6 @@ namespace Registry
 
             //DeletedRegistryKeys now contains all deleted nk records and their associated values.
             //Phase 2 is to build a tree of key/subkeys
-            //TODO Initial testing indicates this is working. do more testing/validation to make sure we do not need to make this recursive to the lowest level of subkeys
             var matchFound = true;
             while (matchFound)
             {
@@ -1133,8 +1116,7 @@ namespace Registry
 
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
                             deletedRegistryKey.Value.KeyName);
-
-
+                        
                         parent.SubKeys.Add(deletedRegistryKey.Value);
 
                         //mark the subkey for deletion so we do not blow up the collection while iterating it
@@ -1152,7 +1134,6 @@ namespace Registry
                 }
             }
 
-            //TODO  make this optional or not at all? perhaps just buuld the correct keypath and show them under the deleted nodes?
             //Phase 3 is looking at top level keys from Phase 2 and seeing if any of those can be assigned to non-deleted keys in the main tree
             foreach (var deletedRegistryKey in _deletedRegistryKeys)
             {
@@ -1185,8 +1166,7 @@ namespace Registry
 
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
-
-
+                        
                         if (Verbosity == VerbosityEnum.Full)
                         {
                             _msgArgs = new MessageEventArgs

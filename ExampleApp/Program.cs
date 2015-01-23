@@ -135,24 +135,18 @@ namespace ExampleApp
                     var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
                     var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
 
-                    //we can look thru records marked in use but not referenced to see if things are broken
-                    //records marked as in use but not referenced by anything (should be 0?)
+
                     var goofyCellsShouldBeUsed =
                         fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
-                    //referenced by another record somewhere, but marked as free based on size
-                    //var goofyCellsShouldBeAllocated =
-                    //    fName1Test.CellRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
 
                     var goofyListsShouldBeUsed =
                         fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                    //var goofyListsShouldBeAllocated =
-                    //    fName1Test.ListRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+
 
                     var goofyDataShouldBeUsed =
                         fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-                    //var goofyDataShouldBeAllocated =
-                    //    fName1Test.DataRecords.Where(t => t.Value.IsFree && t.Value.IsReferenced);
+
 
                     var sb = new StringBuilder();
 
@@ -185,30 +179,6 @@ namespace ExampleApp
                           sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
                           sb.AppendLine(string.Format("{0:N0} free Data records", freeData.Count()));
 
-                      
-
-                     
-
-                    //Console.WriteLine();
-                    //Console.WriteLine(
-                    //    "There were {0:N0} cell records marked as in use but not referenced by anything in the registry tree",
-                    //    goofyCellsShouldBeUsed.Count());
-                    //Console.WriteLine(
-                    //    "There were {0:N0} cell records referenced by another record somewhere, but marked as free based on size in the registry tree",
-                    //    goofyCellsShouldBeAllocated.Count());
-                    //Console.WriteLine(
-                    //    "There were {0:N0} list records marked as in use but not referenced by anything in the registry tree",
-                    //    goofyListsShouldBeUsed.Count());
-                    //Console.WriteLine(
-                    //    "There were {0:N0} list records referenced by another record somewhere, but marked as free based on size in the registry tree",
-                    //    goofyListsShouldBeAllocated.Count());
-                    //Console.WriteLine(
-                    //    "There were {0:N0} data records marked as in use but not referenced by anything in the registry tree",
-                    //    goofyDataShouldBeUsed.Count());
-                    //Console.WriteLine(
-                    //    "There were {0:N0} data records referenced by another record somewhere, but marked as free based on size in the registry tree",
-                    //    goofyDataShouldBeAllocated.Count());
-
                     sb.AppendLine();
                           sb.AppendLine(string.Format(
                         "There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
@@ -230,57 +200,12 @@ namespace ExampleApp
 
                           DumpConsoleMessage(sb.ToString());
 
-                    #region TestStuffForViewingUnreferenced
-
-                    //var baseDir1 = Path.GetDirectoryName(testFile);
-                    //var baseFname1 = Path.GetFileName(testFile);
-                    //var myName1 = "_unref-output.txt";
-
-                    //var outfile1 = Path.Combine(baseDir1, string.Format("{0}{1}", baseFname1, myName1));
-
-                    //File.WriteAllText(outfile1, "NK absoluteoffsets");
-                    //foreach (var source in RegistryHive.CellRecords.Where(q=>q.Value is NKCellRecord))
-                    //{
-                    //    File.AppendAllText(outfile1, string.Format("0x{0:X}\r\n", source.Value.AbsoluteOffset));
-                    //}
-
-
-                    //      var unrefcells = RegistryHive.CellRecords.Where(t => t.Value.IsReferenced == false);
-                    //
-
-                    //          if (unrefcells.Any())
-                    //          {
-                    //              File.WriteAllText(outfile1,string.Format("Found {0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})\r\n", freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-                    //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free List records\r\n", freeLists.Count()));
-                    //              File.AppendAllText(outfile1, string.Format("Found {0:N0} free Data records\r\n\r\n", freeData.Count()));
-                    //          }
-
-                    //              foreach (var keyValuePair in unrefcells)
-                    //              {
-                    //              var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value == null ? "(Null)" : keyValuePair.Value.ToString());
-
-                    //                  //TODO add a check here into referenced cells to see if an active parent exists if its an nk record
-
-                    //                  File.AppendAllText(outfile1, content);
-                    //              }
-
-                    //          // lists dont really do anything for us since free lists have their # of entries set to 0
-                    //              //foreach (var keyValuePair in unrefLists)
-                    //              //{
-                    //              //    var content = string.Format("{0}\r\n---------------------------\r\n\r\n", keyValuePair.Value);
-                    //              //    File.AppendAllText(outfile1, content);
-                    //              //}
-
-                    #endregion
-
+                   
                     if (result.Value.ExportHiveData)
                     {
                         var baseDir = Path.GetDirectoryName(testFile);
                         var baseFname = Path.GetFileName(testFile);
 
-                        //A file ending with "_fullpath.txt" can contain both allocated and unallocated named and value keys.
-                        //A file ending with "_recovered_fullpath.txt" is only recovered unallocated keys with the fullpath.
-                        //A file ending with "_recovered_nameonly.txt" is only recovered with just the name of the object.
 
                         var myName = string.Empty;
 
