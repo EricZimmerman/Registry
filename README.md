@@ -15,6 +15,7 @@ For discussion and design decisions, see http://binaryforay.blogspot.com/.
 6. Ability to compare results with other registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
 
 **Example application output**
+
 NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
 
 All of this was done in 2.24 seconds. The full output from the example app is shown below: 
