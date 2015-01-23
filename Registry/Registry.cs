@@ -9,7 +9,7 @@ using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
 using Registry.Other;
-using System.Collections;
+
 // namespaces...
 
 namespace Registry
@@ -22,17 +22,17 @@ namespace Registry
             Normal,
             Full
         }
-        
+
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
         internal static byte[] FileBytes;
-
         public static long TotalBytesRead;
-        
         private readonly string _filename;
         private MessageEventArgs _msgArgs;
-        // <summary>
-        ///     Initializes a new instance of the <see cref="Registry" /> class.
+        /// <summary>
+        /// Initializes a new instance of the
+        /// <see cref="Registry" />
+        /// class.
         /// </summary>
         public RegistryHive(string fileName)
         {
@@ -68,13 +68,14 @@ namespace Registry
 
             Verbosity = VerbosityEnum.Normal;
         }
-        
+
         /// <summary>
         ///     Contains all recovered
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
         public List<KeyValue> UnassociatedRegistryValues { get; private set; }
+
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
@@ -84,7 +85,6 @@ namespace Registry
         ///     List of all data nodes, both in use and free, as found in the hive
         /// </summary>
         public Dictionary<long, DataNode> DataRecords { get; private set; }
-
 
         public string Filename
         {
@@ -129,7 +129,6 @@ namespace Registry
             }
         }
 
-
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, bool fullPath, ref int keyCount,
             ref int valueCount)
         {
@@ -154,7 +153,7 @@ namespace Registry
                 foreach (var val in subkey.Values)
                 {
                     valueCount += 1;
-              
+
                     //dump value format here
 
                     if (!fullPath)
@@ -190,6 +189,9 @@ namespace Registry
 
                 OnMessage(args);
             }
+
+            key.KeyFlags = RegistryKey.KeyFlagsEnum.HasActiveParent;
+            //key.KeyFlags = key.KeyFlags | RegistryKey.KeyFlagsEnum.HasActiveParent;
 
             var keys = new List<RegistryKey>();
 
@@ -475,7 +477,7 @@ namespace Registry
             var ValueCount = 0;
             var KeyCountDeleted = 0;
             var ValueCountDeleted = 0;
-            
+
             using (var sw = new StreamWriter(outfile, false))
             {
                 sw.AutoFlush = true;
@@ -605,7 +607,7 @@ namespace Registry
             {
                 throw new FileNotFoundException();
             }
-            
+
             var header = ReadBytesFromHive(0, 4096);
 
             TotalBytesRead = 0;
@@ -770,7 +772,7 @@ namespace Registry
             };
 
             OnMessage(_msgArgs);
-            
+
             Root = new RegistryKey(rootNode, null);
 
             var keys = GetSubKeysAndValues(Root);
@@ -838,14 +840,12 @@ namespace Registry
             }
 
 
-           
-
             return true;
         }
 
         /// <summary>
-        /// Associates vk records with NK records and builds a heirarchy of nk records
-        /// <remarks>Results of this method will be available in DeletedRegistryKeys</remarks>
+        ///     Associates vk records with NK records and builds a heirarchy of nk records
+        ///     <remarks>Results of this method will be available in DeletedRegistryKeys</remarks>
         /// </summary>
         public void BuildDeletedRegistryKeys()
         {
@@ -862,12 +862,9 @@ namespace Registry
             var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NKCellRecord);
 
             //TODO update things in this list, then you can look for unreferenced vks at the end so people can browse unassociated vk records
-            
-            
-            
 
 
-                      var associatedVKRecordOffsets = new List<long>();
+            var associatedVKRecordOffsets = new List<long>();
 
             var _deletedRegistryKeys = new Dictionary<long, RegistryKey>();
 
@@ -877,10 +874,11 @@ namespace Registry
                 try
                 {
                     var nk = unreferencedNkCell.Value as NKCellRecord;
-                    
+
                     var regKey = new RegistryKey(nk, null)
                     {
-                        IsDeleted = true
+                        KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
+                     //   IsDeleted = true
                     };
 
                     //Build ValueOffsets for this NKRecord
@@ -893,7 +891,7 @@ namespace Registry
                         if (DataRecords.ContainsKey(regKey.NKRecord.ValueListCellIndex))
                         {
                             offsetList = DataRecords[regKey.NKRecord.ValueListCellIndex];
-                          //  offsetList.IsReferenced = true;
+                            //  offsetList.IsReferenced = true;
                         }
                         else
                         {
@@ -916,7 +914,7 @@ namespace Registry
                                 OnMessage(_msgArgs);
                             }
 
-                            
+
                             //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
                             //so we read it from the hive directly
 
@@ -928,20 +926,16 @@ namespace Registry
                             {
                                 //ValueListCount is the number of offsets we should be looking for. they are 4 bytes long
                                 //If the size of the data record at regKey.NKRecord.ValueListCellIndex exceedsthe total number of bytes plus the size (another 4 bytes), reset it to a more sane value to avoid crazy long reads
-                                sizeNum = regKey.NKRecord.ValueListCount * 4 + 4;
+                                sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
                             }
 
-                                
 
                             try
                             {
                                 var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
                                     (int) sizeNum);
 
-                                var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex)
-                                {
-                                   // IsReferenced = true
-                                };
+                                var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
                                 DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
 
                                 offsetList = dr;
@@ -972,7 +966,7 @@ namespace Registry
 
                         if (offsetList != null)
                         {
-                           // offsetList.IsReferenced = true;
+                            // offsetList.IsReferenced = true;
 
 
                             try
@@ -1011,21 +1005,17 @@ namespace Registry
                     }
 
 
-          
-
                     //For each value offset, get the vk record if it exists, create a KeyValue, and assign it to the current RegistryKey
                     foreach (var valueOffset in nk.ValueOffsets)
                     {
-                        if (CellRecords.ContainsKey((long)valueOffset))
+                        if (CellRecords.ContainsKey((long) valueOffset))
                         {
-                            var val = CellRecords[(long)valueOffset] as VKCellRecord;
+                            var val = CellRecords[(long) valueOffset] as VKCellRecord;
 
                             //we have a value for this key
 
                             if (val != null)
                             {
-                                
-                      
                                 //TODO should this check to see if the vk record IsFree? probably not a bad idea
 
                                 //if its an in use record AND referenced, warn
@@ -1034,35 +1024,32 @@ namespace Registry
                                     if (Verbosity == VerbosityEnum.Full)
                                     {
                                         _msgArgs = new MessageEventArgs
-                                    {
-                                        Detail =
-                                            string.Format(
-                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
-                                                nk.RelativeOffset, valueOffset),
-                                        Exception = null,
-                                        Message =
-                                            string.Format(
-                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
-                                                nk.RelativeOffset, valueOffset),
-                                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
-                                    };
+                                        {
+                                            Detail =
+                                                string.Format(
+                                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
+                                                    nk.RelativeOffset, valueOffset),
+                                            Exception = null,
+                                            Message =
+                                                string.Format(
+                                                    "\t**** When getting values for nk record at relative offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
+                                                    nk.RelativeOffset, valueOffset),
+                                            MsgType = MessageEventArgs.MsgTypeEnum.Warning
+                                        };
 
-                                    OnMessage(_msgArgs);
+                                        OnMessage(_msgArgs);
                                     }
-
                                 }
                                 else
                                 {
                                     associatedVKRecordOffsets.Add(val.RelativeOffset);
 
-                                    var kv = new KeyValue(val.ValueName, val.DataType.ToString(), val.ValueData.ToString(),
-                                  BitConverter.ToString(val.ValueDataSlack), val.ValueDataSlack, val);
+                                    var kv = new KeyValue(val.ValueName, val.DataType.ToString(),
+                                        val.ValueData.ToString(),
+                                        BitConverter.ToString(val.ValueDataSlack), val.ValueDataSlack, val);
 
                                     regKey.Values.Add(kv);
-
                                 }
-
-                                  
                             }
                         }
                         else
@@ -1124,7 +1111,6 @@ namespace Registry
 
                     OnMessage(_msgArgs);
                 }
-
             }
 
             //DeletedRegistryKeys now contains all deleted nk records and their associated values.
@@ -1147,7 +1133,7 @@ namespace Registry
 
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
                             deletedRegistryKey.Value.KeyName);
-                      
+
 
                         parent.SubKeys.Add(deletedRegistryKey.Value);
 
@@ -1173,48 +1159,52 @@ namespace Registry
                 if (CellRecords.ContainsKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex))
                 {
                     //an parent key has been located, so get it
-                    var parentNK = CellRecords[deletedRegistryKey.Value.NKRecord.ParentCellIndex] as NKCellRecord;
+                    var parentNk = CellRecords[deletedRegistryKey.Value.NKRecord.ParentCellIndex] as NKCellRecord;
 
-                    if (parentNK == null)
-                            {
-                                //the data at that index is not an nkrecord
-                                continue;
-                            }
+                    if (parentNk == null)
+                    {
+                        //the data at that index is not an nkrecord
+                        continue;
+                    }
 
-                    if (parentNK.IsReferenced && parentNK.IsFree == false)
+                    if (parentNk.IsReferenced && parentNk.IsFree == false)
                     {
                         //parent exists in our primary tree, so get that key
                         var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex, Root);
 
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
-                           deletedRegistryKey.Value.KeyName);
+                            deletedRegistryKey.Value.KeyName);
+
+                        deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;;
 
                         foreach (var sk in deletedRegistryKey.Value.SubKeys)
                         {
                             sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
-                           sk.KeyName);
+                                sk.KeyName);
                         }
 
                         //add a copy of deletedRegistryKey under its original parent
-                      pk.SubKeys.Add(deletedRegistryKey.Value);
+                        pk.SubKeys.Add(deletedRegistryKey.Value);
 
 
                         if (Verbosity == VerbosityEnum.Full)
                         {
-                             _msgArgs = new MessageEventArgs
+                            _msgArgs = new MessageEventArgs
                             {
-                                Detail = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
-                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+                                Detail =
+                                    string.Format(
+                                        "\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+                                        deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
                                 Exception = null,
-                                Message = string.Format("\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
-                                deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
+                                Message =
+                                    string.Format(
+                                        "\tAssociated deleted key at relative offset 0x{0:X} to active parent key at relative offset 0x{1:X}",
+                                        deletedRegistryKey.Value.NKRecord.RelativeOffset, pk.NKRecord.RelativeOffset),
                                 MsgType = MessageEventArgs.MsgTypeEnum.Warning
-
                             };
 
                             OnMessage(_msgArgs);
                         }
-
                     }
                 }
             }
@@ -1228,15 +1218,16 @@ namespace Registry
                 if (associatedVKRecordOffsets.Contains(keyValuePair.Key) == false)
                 {
                     var vk = keyValuePair.Value as VKCellRecord;
-                    
-                        var val = new KeyValue(vk.ValueName, vk.DataType.ToString(), vk.ValueData.ToString(), BitConverter.ToString(vk.ValueDataSlack),
-                            vk.ValueDataRaw, vk);
 
-                        UnassociatedRegistryValues.Add(val);
+                    var val = new KeyValue(vk.ValueName, vk.DataType.ToString(), vk.ValueData.ToString(),
+                        BitConverter.ToString(vk.ValueDataSlack),
+                        vk.ValueDataRaw, vk);
+
+                    UnassociatedRegistryValues.Add(val);
                 }
             }
-            
         }
+
         /// <summary>
         ///     Given a file, confirm it is a registry hive and that hbin headers are found every 4096 * (size of hbin) bytes.
         /// </summary>

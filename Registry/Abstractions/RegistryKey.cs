@@ -14,6 +14,15 @@ namespace Registry.Abstractions
     /// </summary>
     public class RegistryKey
     {
+
+        [Flags]
+        public enum KeyFlagsEnum
+        {
+            Deleted = 1,
+            HasActiveParent = 2
+        }
+
+
         // public constructors...
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
@@ -51,14 +60,17 @@ namespace Registry.Abstractions
         /// </summary>
         public string InternalGUID { get; set; }
 
-        /// <summary>
-        ///     When true, this key has been recovered and placed as a subkey to the key referenced by NKRecord.ParentCellIndex.
-        ///     <remarks>
-        ///         The parent key is determined by checking whether ParentCellIndex 1) exists and 2)
-        ///         ParentCellIndex.IsReferenced == true.
-        ///     </remarks>
-        /// </summary>
-        public bool IsDeleted { get; set; }
+
+        public KeyFlagsEnum KeyFlags { get; set; }
+
+        ///// <summary>
+        /////     When true, this key has been recovered and placed as a subkey to the key referenced by NKRecord.ParentCellIndex.
+        /////     <remarks>
+        /////         The parent key is determined by checking whether ParentCellIndex 1) exists and 2)
+        /////         ParentCellIndex.IsReferenced == true.
+        /////     </remarks>
+        ///// </summary>
+        //public bool IsDeleted { get; set; }
 
         /// <summary>
         ///     The name of this key. For the full path, see KeyPath
@@ -102,7 +114,9 @@ namespace Registry.Abstractions
             sb.AppendLine(string.Format("LastWriteTime: {0}", LastWriteTime));
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
+           // sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
+
+            sb.AppendLine(string.Format("Key flags: {0}", KeyFlags));
 
             sb.AppendLine();
 
