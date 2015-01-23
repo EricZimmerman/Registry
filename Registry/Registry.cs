@@ -503,27 +503,27 @@ namespace Registry
                 }
 
 
-                //dump recovered keys and values not associated with anything else
+                ////dump recovered keys and values not associated with anything else
 
-                foreach (var source in DeletedRegistryKeys) 
-                {
-                    KeyCountDeleted += 1;
-                    
-                    sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A",
-                        source.NKRecord.AbsoluteOffset, source.KeyName,
-                        source.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                    
-                    foreach (var val in source.Values)
-                    {
-                        ValueCountDeleted += 1;
+                //foreach (var source in DeletedRegistryKeys) 
+                //{
+                //    KeyCountDeleted += 1;
+                //    
+                //    sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A",
+                //        source.NKRecord.AbsoluteOffset, source.KeyName,
+                //        source.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                //    
+                //    foreach (var val in source.Values)
+                //    {
+                //        ValueCountDeleted += 1;
 
-                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                            val.VKRecord.AbsoluteOffset, source.KeyName, val.ValueName, (int) val.VKRecord.DataType,
-                            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                    }
+                //        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
+                //            val.VKRecord.AbsoluteOffset, source.KeyName, val.ValueName, (int) val.VKRecord.DataType,
+                //            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                //    }
 
-                    DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
-                }
+                //    DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
+                //}
 
                 //TODO here we need to look at whats left in CellRecords that arent referenced?
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);

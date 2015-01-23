@@ -1,18 +1,61 @@
 # Registry #
 
 
-Full featured, offline registry parser in C#. For discussion and design decisions, see http://binaryforay.blogspot.com/.
+Full featured, offline registry parser in C#. 
+
+For discussion and design decisions, see http://binaryforay.blogspot.com/.
 
 ## The goals of this project are:  ##
 
 1. full parsing of all known registry structures
 2. Make registry value slack space accessible
-3. Deleted key support
-4. ???
+3. Deleted key/value support
+4. Easy access to underlying data structures and their raw data as byte arrays
+5. Performance
+6. Ability to compare results with other registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
+
+**Example application output**
+NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
+
+All of this was done in 2.24 seconds. The full output from the example app is shown below: 
 
 
+    1/23/2015 8:52:56 AM -07:00: Processing 'D:\temp\re\NTUSER.DAT'
+	1/23/2015 8:52:57 AM -07:00: Initial processing complete. Building tree...
+	1/23/2015 8:52:57 AM -07:00: Found root node! Getting subkeys...
+	1/23/2015 8:52:57 AM -07:00: Processing complete! Call BuildDeletedRegistryKeys to rebuild deleted record structures
+	1/23/2015 8:52:57 AM -07:00: Associating deleted keys and values...
+	1/23/2015 8:52:58 AM -07:00: Finished processing 'D:\temp\re\NTUSER.DAT'
+	1/23/2015 8:52:58 AM -07:00: Results:
+	
+	Found 1,928 hbin records
+	Found 83,313 Cell records (nk: 18,823, vk: 64,391, sk: 99, lk: 0)
+	Found 3,779 List records
+	Found 48,863 Data records
+	
+	There are 70,981 cell records marked as being referenced (85.20 %)
+	There are 3,769 list records marked as being referenced (99.74 %)
+	There are 41,979 data records marked as being referenced (85.91 %)
+	
+	Free record info
+	12,332 free Cell records (nk: 3,369, vk: 8,963, sk: 0, lk: 0)
+	10 free List records
+	3,070 free Data records
+	
+	There were 0 hard parsing errors (a record marked 'in use' that didn't parse correctly.)
+	There were 0 soft parsing errors (a record marked 'free' that didn't parse correctly.)
+	
+	Cells: Free + referenced + marked as in use but not referenced == Total? True
+	Lists: Free + referenced + marked as in use but not referenced == Total? True
+	Data:  Free + referenced + marked as in use but not referenced == Total? True
+	
+	Processing took 2.2406 seconds
+	
+	
+	Press any key to continue to next file
 
-**Testing metrics**
+
+**Additional testing metrics**
 
 108 hives processed
 
@@ -32,39 +75,11 @@ Total soft parsing errors (record marked as free):	522 (0.0055246735944521 % err
 
 ***Parsing success rate: 99.99286660919031 %*** <br />
 
-**The following kinds of statistics are also possible:**<br />
 
-Found 1,797 Cell records (NK: 292, VK: 1,495, SK: 10)<br />
-Found 93 List records<br />
-Found 1,046 Data records<br />
-
-Found 3 free Cell records (NK: 0, VK: 3, SK: 0)<br />
-Found 1 free List records<br />
-Found 177 free Data records<br />
-
-There are 1,784 cell records marked as being referenced (99.28 %)<br />
-There are 92 list records marked as being referenced (98.92 %)<br />
-
-There were 10 cell records marked as in use but not referenced by
-anything in the registry tree<br />
-There were 0 cell records referenced by another record somewhere, but
-marked as free based on size in the registry tree<br />
-There were 0 list records marked as in use but not referenced by
-anything in the registry tree<br />
-There were 0 list records referenced by another record somewhere, but
-marked as free based on size in the registry tree<br />
-
-There were 0 hard parsing errors (a record marked 'in use' that didn't
-parse correctly.)<br />
-There were 0 soft parsing errors (a record marked 'free' that didn't
-parse correctly.)<br />
-
-
-Processing took 0.1400 seconds<br />
 
 ### Example data ###
 
-Find below examples of the kinds of data that will be exposed. Of course, you dont have to deal with any of this if you just want the normal key, subkey and values. The output below is what ToString() generates for each object. All offsets are resolved and the entire hive is accessible via traditional object oriented methods using collections, linq, etc.
+Find below examples of the kinds of data that will be exposed. Of course, you don't have to deal with any of this if you just want the normal key, subkey and values. The output below is what ToString() generates for each object. All offsets are resolved and the entire hive is accessible via traditional object oriented methods using collections, linq, etc.
 
 **Security Cell Record**
 
