@@ -237,15 +237,15 @@ namespace Registry.Cells
                 // in some rare cases the bytes returned from above are all zeros, so make sure we get something but all zeros
                 if (datablockSizeRaw.Length == 4)
                 {
-                    dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+                    dataBlockSize = Math.Abs(BitConverter.ToInt32(datablockSizeRaw, 0));
                 }
 
 
-                if (IsFree && Math.Abs(dataBlockSize) > DataLength*10)
+                if (IsFree && dataBlockSize > DataLength*100)
                 {
                     //safety net to avoid crazy large reads that just fail
-                    //find out the next highest multiple of 8 based on DataLength for a best guess
-                    dataBlockSize = (int) (Math.Ceiling(((double) DataLength/8))*8);
+                    //find out the next highest multiple of 8 based on DataLength for a best guess, with 32 extra bytes to spare
+                    dataBlockSize = (int) (Math.Ceiling(((double) DataLength/8))*8) + 32;
                     // dataBlockSize = (int) (DataLength * 2);
                 }
 
@@ -257,26 +257,31 @@ namespace Registry.Cells
                     dataBlockSize = dataBlockSize - -2147483648;
                 }
 
-
-                //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
-
-                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
-                if (IsFree)
+                if (IsFree && dataBlockSize == DataLength)
                 {
-                    try
-                    {
-                        datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
-                    }
-                    catch (Exception)
-                    {
-                        //crazy things can happen in IsFree records
-                        datablockRaw = new byte[0];
-                    }
+                    dataBlockSize += 4;
                 }
-                else
-                {
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
-                }
+
+
+                    //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
+
+                    //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
+                    if (IsFree)
+                    {
+                        try
+                        {
+                            datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                        }
+                        catch (Exception)
+                        {
+                            //crazy things can happen in IsFree records
+                            datablockRaw = new byte[0];
+                        }
+                    }
+                    else
+                    {
+                        datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                    }
 
 
                 //datablockRaw now has our value AND slack space!
@@ -288,7 +293,7 @@ namespace Registry.Cells
                 {
                     // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType data
 
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, Math.Abs(dataBlockSize));
+                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
 
                     var db = new DBListRecord(datablockRaw, 4096 + OffsetToData);
 
@@ -297,7 +302,7 @@ namespace Registry.Cells
                     datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, 4);
                     dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
 
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, Math.Abs(dataBlockSize));
+                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, dataBlockSize);
 
                     //datablockRaw now contains our list of pointers to fragmented Data
 
@@ -349,15 +354,23 @@ namespace Registry.Cells
             if (dataLengthInternal + internalDataOffset > datablockRaw.Length)
             {
                 //we dont have enough data to copy, so take what we can get
-                try
+                if (datablockRaw.Length > 0)
                 {
-                    Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0,
-                        datablockRaw.Length - internalDataOffset);
+  
+                    try
+                    {
+                   
+
+                            Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0,
+                            datablockRaw.Length - internalDataOffset);
+                    }
+                    catch (Exception)
+                    {
+                        Array.Copy(datablockRaw, 0, ValueDataRaw, 0, datablockRaw.Length);
+                    }
                 }
-                catch (Exception)
-                {
-                    Array.Copy(datablockRaw, 0, ValueDataRaw, 0, datablockRaw.Length);
-                }
+
+            
             }
             else
             {

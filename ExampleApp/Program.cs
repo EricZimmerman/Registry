@@ -113,6 +113,8 @@ namespace ExampleApp
                     };
 
                     fName1Test.ParseHive();
+                    fName1Test.BuildDeletedRegistryKeys();
+
 
                     DumpConsoleMessage(string.Format("Finished processing '{0}'", testFile));
                     Console.Title = string.Format("Finished processing '{0}'", testFile);
