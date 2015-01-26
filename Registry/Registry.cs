@@ -177,6 +177,11 @@ namespace Registry
         //TODO this needs refactored to remove duplicated code
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
+
+            RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
+            KeyPathKeyMap.Add(key.KeyPath, key);
+
+
             if (Verbosity == VerbosityEnum.Full)
             {
                 var args = new MessageEventArgs
@@ -556,34 +561,25 @@ namespace Registry
 
         public RegistryKey FindKey(string keypath)
         {
-            //todo finish this
+            if (KeyPathKeyMap.ContainsKey(keypath))
+            {
+                return KeyPathKeyMap[keypath];
+            }
             return null;
         }
 
         public RegistryKey FindKey(long relativeOffset, RegistryKey parent)
         {
-            RegistryKey found = null;
-            if (Root == null)
+            if (RelativeOffsetKeyMap.ContainsKey(relativeOffset))
             {
-                return null;
+                return RelativeOffsetKeyMap[relativeOffset];
             }
 
-            if (parent.NKRecord.RelativeOffset == relativeOffset)
-            {
-                return parent;
-            }
-
-            foreach (var registryKey in parent.SubKeys)
-            {
-                if (found != null)
-                {
-                    break;
-                }
-                found = FindKey(relativeOffset, registryKey);
-            }
-
-            return found;
+            return null;
         }
+
+          private Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
+          private Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
 
         public bool ParseHive()
         {
@@ -764,6 +760,7 @@ namespace Registry
 
             Root = new RegistryKey(rootNode, null);
 
+          
             var keys = GetSubKeysAndValues(Root);
 
             Root.SubKeys.AddRange(keys);

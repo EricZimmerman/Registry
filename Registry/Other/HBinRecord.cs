@@ -359,7 +359,7 @@ namespace Registry.Other
                     matchResult = matchResult.NextMatch();
                 }
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 // Syntax error in the regular expression
             }

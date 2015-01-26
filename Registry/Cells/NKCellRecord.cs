@@ -157,13 +157,13 @@ namespace Registry.Cells
                 if (IsFree)
                 {
                     if (rawBytes.Length >= 0x50 + NameLength)
-                    {
-                        Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
-                    }
-                    else
-                    {
-                        Name = "(Unable to determine name)";
-                    }
+                        {
+                            Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+                        }
+                        else
+                        {
+                            Name = "(Unable to determine name)";
+                        }
                 }
                 else
                 {
