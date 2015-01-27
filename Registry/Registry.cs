@@ -181,7 +181,10 @@ namespace Registry
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
-            KeyPathKeyMap.Add(key.KeyPath, key);
+
+ 
+
+            KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName),""), key);
 
 
             if (Verbosity == VerbosityEnum.Full)
@@ -315,7 +318,7 @@ namespace Registry
 
 
                 var value = new KeyValue(vk.ValueName, vk.DataType.ToString(), valueDataString,
-                    BitConverter.ToString(vk.ValueDataSlack), vk.ValueDataSlack, vk);
+                    BitConverter.ToString(vk.ValueDataSlack),vk.ValueDataRaw, vk.ValueDataSlack, vk);
 
 
                 key.Values.Add(value);
@@ -1024,7 +1027,7 @@ namespace Registry
 
                                     var kv = new KeyValue(val.ValueName, val.DataType.ToString(),
                                         val.ValueData.ToString(),
-                                        BitConverter.ToString(val.ValueDataSlack), val.ValueDataSlack, val);
+                                        BitConverter.ToString(val.ValueDataSlack), val.ValueDataRaw, val.ValueDataSlack, val);
 
                                     regKey.Values.Add(kv);
                                 }
@@ -1195,7 +1198,7 @@ namespace Registry
                     var vk = keyValuePair.Value as VKCellRecord;
 
                     var val = new KeyValue(vk.ValueName, vk.DataType.ToString(), vk.ValueData.ToString(),
-                        BitConverter.ToString(vk.ValueDataSlack),
+                        BitConverter.ToString(vk.ValueDataSlack), vk.ValueDataRaw,
                         vk.ValueDataRaw, vk);
 
                     UnassociatedRegistryValues.Add(val);

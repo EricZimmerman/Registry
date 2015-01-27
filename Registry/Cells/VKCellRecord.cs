@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -67,7 +68,8 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = _size > 0;
+       
+                IsFree = _size > 0;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 

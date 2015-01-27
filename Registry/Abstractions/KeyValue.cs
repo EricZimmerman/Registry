@@ -22,7 +22,7 @@ namespace Registry.Abstractions
         /// <param name="valueData"></param>
         /// <param name="valueSlack"></param>
         /// <param name="valueSlackRaw"></param>
-        public KeyValue(string valueName, string valueType, string valueData, string valueSlack, byte[] valueSlackRaw,
+        public KeyValue(string valueName, string valueType, string valueData, string valueSlack, byte[]  valueDataRaw, byte[] valueSlackRaw,
             VKCellRecord vk)
         {
             VKRecord = vk;
@@ -30,6 +30,7 @@ namespace Registry.Abstractions
             ValueType = valueType;
             ValueData = valueData;
             ValueSlack = valueSlack;
+            ValueDataRaw = valueDataRaw;
             ValueSlackRaw = valueSlackRaw;
 
             InternalGUID = Guid.NewGuid().ToString();

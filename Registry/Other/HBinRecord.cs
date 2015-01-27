@@ -232,7 +232,11 @@ namespace Registry.Other
                             break;
 
                         case "nk":
-                            cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
+                            {
+                                cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            }
+                          
 
                             break;
                         case "sk":
@@ -407,6 +411,12 @@ namespace Registry.Other
                     switch (sig)
                     {
                         case "nk":
+                            if (raw.Length <= 0x30)
+                            {
+                               
+                                continue;
+                            }
+
                             var nk = new NKCellRecord(raw, relativeoffset + actualStart);
                             if (nk.LastWriteTimestamp.Year > 1700)
                             {
