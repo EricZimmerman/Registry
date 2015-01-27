@@ -245,11 +245,16 @@ namespace ExampleApp
 
                 Console.WriteLine();
                 Console.WriteLine();
-                Console.WriteLine("Press any key to continue to next file");
-                Console.ReadKey();
 
-                Console.WriteLine();
-                Console.WriteLine();
+                if (result.Value.PauseAfterEachFile)
+                {
+                    Console.WriteLine("Press any key to continue to next file");
+                    Console.ReadKey();
+
+                    Console.WriteLine();
+                    Console.WriteLine(); 
+                }
+    
             }
         }
     }

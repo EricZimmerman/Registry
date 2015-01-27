@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
@@ -255,7 +257,7 @@ namespace Registry.Other
                 }
                 catch (Exception ex)
                 {
-                    //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else
+                    //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else?
                     //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
 
                     var size = BitConverter.ToInt32(rawRecord, 0);
@@ -263,7 +265,6 @@ namespace Registry.Other
                     if (size < 0)
                     {
                         RegistryHive._hardParsingErrors += 1;
-                        //  Debug.WriteLine("Cell signature: {0}, Error: {1}, Stack: {2}. Hex: {3}", cellSignature, ex.Message, ex.StackTrace, BitConverter.ToString(rawRecord));
 
                         var args = new MessageEventArgs
                         {
@@ -280,13 +281,12 @@ namespace Registry.Other
                             MsgType = MessageEventArgs.MsgTypeEnum.Error
                         };
 
-                        OnMessage(args);
+                        if (cellSignature == "nk")
+                        {
+                            Debug.WriteLine("Unfree NK");
+                        }
 
-                        //Console.WriteLine();
-                        //Console.WriteLine();
-                        //Console.WriteLine("Press a key to continue");
-
-                        //Console.ReadKey();
+                            OnMessage(args);
                     }
                     else
                     {
