@@ -14,14 +14,12 @@ namespace Registry.Abstractions
     /// </summary>
     public class RegistryKey
     {
-
         [Flags]
         public enum KeyFlagsEnum
         {
             Deleted = 1,
             HasActiveParent = 2
         }
-
 
         // public constructors...
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
@@ -53,16 +51,14 @@ namespace Registry.Abstractions
 
         // public properties...
         public string ClassName { get; set; }
-
         public RegistryKey Parent { get; set; }
+
         /// <summary>
         ///     A unique value that can be used to find this key in a collection
         /// </summary>
         public string InternalGUID { get; set; }
 
-
         public KeyFlagsEnum KeyFlags { get; set; }
-
         ///// <summary>
         /////     When true, this key has been recovered and placed as a subkey to the key referenced by NKRecord.ParentCellIndex.
         /////     <remarks>
@@ -114,7 +110,7 @@ namespace Registry.Abstractions
             sb.AppendLine(string.Format("LastWriteTime: {0}", LastWriteTime));
             sb.AppendLine();
 
-           // sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
+            // sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
 
             sb.AppendLine(string.Format("Key flags: {0}", KeyFlags));
 

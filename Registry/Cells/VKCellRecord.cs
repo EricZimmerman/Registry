@@ -62,7 +62,7 @@ namespace Registry.Cells
         public VKCellRecord(byte[] rawBytes, long relativeOffset, float version)
         {
             RelativeOffset = relativeOffset;
-            
+
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -155,7 +155,7 @@ namespace Registry.Cells
                     try
                     {
                         foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
-                            // look for hex chars followed by 00 separators
+                        // look for hex chars followed by 00 separators
                     }
                     catch (ArgumentException)
                     {
@@ -263,25 +263,25 @@ namespace Registry.Cells
                 }
 
 
-                    //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
+                //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
 
-                    //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
-                    if (IsFree)
-                    {
-                        try
-                        {
-                            datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
-                        }
-                        catch (Exception)
-                        {
-                            //crazy things can happen in IsFree records
-                            datablockRaw = new byte[0];
-                        }
-                    }
-                    else
+                //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
+                if (IsFree)
+                {
+                    try
                     {
                         datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
                     }
+                    catch (Exception)
+                    {
+                        //crazy things can happen in IsFree records
+                        datablockRaw = new byte[0];
+                    }
+                }
+                else
+                {
+                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                }
 
 
                 //datablockRaw now has our value AND slack space!
@@ -356,12 +356,9 @@ namespace Registry.Cells
                 //we dont have enough data to copy, so take what we can get
                 if (datablockRaw.Length > 0)
                 {
-  
                     try
                     {
-                   
-
-                            Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0,
+                        Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0,
                             datablockRaw.Length - internalDataOffset);
                     }
                     catch (Exception)
@@ -369,8 +366,6 @@ namespace Registry.Cells
                         Array.Copy(datablockRaw, 0, ValueDataRaw, 0, datablockRaw.Length);
                     }
                 }
-
-            
             }
             else
             {
@@ -533,9 +528,8 @@ namespace Registry.Cells
                     //When records ARE free, different rules apply, so we process thsoe all at once later
                     Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
                 }
-                     
             }
-                
+
             catch (Exception)
             {
                 //if its a free record, errors are expected, but if not, throw so the issue can be addressed
@@ -707,7 +701,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
- 
+
 
             return sb.ToString();
         }

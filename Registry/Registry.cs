@@ -28,11 +28,14 @@ namespace Registry
         internal static byte[] FileBytes;
         public static long TotalBytesRead;
         private readonly string _filename;
+        private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
+        private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
         private MessageEventArgs _msgArgs;
+
         /// <summary>
-        /// Initializes a new instance of the
-        /// <see cref="Registry" />
-        /// class.
+        ///     Initializes a new instance of the
+        ///     <see cref="Registry" />
+        ///     class.
         /// </summary>
         public RegistryHive(string fileName)
         {
@@ -177,7 +180,6 @@ namespace Registry
         //TODO this needs refactored to remove duplicated code
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
-
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
             KeyPathKeyMap.Add(key.KeyPath, key);
 
@@ -224,12 +226,10 @@ namespace Registry
 
                     key.NKRecord.ValueOffsets.Add(os);
                 }
-
             }
 
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
             {
-           
                 var args = new MessageEventArgs
                 {
                     Detail =
@@ -250,9 +250,9 @@ namespace Registry
                 var vc = CellRecords[(long) valueOffset];
 
                 var vk = vc as VKCellRecord;
-                
+
                 vk.IsReferenced = true;
-                
+
                 var dbListProcessed = false;
 
                 foreach (var dataOffet in vk.DataOffets)
@@ -521,7 +521,7 @@ namespace Registry
                 //    DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
                 //}
 
-         
+
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
                 //may not need to if we do not care about orphaned values
 
@@ -577,9 +577,6 @@ namespace Registry
 
             return null;
         }
-
-          private Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
-          private Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
 
         public bool ParseHive()
         {
@@ -760,7 +757,7 @@ namespace Registry
 
             Root = new RegistryKey(rootNode, null);
 
-          
+
             var keys = GetSubKeysAndValues(Root);
 
             Root.SubKeys.AddRange(keys);
@@ -861,7 +858,7 @@ namespace Registry
                     var regKey = new RegistryKey(nk, null)
                     {
                         KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
-                     //   IsDeleted = true
+                        //   IsDeleted = true
                     };
 
                     //Build ValueOffsets for this NKRecord
@@ -1113,7 +1110,7 @@ namespace Registry
 
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
                             deletedRegistryKey.Value.KeyName);
-                        
+
                         parent.SubKeys.Add(deletedRegistryKey.Value);
 
                         //mark the subkey for deletion so we do not blow up the collection while iterating it
@@ -1153,7 +1150,8 @@ namespace Registry
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
                             deletedRegistryKey.Value.KeyName);
 
-                        deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;;
+                        deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;
+                        ;
 
                         foreach (var sk in deletedRegistryKey.Value.SubKeys)
                         {
@@ -1163,7 +1161,7 @@ namespace Registry
 
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
-                        
+
                         if (Verbosity == VerbosityEnum.Full)
                         {
                             _msgArgs = new MessageEventArgs

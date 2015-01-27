@@ -157,13 +157,13 @@ namespace Registry.Cells
                 if (IsFree)
                 {
                     if (rawBytes.Length >= 0x50 + NameLength)
-                        {
-                            Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
-                        }
-                        else
-                        {
-                            Name = "(Unable to determine name)";
-                        }
+                    {
+                        Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+                    }
+                    else
+                    {
+                        Name = "(Unable to determine name)";
+                    }
                 }
                 else
                 {
@@ -204,7 +204,7 @@ namespace Registry.Cells
                 Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
 
-        
+
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
 
             if (!IsFree)
@@ -212,7 +212,6 @@ namespace Registry.Cells
                 //When records ARE free, different rules apply, so we process thsoe all at once later
                 Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
             }
-        
         }
 
         // public properties...
@@ -376,7 +375,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Padding: {0}", Padding));
 
             sb.AppendLine();
-       
+
             return sb.ToString();
         }
     }

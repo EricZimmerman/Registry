@@ -11,8 +11,6 @@ using Registry.Lists;
 
 namespace Registry.Other
 {
-
-
     // public classes...
     public class HBinRecord
     {
@@ -34,17 +32,6 @@ namespace Registry.Other
 
         private readonly byte[] _rawBytes;
         private readonly float _version;
-
-        public event EventHandler<MessageEventArgs> Message;
-
-        protected virtual void OnMessage(MessageEventArgs e)
-        {
-            var handler = Message;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
-        }
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
@@ -135,6 +122,16 @@ namespace Registry.Other
         public uint Size { get; private set; }
 
         public uint Spare { get; private set; }
+        public event EventHandler<MessageEventArgs> Message;
+
+        protected virtual void OnMessage(MessageEventArgs e)
+        {
+            var handler = Message;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
 
         public List<IRecordBase> Process()
         {
@@ -186,15 +183,16 @@ namespace Registry.Other
                     var args = new MessageEventArgs
                     {
                         Detail =
-                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
                         Exception = null,
-                        Message = string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})", cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                        Message =
+                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
                         MsgType = MessageEventArgs.MsgTypeEnum.Info
                     };
 
                     OnMessage(args);
-
-
                 }
 
                 ICellTemplate cellRecord = null;
@@ -271,19 +269,19 @@ namespace Registry.Other
                         {
                             Detail =
                                 string.Format(
-                            "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
-                            cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                            BitConverter.ToString(rawRecord)),
+                                    "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
+                                    cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
+                                    BitConverter.ToString(rawRecord)),
                             Exception = ex,
                             Message = string.Format(
-                            "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
-                            cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                            BitConverter.ToString(rawRecord)),
+                                "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
+                                cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
+                                BitConverter.ToString(rawRecord)),
                             MsgType = MessageEventArgs.MsgTypeEnum.Error
                         };
 
                         OnMessage(args);
-                        
+
                         //Console.WriteLine();
                         //Console.WriteLine();
                         //Console.WriteLine("Press a key to continue");
@@ -308,14 +306,13 @@ namespace Registry.Other
                     else
                     {
                         records.Add((IRecordBase) cellRecord);
-        
                     }
                 }
 
                 if (listRecord != null)
                 {
                     records.Add((IRecordBase) listRecord);
- 
+
                     carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
                 }
 
@@ -371,7 +368,6 @@ namespace Registry.Other
                 var dr1 = new DataNode(remainingData, relativeoffset);
 
                 records.Add(dr1);
-
             }
             else
             {
@@ -381,7 +377,6 @@ namespace Registry.Other
                 {
                     var dr = new DataNode(remainingData, relativeoffset);
                     records.Add(dr);
-
                 }
             }
 
@@ -406,7 +401,7 @@ namespace Registry.Other
 
                     Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
 
-                 
+
                     sig = Encoding.ASCII.GetString(raw, 4, 2);
 
                     switch (sig)
@@ -438,13 +433,13 @@ namespace Registry.Other
                         case "sk":
                             var sk = new SKCellRecord(raw, relativeoffset + actualStart);
                             records.Add(sk);
-                            
+
                             break;
 
                         case "lf":
                             var lf = new LxListRecord(raw, relativeoffset + actualStart);
                             records.Add(lf);
-                        
+
                             break;
 
                         default:
@@ -479,11 +474,14 @@ namespace Registry.Other
                     var args = new MessageEventArgs
                     {
                         Detail =
-                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
-                        relativeoffset + (i / 3) - 3, ex.Message, raw.Length),
+                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
+                                sig,
+                                relativeoffset + (i/3) - 3, ex.Message, raw.Length),
                         Exception = ex,
-                        Message = string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}", sig,
-                        relativeoffset + (i/3) - 3, ex.Message, raw.Length),
+                        Message =
+                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
+                                sig,
+                                relativeoffset + (i/3) - 3, ex.Message, raw.Length),
                         MsgType = MessageEventArgs.MsgTypeEnum.Error
                     };
 

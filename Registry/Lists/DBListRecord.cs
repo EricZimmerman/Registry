@@ -37,8 +37,6 @@ namespace Registry.Lists
             Check.That(Signature).IsEqualTo("db");
 
             OffsetToOffsets = BitConverter.ToUInt32(rawBytes, 0x8);
-
-           
         }
 
         /// <summary>
