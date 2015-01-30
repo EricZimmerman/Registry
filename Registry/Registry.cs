@@ -132,25 +132,25 @@ namespace Registry
             }
         }
 
-        private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, bool fullPath, ref int keyCount,
+        private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
         {
             foreach (var subkey in key.SubKeys)
             {
                 keyCount += 1;
 
-                if (!fullPath)
-                {
+                //if (!fullPath)
+                //{
                     sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
                         subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
                         subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                }
-                else
-                {
-                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
-                        subkey.NKRecord.AbsoluteOffset, subkey.KeyPath,
-                        subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                }
+                //}
+                //else
+                //{
+                //    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
+                //        subkey.NKRecord.AbsoluteOffset, subkey.KeyPath,
+                //        subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                //}
 
 
                 foreach (var val in subkey.Values)
@@ -159,21 +159,21 @@ namespace Registry
 
                     //dump value format here
 
-                    if (!fullPath)
-                    {
+                    //if (!fullPath)
+                    //{
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
                             val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
                             BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                    }
-                    else
-                    {
-                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                            val.VKRecord.AbsoluteOffset, subkey.KeyPath, val.ValueName, (int) val.VKRecord.DataType,
-                            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                    }
+                    //}
+                    //else
+                    //{
+                    //    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
+                    //        val.VKRecord.AbsoluteOffset, subkey.KeyPath, val.ValueName, (int) val.VKRecord.DataType,
+                    //        BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+                    //}
                 }
 
-                DumpKeyCommonFormat(subkey, sw, fullPath, ref keyCount, ref valueCount);
+                DumpKeyCommonFormat(subkey, sw, ref keyCount, ref valueCount);
             }
         }
 
@@ -468,7 +468,7 @@ namespace Registry
         // public methods...
 
 
-        public void ExportDataToCommonFormat(string outfile, bool deletedOnly, bool fullPath)
+        public void ExportDataToCommonFormat(string outfile, bool deletedOnly)
         {
             var KeyCount = 0; //root key
             var ValueCount = 0;
@@ -498,33 +498,9 @@ namespace Registry
                     }
 
 
-                    DumpKeyCommonFormat(Root, sw, true, ref KeyCount, ref ValueCount);
+                    DumpKeyCommonFormat(Root, sw, ref KeyCount, ref ValueCount);
                 }
-
-
-                ////dump recovered keys and values not associated with anything else
-
-                //foreach (var source in DeletedRegistryKeys) 
-                //{
-                //    KeyCountDeleted += 1;
-                //    
-                //    sw.WriteLine("key|{0}|{1}|{2}|{3}", source.NKRecord.IsFree ? "U" : "A",
-                //        source.NKRecord.AbsoluteOffset, source.KeyName,
-                //        source.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                //    
-                //    foreach (var val in source.Values)
-                //    {
-                //        ValueCountDeleted += 1;
-
-                //        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                //            val.VKRecord.AbsoluteOffset, source.KeyName, val.ValueName, (int) val.VKRecord.DataType,
-                //            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                //    }
-
-                //    DumpKeyCommonFormat(source, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
-                //}
-
-
+                
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
                 //may not need to if we do not care about orphaned values
 
@@ -550,7 +526,7 @@ namespace Registry
                             key.NKRecord.AbsoluteOffset, key.KeyName,
                             key.LastWriteTime.Value.UtcDateTime.ToString("o"));
 
-                        DumpKeyCommonFormat(key, sw, fullPath, ref KeyCountDeleted, ref ValueCountDeleted);
+                        DumpKeyCommonFormat(key, sw, ref KeyCountDeleted, ref ValueCountDeleted);
                     }
                 }
 

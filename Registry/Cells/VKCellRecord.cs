@@ -67,9 +67,8 @@ namespace Registry.Cells
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
-
-       
-                IsFree = _size > 0;
+            
+            IsFree = _size > 0;
 
             Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 

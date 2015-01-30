@@ -19,6 +19,10 @@ internal class Options
     HelpText = "If true, pause after processing a hive and wait for keypress to continue")]
     public bool PauseAfterEachFile { get; set; }
 
+    [Option('a', DefaultValue = false, Required = false,
+HelpText = "If true, only recovered deleted keys/values will be exported")]
+    public bool ExportDeletedOnly { get; set; }
+
     public string GetUsage()
     {
         var usage = new StringBuilder();
@@ -26,8 +30,8 @@ internal class Options
         usage.AppendLine("-d <directory>: Process files found in <directory>");
         usage.AppendLine("-f <file>: Process <file>");
         usage.AppendLine("-p: Pause after processing each file");
-        usage.AppendLine(
-            "-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
+        usage.AppendLine("-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
+        usage.AppendLine("-a: Only export deleted key/values");
 
         usage.AppendLine("");
         usage.AppendLine("-d or -f must be specified, but not both");

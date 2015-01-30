@@ -206,32 +206,22 @@ namespace ExampleApp
                         var baseDir = Path.GetDirectoryName(testFile);
                         var baseFname = Path.GetFileName(testFile);
 
-
                         var myName = string.Empty;
 
-                        bool deletedOnly = false;
-                        bool fullpath = false;
+                        bool deletedOnly = result.Value.ExportDeletedOnly;
 
                         if (deletedOnly)
                         {
-                            if (fullpath)
-                            {
-                                myName = "_EricZ_recovered_fullpath.txt";
-                            }
-                            else
-                            {
-                                myName = "_EricZ_recovered_nameonly.txt";
-                            }
+                            myName = "_EricZ_recovered.txt";                       
                         }
                         else
                         {
-                            myName = "_EricZ_fullpath.txt";
+                            myName = "_EricZ_all.txt";
                         }
-
-
+                        
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
 
-                        fName1Test.ExportDataToCommonFormat(outfile, deletedOnly, fullpath);
+                        fName1Test.ExportDataToCommonFormat(outfile, deletedOnly);
                     }
                 }
                 catch (Exception ex)
