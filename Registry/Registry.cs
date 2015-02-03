@@ -739,6 +739,8 @@ namespace Registry
 
             var keys = GetSubKeysAndValues(Root);
 
+            
+
             Root.SubKeys.AddRange(keys);
 
             _msgArgs = new MessageEventArgs
@@ -818,6 +820,8 @@ namespace Registry
                 Message = "Associating deleted keys and values...",
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
             };
+
+
 
             OnMessage(_msgArgs);
 
@@ -1130,16 +1134,31 @@ namespace Registry
                             deletedRegistryKey.Value.KeyName);
 
                         deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;
-                        ;
+                        
 
-                        foreach (var sk in deletedRegistryKey.Value.SubKeys)
-                        {
-                            sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
-                                sk.KeyName);
-                        }
+                        //right now you get the first layer of children but thats it
+
+                        UpdateChildPaths(deletedRegistryKey.Value);
+
+                        //foreach (var sk in deletedRegistryKey.Value.SubKeys)
+                        //{
+                        //    sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
+                        //        sk.KeyName);
+
+                        //    RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
+                        //    
+                        //    KeyPathKeyMap.Add(sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), sk);
+
+                        //}
 
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
+
+                        RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset, deletedRegistryKey.Value);
+
+                        KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), deletedRegistryKey.Value);
+
+                    
 
                         if (Verbosity == VerbosityEnum.Full)
                         {
@@ -1179,6 +1198,21 @@ namespace Registry
 
                     UnassociatedRegistryValues.Add(val);
                 }
+            }
+        }
+
+        private void UpdateChildPaths(RegistryKey key)
+        {
+            foreach (var sk in key.SubKeys)
+            {
+                sk.KeyPath = string.Format(@"{0}\{1}", key.KeyPath,
+                    sk.KeyName);
+
+                RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
+
+                KeyPathKeyMap.Add(sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), sk);
+
+                UpdateChildPaths(sk);
             }
         }
 

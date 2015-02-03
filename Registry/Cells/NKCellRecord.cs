@@ -52,7 +52,7 @@ namespace Registry.Cells
             //if (relativeOffset == 0x0023B860)
             //    System.Diagnostics.Debug.Write("nk trap");
 
-            //if (AbsoluteOffset == 5525352)
+            //if (AbsoluteOffset == 5136)
             //    System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
 
             ValueOffsets = new List<ulong>();
