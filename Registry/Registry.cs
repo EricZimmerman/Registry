@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -32,6 +33,28 @@ namespace Registry
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
         private MessageEventArgs _msgArgs;
 
+        public enum HiveTypeEnum
+        {
+            [Description("Other")]
+            Other = 0,
+            [Description("NTUSER")]
+            NtUser = 1,
+            [Description("SAM")]
+            Sam = 2,
+            [Description("SECURITY")]
+            Security = 3,
+            [Description("SOFTWARE")]
+            Software = 4,
+            [Description("SYSTEM")]
+            System = 5,
+            [Description("USRCLASS")]
+            UsrClass = 6
+        }
+
+        public HiveTypeEnum HiveType { get; private set; }
+
+        public string HivePath { get; private set; }
+
         /// <summary>
         ///     Initializes a new instance of the
         ///     <see cref="Registry" />
@@ -50,6 +73,8 @@ namespace Registry
             {
                 throw new FileNotFoundException();
             }
+
+            HivePath = _filename;
 
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
@@ -577,6 +602,35 @@ namespace Registry
 
             Header = new RegistryHeader(header);
 
+            var fnameBase = Path.GetFileName(Header.FileName).ToLower();
+
+            switch (fnameBase)
+            {
+                case "ntuser.dat":
+                    HiveType = HiveTypeEnum.NtUser;
+                    break;
+                case "sam":
+                    HiveType = HiveTypeEnum.Sam;
+                    break;
+                case "security":
+                    HiveType = HiveTypeEnum.Security;
+                    break;
+                case "software":
+                    HiveType = HiveTypeEnum.Software;
+                    break;
+                case "system":
+                    HiveType = HiveTypeEnum.System;
+                    break;
+                case "usrclass.dat":
+                    HiveType = HiveTypeEnum.UsrClass;
+                    break;
+
+                default:
+                    HiveType = HiveTypeEnum.Other;
+                    break;
+            }
+
+
             var version = float.Parse(string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion));
 
             _softParsingErrors = 0;
@@ -766,12 +820,12 @@ namespace Registry
                         Detail =
                             string.Format(
                                 "Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!",
-                                HiveLength()),
+                                TotalBytesRead),
                         Exception = null,
                         Message =
                             string.Format(
                                 "Extra, non-zero data found beyond hive length! Check for erroneous data starting at 0x{0:x}!",
-                                HiveLength()),
+                                TotalBytesRead),
                         MsgType = MessageEventArgs.MsgTypeEnum.Warning
                     };
 
@@ -838,10 +892,12 @@ namespace Registry
                 {
                     var nk = unreferencedNkCell.Value as NKCellRecord;
 
+                    nk.IsDeleted = true;
+
                     var regKey = new RegistryKey(nk, null)
                     {
                         KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
-                        //   IsDeleted = true
+                       
                     };
 
                     //Build ValueOffsets for this NKRecord
@@ -974,7 +1030,6 @@ namespace Registry
                         if (CellRecords.ContainsKey((long) valueOffset))
                         {
                             var val = CellRecords[(long) valueOffset] as VKCellRecord;
-
                             //we have a value for this key
 
                             if (val != null)
@@ -1156,7 +1211,11 @@ namespace Registry
 
                         RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset, deletedRegistryKey.Value);
 
-                        KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), deletedRegistryKey.Value);
+                        if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "")) == false)
+                        {
+                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), deletedRegistryKey.Value);
+                        }
+                            
 
                     
 
@@ -1210,7 +1269,13 @@ namespace Registry
 
                 RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
 
-                KeyPathKeyMap.Add(sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), sk);
+                var keyNormalized = sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "");
+
+                if (KeyPathKeyMap.ContainsKey(keyNormalized) == false)
+                {
+                    KeyPathKeyMap.Add(keyNormalized, sk);
+                }
+                    
 
                 UpdateChildPaths(sk);
             }
