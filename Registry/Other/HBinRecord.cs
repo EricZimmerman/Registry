@@ -32,7 +32,7 @@ namespace Registry.Other
             "vk"
         };
 
-        private readonly byte[] _rawBytes;
+        private  byte[] _rawBytes;
         private readonly float _version;
         // protected internal constructors...
         /// <summary>
@@ -315,9 +315,11 @@ namespace Registry.Other
 
                 if (listRecord != null)
                 {
-                    records.Add((IRecordBase) listRecord);
+                    
 
                     carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+                   
+                    records.Add((IRecordBase) listRecord);
                 }
 
                 if (dataRecord != null)
@@ -333,6 +335,8 @@ namespace Registry.Other
                 offsetInHbin += readSize;
             }
 
+
+            _rawBytes = null;
             return records;
         }
 

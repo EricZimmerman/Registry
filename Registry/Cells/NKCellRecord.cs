@@ -59,136 +59,8 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = _size > 0;
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
-
             Check.That(Signature).IsEqualTo("nk");
-
-            Flags = (FlagEnum) BitConverter.ToUInt16(rawBytes, 6);
-
-            var ts = BitConverter.ToInt64(rawBytes, 0x8);
-
-            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
-
-            ParentCellIndex = BitConverter.ToUInt32(rawBytes, 0x14);
-
-            SubkeyCountsStable = BitConverter.ToUInt32(rawBytes, 0x18);
-            SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
-
-
-            //SubkeyListsStableCellIndex
-            var num = BitConverter.ToUInt32(rawBytes, 0x20);
-
-            if (num == 0xFFFFFFFF)
-            {
-                SubkeyListsStableCellIndex = 0;
-            }
-            else
-            {
-                SubkeyListsStableCellIndex = num;
-            }
-
-            //SubkeyListsVolatileCellIndex
-            num = BitConverter.ToUInt32(rawBytes, 0x24);
-
-            if (num == 0xFFFFFFFF)
-            {
-                SubkeyListsVolatileCellIndex = 0;
-            }
-            else
-            {
-                SubkeyListsVolatileCellIndex = num;
-            }
-
-            ValueListCount = BitConverter.ToUInt32(rawBytes, 0x28);
-
-            //ValueListCellIndex
-            num = BitConverter.ToUInt32(rawBytes, 0x2c);
-
-            if (num == 0xFFFFFFFF)
-            {
-                ValueListCellIndex = 0;
-            }
-            else
-            {
-                ValueListCellIndex = num;
-            }
-
-            SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
-
-            //ClassCellIndex
-            num = BitConverter.ToUInt32(rawBytes, 0x34);
-
-            if (num == 0xFFFFFFFF)
-            {
-                ClassCellIndex = 0;
-            }
-            else
-            {
-                ClassCellIndex = num;
-            }
-
-            MaximumNameLength = BitConverter.ToUInt16(rawBytes, 0x38);
-
-            var rawFlags = Convert.ToString(rawBytes[0x3a], 2).PadLeft(8, '0');
-
-            //TODO is this a flag enum somewhere?
-            var userInt = Convert.ToInt32(rawFlags.Substring(0, 4));
-
-            var virtInt = Convert.ToInt32(rawFlags.Substring(4, 4));
-
-            UserFlags = userInt;
-            VirtualControlFlags = virtInt;
-
-            Debug = rawBytes[0x3b];
-
-            MaximumClassLength = BitConverter.ToUInt32(rawBytes, 0x3c);
-            MaximumValueNameLength = BitConverter.ToUInt32(rawBytes, 0x40);
-            MaximumValueDataLength = BitConverter.ToUInt32(rawBytes, 0x44);
-
-            WorkVar = BitConverter.ToUInt32(rawBytes, 0x48);
-
-            NameLength = BitConverter.ToUInt16(rawBytes, 0x4c);
-            ClassLength = BitConverter.ToUInt16(rawBytes, 0x4e);
-
-            if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
-            {
-                if (IsFree)
-                {
-                    if (rawBytes.Length >= 0x50 + NameLength)
-                    {
-                        Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
-                    }
-                    else
-                    {
-                        Name = "(Unable to determine name)";
-                    }
-                }
-                else
-                {
-                    Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
-                }
-            }
-            else
-            {
-                if (IsFree)
-                {
-                    if (rawBytes.Length >= 0x50 + NameLength)
-                    {
-                        Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
-                    }
-                    else
-                    {
-                        Name = "(Unable to determine name)";
-                    }
-                }
-                else
-                {
-                    Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
-                }
-            }
-
+            
             var paddingOffset = 0x50 + NameLength;
 
             var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
@@ -224,43 +96,160 @@ namespace Registry.Cells
         ///         slack slace in the data node when they hold classnames
         ///     </remarks>
         /// </summary>
-        public uint ClassCellIndex { get; private set; }
+        public uint ClassCellIndex
+        {
+            get
+            {
+                var num = BitConverter.ToUInt32(RawBytes, 0x34);
+
+                if (num == 0xFFFFFFFF)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return num;
+                }
+            }
+            
+        }
 
         /// <summary>
         ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
-        public ushort ClassLength { get; private set; }
+        public ushort ClassLength
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x4e); }
+        }
 
-        public byte Debug { get; private set; }
-        public FlagEnum Flags { get; private set; }
+        public byte Debug
+        {
+            get { return RawBytes[0x3b]; }
+            
+        }
+
+        public FlagEnum Flags
+        {
+            get
+            {
+                return (FlagEnum)BitConverter.ToUInt16(RawBytes, 6);
+            }
+            
+        }
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset LastWriteTimestamp { get; private set; }
+        public DateTimeOffset LastWriteTimestamp
+        {
+            get
+            {
+                var ts = BitConverter.ToInt64(RawBytes, 0x8);
 
-        public uint MaximumClassLength { get; private set; }
-        public ushort MaximumNameLength { get; private set; }
-        public uint MaximumValueDataLength { get; private set; }
-        public uint MaximumValueNameLength { get; private set; }
+                return DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+
+            }
+            
+        }
+
+        public uint MaximumClassLength
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x3c); }
+        }
+
+        public ushort MaximumNameLength
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x38); }
+            
+        }
+
+        public uint MaximumValueDataLength
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x44); }
+            
+        }
+
+        public uint MaximumValueNameLength
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x40); }
+            
+        }
 
         /// <summary>
         ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name
+        {
+            get
+            {
+                string _name;
+                if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+                {
+                    if (IsFree)
+                    {
+                        if (RawBytes.Length >= 0x50 + NameLength)
+                        {
+                            _name = Encoding.ASCII.GetString(RawBytes, 0x50, NameLength);
+                        }
+                        else
+                        {
+                            _name = "(Unable to determine name)";
+                        }
+                    }
+                    else
+                    {
+                        _name = Encoding.ASCII.GetString(RawBytes, 0x50, NameLength);
+                    }
+                }
+                else
+                {
+                    if (IsFree)
+                    {
+                        if (RawBytes.Length >= 0x50 + NameLength)
+                        {
+                            _name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
+                        }
+                        else
+                        {
+                            _name = "(Unable to determine name)";
+                        }
+                    }
+                    else
+                    {
+                        _name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
+                    }
+                }
 
-        public ushort NameLength { get; private set; }
+                return _name;
+            }
+            
+        }
+
+        public ushort NameLength
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
+            
+        }
+
         public string Padding { get; private set; }
 
         /// <summary>
         ///     The relative offset to the parent key for this record
         /// </summary>
-        public uint ParentCellIndex { get; private set; }
+        public uint ParentCellIndex
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
+            
+        }
 
         /// <summary>
         ///     The relative offset to the security record for this record
         /// </summary>
-        public uint SecurityCellIndex { get; private set; }
+        public uint SecurityCellIndex
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x30); }
+            
+        }
 
         /// <summary>
         ///     When true, this key has been deleted
@@ -274,42 +263,145 @@ namespace Registry.Cells
         /// <summary>
         ///     The number of subkeys this key contains
         /// </summary>
-        public uint SubkeyCountsStable { get; private set; }
+        public uint SubkeyCountsStable
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x18); }
+            
+        }
 
-        public uint SubkeyCountsVolatile { get; private set; }
+        public uint SubkeyCountsVolatile
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x1c); }
+            
+        }
 
         /// <summary>
         ///     The relative offset to a list (or list of lists) that points to other NKRecords. These records are subkeys of this
         ///     key.
         /// </summary>
-        public uint SubkeyListsStableCellIndex { get; private set; }
+        public uint SubkeyListsStableCellIndex
+        {
+            get
+            {
+                var num = BitConverter.ToUInt32(RawBytes, 0x20);
 
-        public uint SubkeyListsVolatileCellIndex { get; private set; }
-        public int UserFlags { get; private set; }
+                if (num == 0xFFFFFFFF)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return num;
+                }
+            }
+            
+        }
+
+        public uint SubkeyListsVolatileCellIndex
+        {
+            get
+            {
+                var num = BitConverter.ToUInt32(RawBytes, 0x24);
+
+                if (num == 0xFFFFFFFF)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return num;
+                }
+            }
+            
+        }
+
+        public int UserFlags
+        {
+            get
+            {
+                var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
+
+                return Convert.ToInt32(rawFlags.Substring(0, 4));
+
+
+            }
+            
+        }
 
         /// <summary>
         ///     The relative offset to a list of VKrecords for this key
         /// </summary>
-        public uint ValueListCellIndex { get; private set; }
+        public uint ValueListCellIndex
+        {
+            get
+            {
+              var   num = BitConverter.ToUInt32(RawBytes, 0x2c);
+
+                if (num == 0xFFFFFFFF)
+                {
+                    return  0;
+                }
+                else
+                {
+                    return  num;
+                }
+            }
+            private set { throw new NotImplementedException(); }
+        }
 
         /// <summary>
         ///     The number of values this key contains
         /// </summary>
-        public uint ValueListCount { get; private set; }
+        public uint ValueListCount
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x28); }
+            
+        }
 
-        public int VirtualControlFlags { get; private set; }
-        public uint WorkVar { get; private set; }
+        public int VirtualControlFlags
+        {
+            get
+            {
+                var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
+                
+                return Convert.ToInt32(rawFlags.Substring(4, 4));
+                
+            }
+            
+        }
+
+        public uint WorkVar
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x48); }
+            
+        }
+
         // public properties...
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
         }
 
-        public bool IsFree { get; private set; }
+        public bool IsFree
+        {
+            get {
+                return _size > 0;
+            
+            }
+            
+        }
+
         public bool IsReferenced { get; internal set; }
         public byte[] RawBytes { get; private set; }
         public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+        public string Signature
+        {
+            get
+            {
+                return Encoding.ASCII.GetString(RawBytes, 4, 2);
+            }
+            
+        }
 
         public int Size
         {

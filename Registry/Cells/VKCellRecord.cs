@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -55,7 +54,6 @@ namespace Registry.Cells
 
         private const uint DEVPROP_MASK_TYPE = 0x00000FFF;
         // private fields...
-        private readonly int _size;
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="VKCellRecord" /> class.
@@ -66,18 +64,12 @@ namespace Registry.Cells
 
             RawBytes = rawBytes;
 
-            _size = BitConverter.ToInt32(rawBytes, 0);
-            
-            IsFree = _size > 0;
+            Size = BitConverter.ToInt32(rawBytes, 0);
 
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("vk");
 
             DataOffets = new List<ulong>();
-
-            NameLength = BitConverter.ToUInt16(rawBytes, 0x06);
-            DataLength = BitConverter.ToUInt32(rawBytes, 0x08);
 
             var dataLengthInternal = DataLength;
 
@@ -103,9 +95,6 @@ namespace Registry.Cells
                 internalDataOffset = 0;
             }
 
-
-            OffsetToData = BitConverter.ToUInt32(rawBytes, 0x0c);
-
             //we need to preserve the datatype as it exists (so we can see unsupported types easily)
             DataTypeRaw = BitConverter.ToUInt32(rawBytes, 0x10) & DEVPROP_MASK_TYPE;
 
@@ -119,61 +108,8 @@ namespace Registry.Cells
 
             DataType = (DataTypeEnum) dataTypeInternal;
 
-            NamePresentFlag = BitConverter.ToUInt16(rawBytes, 0x14);
-            Unknown = BitConverter.ToUInt16(rawBytes, 0x16);
 
-            if (NameLength == 0)
-            {
-                ValueName = "(default)";
-            }
-            else
-            {
-                if (NamePresentFlag > 0)
-                {
-                    if (IsFree)
-                    {
-                        //make sure we have enough data
-                        if (rawBytes.Length >= NameLength + 0x18)
-                        {
-                            ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
-                        }
-                        else
-                        {
-                            ValueName = "(Unable to determine name)";
-                        }
-                    }
-                    else
-                    {
-                        ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
-                    }
-                }
-                else
-                {
-                    // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
-                    var valString = BitConverter.ToString(rawBytes, 0x18, NameLength);
-
-                    var foundMatch = false;
-                    try
-                    {
-                        foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
-                        // look for hex chars followed by 00 separators
-                    }
-                    catch (ArgumentException)
-                    {
-                        // Syntax error in the regular expression
-                    }
-
-                    if (foundMatch)
-                    {
-                        // we found what appears to be unicode
-                        ValueName = Encoding.Unicode.GetString(rawBytes, 0x18, NameLength);
-                    }
-                    else
-                    {
-                        ValueName = Encoding.ASCII.GetString(rawBytes, 0x18, NameLength);
-                    }
-                }
-            }
+            //  Unknown = BitConverter.ToUInt16(rawBytes, 0x16);
 
 
             byte[] datablockRaw;
@@ -545,24 +481,35 @@ namespace Registry.Cells
             }
         }
 
-        public string Padding { get; private set; }
+        public string Padding { get; }
 
         /// <summary>
         ///     A list of offsets to data records.
         ///     <remarks>This is used to mark each Data record's IsReferenced property to true</remarks>
         /// </summary>
-        public List<ulong> DataOffets { get; private set; }
+        public List<ulong> DataOffets { get; }
 
         // public properties...
-        public uint DataLength { get; set; }
+        public uint DataLength
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
+        }
+
         public DataTypeEnum DataType { get; set; }
         public uint DataTypeRaw { get; set; }
-        public ushort NameLength { get; set; }
+
+        public ushort NameLength
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
+        }
 
         /// <summary>
         ///     Used to determine if the name is stored in ASCII (> 0) or Unicode (== 0)
         /// </summary>
-        public ushort NamePresentFlag { get; set; }
+        public ushort NamePresentFlag
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x14); }
+        }
 
         /// <summary>
         ///     The relative offset to the data for this record. If the high bit is set, the data is resident in the offset itself.
@@ -571,9 +518,10 @@ namespace Registry.Cells
         ///         determined by subtracting 0x80000000
         ///     </remarks>
         /// </summary>
-        public uint OffsetToData { get; set; }
-
-        public ushort Unknown { get; set; }
+        public uint OffsetToData
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
+        }
 
         /// <summary>
         ///     The normalized Value of this value record. This is what is visible under the 'Data' column in RegEdit
@@ -591,7 +539,68 @@ namespace Registry.Cells
         /// <summary>
         ///     The name of the value. This is what is visible under the 'Name' column in RegEdit.
         /// </summary>
-        public string ValueName { get; set; }
+        public string ValueName
+        {
+            get
+            {
+                string _valName;
+
+                if (NameLength == 0)
+                {
+                    _valName = "(default)";
+                }
+                else
+                {
+                    if (NamePresentFlag > 0)
+                    {
+                        if (IsFree)
+                        {
+                            //make sure we have enough data
+                            if (RawBytes.Length >= NameLength + 0x18)
+                            {
+                                _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                            }
+                            else
+                            {
+                                _valName = "(Unable to determine name)";
+                            }
+                        }
+                        else
+                        {
+                            _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                        }
+                    }
+                    else
+                    {
+                        // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
+                        var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
+
+                        var foundMatch = false;
+                        try
+                        {
+                            foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
+                            // look for hex chars followed by 00 separators
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Syntax error in the regular expression
+                        }
+
+                        if (foundMatch)
+                        {
+                            // we found what appears to be unicode
+                            _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                        }
+                        else
+                        {
+                            _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                        }
+                    }
+                }
+
+                return _valName;
+            }
+        }
 
         // public properties...
         public long AbsoluteOffset
@@ -599,23 +608,28 @@ namespace Registry.Cells
             get { return RelativeOffset + 4096; }
         }
 
-        public bool IsFree { get; private set; }
-        public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
-
-        public int Size
+        public bool IsFree
         {
-            get { return _size; }
+            get { return Size > 0; }
         }
 
+        public bool IsReferenced { get; internal set; }
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            //private set { throw new NotImplementedException(); }
+        }
+
+        public int Size { get; }
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(Size)));
             sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));

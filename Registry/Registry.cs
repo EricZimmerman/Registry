@@ -164,38 +164,18 @@ namespace Registry
             {
                 keyCount += 1;
 
-                //if (!fullPath)
-                //{
                     sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
                         subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
                         subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                //}
-                //else
-                //{
-                //    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
-                //        subkey.NKRecord.AbsoluteOffset, subkey.KeyPath,
-                //        subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                //}
-
-
+                
                 foreach (var val in subkey.Values)
                 {
                     valueCount += 1;
 
-                    //dump value format here
-
-                    //if (!fullPath)
-                    //{
+             
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
                             val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
                             BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                    //}
-                    //else
-                    //{
-                    //    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                    //        val.VKRecord.AbsoluteOffset, subkey.KeyPath, val.ValueName, (int) val.VKRecord.DataType,
-                    //        BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
-                    //}
                 }
 
                 DumpKeyCommonFormat(subkey, sw, ref keyCount, ref valueCount);
@@ -206,8 +186,6 @@ namespace Registry
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
-
- 
 
             KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName),""), key);
 
@@ -342,8 +320,7 @@ namespace Registry
                 }
 
 
-                var value = new KeyValue(vk.ValueName, vk.DataType.ToString(), valueDataString,
-                    BitConverter.ToString(vk.ValueDataSlack),vk.ValueDataRaw, vk.ValueDataSlack, vk);
+                var value = new KeyValue(vk);
 
 
                 key.Values.Add(value);
@@ -668,8 +645,7 @@ namespace Registry
                     };
 
                     OnMessage(args);
-
-
+                    
                     break;
                 }
 
@@ -1060,9 +1036,7 @@ namespace Registry
                                 {
                                     associatedVKRecordOffsets.Add(val.RelativeOffset);
 
-                                    var kv = new KeyValue(val.ValueName, val.DataType.ToString(),
-                                        val.ValueData.ToString(),
-                                        BitConverter.ToString(val.ValueDataSlack), val.ValueDataRaw, val.ValueDataSlack, val);
+                                    var kv = new KeyValue(val);
 
                                     regKey.Values.Add(kv);
                                 }
@@ -1251,9 +1225,7 @@ namespace Registry
                 {
                     var vk = keyValuePair.Value as VKCellRecord;
 
-                    var val = new KeyValue(vk.ValueName, vk.DataType.ToString(), vk.ValueData.ToString(),
-                        BitConverter.ToString(vk.ValueDataSlack), vk.ValueDataRaw,
-                        vk.ValueDataRaw, vk);
+                    var val = new KeyValue(vk);
 
                     UnassociatedRegistryValues.Add(val);
                 }

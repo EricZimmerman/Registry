@@ -25,22 +25,10 @@ namespace Registry.Abstractions
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
             NKRecord = nk;
-
-            KeyName = nk.Name;
-            LastWriteTime = nk.LastWriteTimestamp;
+            
 
             Parent = parent;
-
-            if (parent == null)
-            {
-                //This is the root key
-                KeyPath = string.Format(@"{0}", KeyName);
-            }
-            else
-            {
-                KeyPath = string.Format(@"{0}\{1}", parent.KeyPath, KeyName);
-            }
-
+            
             InternalGUID = Guid.NewGuid().ToString();
 
             SubKeys = new List<RegistryKey>();
@@ -71,32 +59,62 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The name of this key. For the full path, see KeyPath
         /// </summary>
-        public string KeyName { get; private set; }
+        public string KeyName
+        {
+            get { return NKRecord.Name; }
+            
+        }
+
+        private string _keyPath;
 
         /// <summary>
         ///     The full path to the  key, including its KeyName
         /// </summary>
-        public string KeyPath { get; internal set; }
+        public string KeyPath
+        {
+            get
+            {
+                if (_keyPath != null)
+                {
+                    //sometimes we have to update the path elsewhere, so if that happens, return it
+                    return _keyPath;
+                }
+
+                if (Parent == null)
+                {
+                    //This is the root key
+                    return string.Format(@"{0}", KeyName);
+                }
+
+                return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
+            }
+
+            set { _keyPath = value; }
+        }
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset? LastWriteTime { get; private set; }
+        public DateTimeOffset? LastWriteTime
+        {
+            get { return NKRecord.LastWriteTimestamp; }
+            
+        }
 
         /// <summary>
         ///     The underlying NKRecord for this Key. This allows access to all info about the NK Record
         /// </summary>
-        public NKCellRecord NKRecord { get; private set; }
+        public NKCellRecord NKRecord { get; }
 
         /// <summary>
         ///     A list of child keys that exist under this key
         /// </summary>
-        public List<RegistryKey> SubKeys { get; private set; }
+        public List<RegistryKey> SubKeys { get; }
 
         /// <summary>
         ///     A list of values that exists under this key
         /// </summary>
-        public List<KeyValue> Values { get; private set; }
+        public List<KeyValue> Values { get; }
 
         // public methods...
         public override string ToString()
