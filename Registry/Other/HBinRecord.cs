@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
@@ -32,8 +30,8 @@ namespace Registry.Other
             "vk"
         };
 
-        private  byte[] _rawBytes;
         private readonly float _version;
+        private byte[] _rawBytes;
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
@@ -94,25 +92,25 @@ namespace Registry.Other
         /// <summary>
         ///     The relative offset to this record
         /// </summary>
-        public uint FileOffset { get; private set; }
+        public uint FileOffset { get; }
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset? LastWriteTimestamp { get; private set; }
+        public DateTimeOffset? LastWriteTimestamp { get; }
 
         /// <summary>
         ///     The offset to this record as stored by other records
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get; private set; }
+        public long RelativeOffset { get; }
 
-        public uint Reserved { get; private set; }
+        public uint Reserved { get; }
 
         /// <summary>
         ///     The signature of the hbin record. Should always be "hbin"
         /// </summary>
-        public string Signature { get; private set; }
+        public string Signature { get; }
 
         /// <summary>
         ///     The size of the hive
@@ -121,9 +119,9 @@ namespace Registry.Other
         ///         negative size)
         ///     </remarks>
         /// </summary>
-        public uint Size { get; private set; }
+        public uint Size { get; }
 
-        public uint Spare { get; private set; }
+        public uint Spare { get; }
         public event EventHandler<MessageEventArgs> Message;
 
         protected virtual void OnMessage(MessageEventArgs e)
@@ -156,8 +154,8 @@ namespace Registry.Other
 
                 var readSize = (int) recordSize;
 
-                readSize = Math.Abs(readSize);
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
+                readSize = Math.Abs(readSize);
 
                 var rawRecord = new byte[readSize];
 
@@ -236,7 +234,7 @@ namespace Registry.Other
                             {
                                 cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
-                          
+
 
                             break;
                         case "sk":
@@ -290,7 +288,7 @@ namespace Registry.Other
                             Debug.WriteLine("Unfree NK");
                         }
 
-                            OnMessage(args);
+                        OnMessage(args);
                     }
                     else
                     {
@@ -315,10 +313,8 @@ namespace Registry.Other
 
                 if (listRecord != null)
                 {
-                    
-
                     carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
-                   
+
                     records.Add((IRecordBase) listRecord);
                 }
 
@@ -369,24 +365,24 @@ namespace Registry.Other
                 // Syntax error in the regular expression
             }
 
-            if (offsetList.Count == 0)
-            {
-                //its a data record
-
-                var dr1 = new DataNode(remainingData, relativeoffset);
-
-                records.Add(dr1);
-            }
-            else
-            {
-                //is this a strange case where there are records at the end of a data block?
-                var actualStart = (offsetList.First()/3) - 3;
-                if (actualStart > 0)
-                {
-                    var dr = new DataNode(remainingData, relativeoffset);
-                    records.Add(dr);
-                }
-            }
+//            if (offsetList.Count == 0)
+//            {
+//                //its a data record
+//
+//                //var dr1 = new DataNode(remainingData, relativeoffset);
+//
+//              //  records.Add(dr1);
+//            }
+//            else
+//            {
+//                //is this a strange case where there are records at the end of a data block?
+//                var actualStart = (offsetList.First()/3) - 3;
+//                if (actualStart > 0)
+//                {
+//                 //   var dr = new DataNode(remainingData, relativeoffset);
+//                 //   records.Add(dr);
+//                }
+//            }
 
             //resultList now has offset of every record signature we are interested in
             foreach (var i in offsetList)
@@ -417,7 +413,6 @@ namespace Registry.Other
                         case "nk":
                             if (raw.Length <= 0x30)
                             {
-                               
                                 continue;
                             }
 
@@ -471,9 +466,9 @@ namespace Registry.Other
                                     "Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
                             }
 
-                            var dr = new DataNode(raw, relativeoffset + actualStart);
+                            //var dr = new DataNode(raw, relativeoffset + actualStart);
 
-                            records.Add(dr);
+//                            records.Add(dr);
 
                             break;
                     }
@@ -485,21 +480,27 @@ namespace Registry.Other
                     // this is a corrupted/unusable record
                     //TODO do we add a placeholder here? probably not since its free
 
-                    var args = new MessageEventArgs
+                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
                     {
-                        Detail =
-                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
-                                sig,
-                                relativeoffset + (i/3) - 3, ex.Message, raw.Length),
-                        Exception = ex,
-                        Message =
-                            string.Format("{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
-                                sig,
-                                relativeoffset + (i/3) - 3, ex.Message, raw.Length),
-                        MsgType = MessageEventArgs.MsgTypeEnum.Error
-                    };
+                        var args = new MessageEventArgs
+                        {
+                            Detail =
+                                string.Format(
+                                    "{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
+                                    sig,
+                                    relativeoffset + (i/3) - 3, ex.Message, raw.Length),
+                            Exception = ex,
+                            Message =
+                                string.Format(
+                                    "{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
+                                    sig,
+                                    relativeoffset + (i/3) - 3, ex.Message, raw.Length),
+                            MsgType = MessageEventArgs.MsgTypeEnum.Error
+                        };
+                        OnMessage(args);
+                    }
 
-                    OnMessage(args);
+                    RegistryHive._softParsingErrors += 1;
                 }
             }
 

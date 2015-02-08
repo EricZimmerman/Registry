@@ -22,23 +22,27 @@ namespace Registry.Other
             RawBytes = rawBytes;
 
             _size = BitConverter.ToInt32(rawBytes, 0);
-
-            IsFree = _size > 0;
-
-            Data = new byte[rawBytes.Length - 4];
-
-            Signature = "";
-
-
-            Array.Copy(rawBytes, 4, Data, 0, rawBytes.Length - 4);
-
-            // Data = rawBytes.Skip(4).ToArray();
         }
 
         // public properties...
-        public byte[] Data { get; private set; }
-        public bool IsFree { get; private set; }
-        public byte[] RawBytes { get; private set; }
+        public byte[] Data
+        {
+            get
+            {
+                var data = new byte[RawBytes.Length - 4];
+
+                Array.Copy(RawBytes, 4, data, 0, RawBytes.Length - 4);
+
+                return data;
+            }
+        }
+
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
+        public byte[] RawBytes { get; }
 
         /// <summary>
         ///     Set to true when a record is referenced by another referenced record.
@@ -53,7 +57,7 @@ namespace Registry.Other
         ///     The offset as stored in other records to a given record
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get; private set; }
+        public long RelativeOffset { get; }
 
         public int Size
         {
@@ -69,7 +73,11 @@ namespace Registry.Other
             get { return RelativeOffset + 4096; }
         }
 
-        public string Signature { get; private set; }
+        public string Signature
+        {
+            get { return string.Empty; }
+        }
+
         // public methods...
         public override string ToString()
         {

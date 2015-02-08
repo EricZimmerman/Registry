@@ -25,28 +25,8 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = _size > 0;
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
-
             Check.That(Signature).IsEqualTo("sk");
 
-            Reserved = BitConverter.ToUInt16(rawBytes, 0x6);
-
-            FLink = BitConverter.ToUInt32(rawBytes, 0x08);
-            BLink = BitConverter.ToUInt32(rawBytes, 0x0c);
-
-            ReferenceCount = BitConverter.ToUInt32(rawBytes, 0x10);
-
-            DescriptorLength = BitConverter.ToUInt32(rawBytes, 0x14);
-
-            var rawDescriptor = rawBytes.Skip(0x18).Take((int) DescriptorLength).ToArray();
-
-            if (rawDescriptor.Length > 0)
-            {
-                // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
-                SecurityDescriptor = new SKSecurityDescriptor(rawDescriptor);
-            }
 
             //this has to be a multiple of 8, so check for it
             var paddingOffset = 0x18 + DescriptorLength;
@@ -68,26 +48,55 @@ namespace Registry.Cells
         /// <summary>
         ///     A relative offset to the previous SK record
         /// </summary>
-        public uint BLink { get; private set; }
+        public uint BLink
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
+        }
 
-        public uint DescriptorLength { get; private set; }
+        public uint DescriptorLength
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
+        }
 
         /// <summary>
         ///     A relative offset to the next SK record
         /// </summary>
-        public uint FLink { get; private set; }
+        public uint FLink
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
+        }
 
         /// <summary>
         ///     A count of how many keys this security record applies to
         /// </summary>
-        public uint ReferenceCount { get; private set; }
+        public uint ReferenceCount
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x10); }
+        }
 
-        public ushort Reserved { get; private set; }
+        public ushort Reserved
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x6); }
+        }
 
         /// <summary>
         ///     The security descriptor object for this record
         /// </summary>
-        public SKSecurityDescriptor SecurityDescriptor { get; private set; }
+        public SKSecurityDescriptor SecurityDescriptor
+        {
+            get
+            {
+                var rawDescriptor = RawBytes.Skip(0x18).Take((int) DescriptorLength).ToArray();
+
+                if (rawDescriptor.Length > 0)
+                {
+                    // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
+                    return new SKSecurityDescriptor(rawDescriptor);
+                }
+
+                return null;
+            }
+        }
 
         // public properties...
         public long AbsoluteOffset
@@ -95,11 +104,19 @@ namespace Registry.Cells
             get { return RelativeOffset + 4096; }
         }
 
-        public bool IsFree { get; private set; }
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+        }
 
         public int Size
         {

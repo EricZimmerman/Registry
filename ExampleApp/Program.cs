@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -26,7 +25,6 @@ namespace ExampleApp
             {
                 Console.WriteLine();
             }
-                
         }
 
         // private methods...
@@ -97,7 +95,7 @@ namespace ExampleApp
                     continue;
                 }
 
-               DumpConsoleMessage(string.Format("Processing '{0}'", testFile));
+                DumpConsoleMessage(string.Format("Processing '{0}'", testFile));
                 Console.Title = string.Format("Processing '{0}'", testFile);
 
                 var fName1Test = new RegistryHive(testFile);
@@ -107,10 +105,7 @@ namespace ExampleApp
 
                 try
                 {
-                    fName1Test.Message += (ss, ee) =>
-                    {
-                        DumpConsoleMessage(ee.Detail);
-                    };
+                    fName1Test.Message += (ss, ee) => { DumpConsoleMessage(ee.Detail); };
 
                     fName1Test.ParseHive();
                     fName1Test.BuildDeletedRegistryKeys();
@@ -132,8 +127,8 @@ namespace ExampleApp
                     var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
                     var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
 
-                    var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
-                    var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
+                    //var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
+                    //var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
 
 
                     var goofyCellsShouldBeUsed =
@@ -144,81 +139,89 @@ namespace ExampleApp
                         fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
 
-                    var goofyDataShouldBeUsed =
-                        fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+//                    var goofyDataShouldBeUsed =
+//                        fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
 
                     var sb = new StringBuilder();
 
                     sb.AppendLine("Results:");
                     sb.AppendLine();
-                 
+
                     sb.AppendLine(string.Format("Found {0:N0} hbin records", fName1Test.HBinRecords.Count));
-                   sb.AppendLine(string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-                        fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
-                        fName1Test.CellRecords.Count(w => w.Value is VKCellRecord),
-                        fName1Test.CellRecords.Count(w => w.Value is SKCellRecord),
-                        fName1Test.CellRecords.Count(w => w.Value is LKCellRecord)));
+                    sb.AppendLine(
+                        string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+                            fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
+                            fName1Test.CellRecords.Count(w => w.Value is VKCellRecord),
+                            fName1Test.CellRecords.Count(w => w.Value is SKCellRecord),
+                            fName1Test.CellRecords.Count(w => w.Value is LKCellRecord)));
                     sb.AppendLine(string.Format("Found {0:N0} List records", fName1Test.ListRecords.Count));
-                   sb.AppendLine(string.Format("Found {0:N0} Data records", fName1Test.DataRecords.Count));
+                    //  sb.AppendLine(string.Format("Found {0:N0} Data records", fName1Test.DataRecords.Count));
 
                     sb.AppendLine();
 
-                        sb.AppendLine(string.Format("There are {0:N0} cell records marked as being referenced ({1:P})",
-                        referencedCells.Count(), referencedCells.Count() / (double)fName1Test.CellRecords.Count));
-                        sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
-                        referencedList.Count(), referencedList.Count() / (double)fName1Test.ListRecords.Count));
-                        sb.AppendLine(string.Format("There are {0:N0} data records marked as being referenced ({1:P})",
-                        referencedData.Count(), referencedData.Count() / (double)fName1Test.DataRecords.Count));
+                    sb.AppendLine(string.Format("There are {0:N0} cell records marked as being referenced ({1:P})",
+                        referencedCells.Count(), referencedCells.Count()/(double) fName1Test.CellRecords.Count));
+                    sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
+                        referencedList.Count(), referencedList.Count()/(double) fName1Test.ListRecords.Count));
+//                        sb.AppendLine(string.Format("There are {0:N0} data records marked as being referenced ({1:P})",
+//                        referencedData.Count(), referencedData.Count() / (double)fName1Test.DataRecords.Count));
 
                     sb.AppendLine();
                     sb.AppendLine("Free record info");
-                          sb.AppendLine(string.Format(
+                    sb.AppendLine(string.Format(
                         "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                         freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-                          sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
-                          sb.AppendLine(string.Format("{0:N0} free Data records", freeData.Count()));
+                    sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
+//                          sb.AppendLine(string.Format("{0:N0} free Data records", freeData.Count()));
 
                     sb.AppendLine();
-                          sb.AppendLine(string.Format(
+                    sb.AppendLine(string.Format(
                         "There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
                         fName1Test.HardParsingErrors));
-                          sb.AppendLine(string.Format(
+                    sb.AppendLine(string.Format(
                         "There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
                         fName1Test.SoftParsingErrors));
 
-                          sb.AppendLine();
-                          sb.AppendLine(string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
-                        fName1Test.CellRecords.Count ==
-                        freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
-                          sb.AppendLine(string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
-                        fName1Test.ListRecords.Count ==
-                        freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
-                          sb.AppendLine(string.Format("Data:  Free + referenced + marked as in use but not referenced == Total? {0}",
-                        fName1Test.DataRecords.Count ==
-                        freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count()));
+                    sb.AppendLine();
+                    sb.AppendLine(
+                        string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
+                            fName1Test.CellRecords.Count ==
+                            freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
+                    sb.AppendLine(
+                        string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
+                            fName1Test.ListRecords.Count ==
+                            freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+//                          sb.AppendLine(string.Format("Data:  Free + referenced + marked as in use but not referenced == Total? {0}",
+//                        fName1Test.DataRecords.Count ==
+//                        freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count()));
 
-                          DumpConsoleMessage(sb.ToString());
+                    DumpConsoleMessage(sb.ToString());
 
-                   
+
                     if (result.Value.ExportHiveData)
                     {
+                        DumpConsoleMessage("");
+
+
                         var baseDir = Path.GetDirectoryName(testFile);
                         var baseFname = Path.GetFileName(testFile);
 
                         var myName = string.Empty;
 
-                        bool deletedOnly = result.Value.ExportDeletedOnly;
+                        var deletedOnly = result.Value.ExportDeletedOnly;
 
                         if (deletedOnly)
                         {
-                            myName = "_EricZ_recovered.txt";                       
+                            myName = "_EricZ_recovered.txt";
                         }
                         else
                         {
                             myName = "_EricZ_all.txt";
                         }
-                        
+
+                        DumpConsoleMessage(string.Format("Exporting hive data to '{0}'", myName));
+
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
 
                         fName1Test.ExportDataToCommonFormat(outfile, deletedOnly);
@@ -228,7 +231,6 @@ namespace ExampleApp
                 {
                     Console.WriteLine("There was an error: {0}", ex.Message);
                 }
-
 
 
                 Console.WriteLine("Processing took {0:N4} seconds", sw.Elapsed.TotalSeconds);
@@ -242,9 +244,8 @@ namespace ExampleApp
                     Console.ReadKey();
 
                     Console.WriteLine();
-                    Console.WriteLine(); 
+                    Console.WriteLine();
                 }
-    
             }
         }
     }

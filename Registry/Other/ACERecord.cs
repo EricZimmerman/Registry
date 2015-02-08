@@ -33,7 +33,8 @@ namespace Registry.Other
             SystemAlarmAceType = 0x3,
             SystemAlarmObjectAceType = 0x8,
             SystemAuditAceType = 0x2,
-            SystemAuditObjectAceType = 0x7
+            SystemAuditObjectAceType = 0x7,
+            Unknown = 0x99
         }
 
         [Flags]
@@ -59,59 +60,78 @@ namespace Registry.Other
         public ACERecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
-
-            switch (rawBytes[0])
-            {
-                case 0x0:
-                    ACEType = AceTypeEnum.AccessAllowedAceType;
-                    break;
-                case 0x1:
-                    ACEType = AceTypeEnum.AccessDeniedAceType;
-                    break;
-                case 0x2:
-                    ACEType = AceTypeEnum.SystemAuditAceType;
-                    break;
-                case 0x3:
-                    ACEType = AceTypeEnum.SystemAlarmAceType;
-                    break;
-                case 0x4:
-                    ACEType = AceTypeEnum.AccessAllowedCompoundAceType;
-                    break;
-                case 0x5:
-                    ACEType = AceTypeEnum.AccessAllowedObjectAceType;
-                    break;
-                case 0x6:
-                    ACEType = AceTypeEnum.AccessDeniedObjectAceType;
-                    break;
-                case 0x7:
-                    ACEType = AceTypeEnum.SystemAuditObjectAceType;
-                    break;
-                case 0x8:
-                    ACEType = AceTypeEnum.SystemAlarmObjectAceType;
-                    break;
-            }
-
-            ACEFlags = (AceFlagsEnum) rawBytes[1];
-
-            ACESize = BitConverter.ToUInt16(rawBytes, 2);
-
-            Mask = (MasksEnum) BitConverter.ToUInt32(rawBytes, 4);
-
-            var rawSid = rawBytes.Skip(0x8).Take(ACESize - 0x8).ToArray();
-
-            SID = Helpers.ConvertHexStringToSidString(rawSid);
-
-            SIDType = Helpers.GetSIDTypeFromSIDString(SID);
         }
 
         // public properties...
-        public AceFlagsEnum ACEFlags { get; private set; }
-        public ushort ACESize { get; private set; }
-        public AceTypeEnum ACEType { get; private set; }
-        public MasksEnum Mask { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public string SID { get; private set; }
-        public Helpers.SidTypeEnum SIDType { get; private set; }
+        public AceFlagsEnum ACEFlags
+        {
+            get { return (AceFlagsEnum) RawBytes[1]; }
+        }
+
+        public ushort ACESize
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 2); }
+        }
+
+        public AceTypeEnum ACEType
+        {
+            get
+            {
+                switch (RawBytes[0])
+                {
+                    case 0x0:
+                        return AceTypeEnum.AccessAllowedAceType;
+                    case 0x1:
+                        return AceTypeEnum.AccessDeniedAceType;
+
+                    case 0x2:
+                        return AceTypeEnum.SystemAuditAceType;
+
+                    case 0x3:
+                        return AceTypeEnum.SystemAlarmAceType;
+
+                    case 0x4:
+                        return AceTypeEnum.AccessAllowedCompoundAceType;
+
+                    case 0x5:
+                        return AceTypeEnum.AccessAllowedObjectAceType;
+
+                    case 0x6:
+                        return AceTypeEnum.AccessDeniedObjectAceType;
+
+                    case 0x7:
+                        return AceTypeEnum.SystemAuditObjectAceType;
+
+                    case 0x8:
+                        return AceTypeEnum.SystemAlarmObjectAceType;
+                    default:
+                        return AceTypeEnum.Unknown;
+                }
+            }
+        }
+
+        public MasksEnum Mask
+        {
+            get { return (MasksEnum) BitConverter.ToUInt32(RawBytes, 4); }
+        }
+
+        public byte[] RawBytes { get; }
+
+        public string SID
+        {
+            get
+            {
+                var rawSid = RawBytes.Skip(0x8).Take(ACESize - 0x8).ToArray();
+
+                return Helpers.ConvertHexStringToSidString(rawSid);
+            }
+        }
+
+        public Helpers.SidTypeEnum SIDType
+        {
+            get { return Helpers.GetSIDTypeFromSIDString(SID); }
+        }
+
         // public methods...
         public override string ToString()
         {

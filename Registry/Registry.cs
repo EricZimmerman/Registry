@@ -18,6 +18,17 @@ namespace Registry
     // public classes...
     public class RegistryHive
     {
+        public enum HiveTypeEnum
+        {
+            [Description("Other")] Other = 0,
+            [Description("NTUSER")] NtUser = 1,
+            [Description("SAM")] Sam = 2,
+            [Description("SECURITY")] Security = 3,
+            [Description("SOFTWARE")] Software = 4,
+            [Description("SYSTEM")] System = 5,
+            [Description("USRCLASS")] UsrClass = 6
+        }
+
         public enum VerbosityEnum
         {
             Normal,
@@ -28,32 +39,9 @@ namespace Registry
         internal static int _softParsingErrors;
         internal static byte[] FileBytes;
         public static long TotalBytesRead;
-        private readonly string _filename;
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
         private MessageEventArgs _msgArgs;
-
-        public enum HiveTypeEnum
-        {
-            [Description("Other")]
-            Other = 0,
-            [Description("NTUSER")]
-            NtUser = 1,
-            [Description("SAM")]
-            Sam = 2,
-            [Description("SECURITY")]
-            Security = 3,
-            [Description("SOFTWARE")]
-            Software = 4,
-            [Description("SYSTEM")]
-            System = 5,
-            [Description("USRCLASS")]
-            UsrClass = 6
-        }
-
-        public HiveTypeEnum HiveType { get; private set; }
-
-        public string HivePath { get; private set; }
 
         /// <summary>
         ///     Initializes a new instance of the
@@ -62,26 +50,26 @@ namespace Registry
         /// </summary>
         public RegistryHive(string fileName)
         {
-            _filename = fileName;
+            Filename = fileName;
 
-            if (_filename == null)
+            if (Filename == null)
             {
                 throw new ArgumentNullException("Filename cannot be null");
             }
 
-            if (!File.Exists(_filename))
+            if (!File.Exists(Filename))
             {
                 throw new FileNotFoundException();
             }
 
-            HivePath = _filename;
+            HivePath = Filename;
 
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
-            DataRecords = new Dictionary<long, DataNode>();
+            //  DataRecords = new Dictionary<long, DataNode>();
             HBinRecords = new Dictionary<long, HBinRecord>();
 
-            var fileStream = new FileStream(_filename, FileMode.Open);
+            var fileStream = new FileStream(Filename, FileMode.Open);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -97,27 +85,26 @@ namespace Registry
             Verbosity = VerbosityEnum.Normal;
         }
 
+        public HiveTypeEnum HiveType { get; private set; }
+        public string HivePath { get; private set; }
+
         /// <summary>
         ///     Contains all recovered
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
-        public List<KeyValue> UnassociatedRegistryValues { get; private set; }
+        public List<KeyValue> UnassociatedRegistryValues { get; }
 
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get; private set; }
+        public Dictionary<long, ICellTemplate> CellRecords { get; }
 
         /// <summary>
         ///     List of all data nodes, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, DataNode> DataRecords { get; private set; }
-
-        public string Filename
-        {
-            get { return _filename; }
-        }
+        //  public Dictionary<long, DataNode> DataRecords { get; private set; }
+        public string Filename { get; }
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -127,13 +114,13 @@ namespace Registry
             get { return _hardParsingErrors; }
         }
 
-        public Dictionary<long, HBinRecord> HBinRecords { get; private set; }
+        public Dictionary<long, HBinRecord> HBinRecords { get; }
         public RegistryHeader Header { get; private set; }
 
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get; private set; }
+        public Dictionary<long, IListTemplate> ListRecords { get; }
 
         public RegistryKey Root { get; private set; }
 
@@ -164,22 +151,34 @@ namespace Registry
             {
                 keyCount += 1;
 
-                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
-                        subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
-                        subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-                
+                sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
+                    subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
+                    subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+
                 foreach (var val in subkey.Values)
                 {
                     valueCount += 1;
 
-             
-                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                            val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
-                            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+
+                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
+                        val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
+                        BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                 }
 
                 DumpKeyCommonFormat(subkey, sw, ref keyCount, ref valueCount);
             }
+        }
+
+        private DataNode GetDataNodeFromOffset(long relativeOffset)
+        {
+            var dataLenBytes = ReadBytesFromHive(relativeOffset + 4096, 4);
+            var dataLen = BitConverter.ToUInt32(dataLenBytes, 0);
+            var size = (int) dataLen;
+            size = Math.Abs(size);
+
+            var dn = new DataNode(ReadBytesFromHive(relativeOffset + 4096, size), relativeOffset);
+
+            return dn;
         }
 
         //TODO this needs refactored to remove duplicated code
@@ -187,7 +186,7 @@ namespace Registry
         {
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
 
-            KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName),""), key);
+            KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), key);
 
 
             if (Verbosity == VerbosityEnum.Full)
@@ -210,7 +209,7 @@ namespace Registry
 
             if (key.NKRecord.ClassCellIndex > 0)
             {
-                var d = DataRecords[key.NKRecord.ClassCellIndex];
+                var d = GetDataNodeFromOffset(key.NKRecord.ClassCellIndex);
                 d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NKRecord.ClassLength);
                 key.ClassName = clsName;
@@ -221,7 +220,7 @@ namespace Registry
             {
                 //there are values for this key, so get the offsets so we can pull them next
 
-                var offsetList = DataRecords[key.NKRecord.ValueListCellIndex];
+                var offsetList = GetDataNodeFromOffset(key.NKRecord.ValueListCellIndex);
 
                 offsetList.IsReferenced = true;
 
@@ -273,50 +272,10 @@ namespace Registry
                         dbr.IsReferenced = true;
                         dbListProcessed = true;
                     }
-                    else
-                    {
-                        DataRecords[(long) dataOffet].IsReferenced = true;
-                    }
-                }
-
-                var valueDataString = string.Empty;
-
-                switch (vk.DataType)
-                {
-                    case VKCellRecord.DataTypeEnum.RegFileTime:
-                    case VKCellRecord.DataTypeEnum.RegExpandSz:
-                    case VKCellRecord.DataTypeEnum.RegMultiSz:
-                    case VKCellRecord.DataTypeEnum.RegDword:
-                    case VKCellRecord.DataTypeEnum.RegDwordBigEndian:
-                    case VKCellRecord.DataTypeEnum.RegQword:
-                    case VKCellRecord.DataTypeEnum.RegLink:
-                    case VKCellRecord.DataTypeEnum.RegSz:
-                        if (vk.ValueData == null)
-                        {
-                            valueDataString = "";
-                        }
-                        else
-                        {
-                            valueDataString = vk.ValueData.ToString();
-                        }
-
-
-                        break;
-
-                    case VKCellRecord.DataTypeEnum.RegNone:
-                    case VKCellRecord.DataTypeEnum.RegBinary:
-                    case VKCellRecord.DataTypeEnum.RegResourceRequirementsList:
-                    case VKCellRecord.DataTypeEnum.RegResourceList:
-                    case VKCellRecord.DataTypeEnum.RegFullResourceDescription:
-                    case VKCellRecord.DataTypeEnum.RegUnknown:
-
-                        valueDataString = BitConverter.ToString((byte[]) vk.ValueData);
-
-                        break;
-
-                    default:
-
-                        break;
+//                    else
+//                    {
+//                        GetDataNodeFromOffset((long) dataOffet).IsReferenced = true;
+//                    }
                 }
 
 
@@ -502,7 +461,7 @@ namespace Registry
 
                     DumpKeyCommonFormat(Root, sw, ref KeyCount, ref ValueCount);
                 }
-                
+
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
                 //may not need to if we do not care about orphaned values
 
@@ -561,12 +520,12 @@ namespace Registry
 
         public bool ParseHive()
         {
-            if (_filename == null)
+            if (Filename == null)
             {
                 throw new ArgumentNullException("Filename cannot be null");
             }
 
-            if (!File.Exists(_filename))
+            if (!File.Exists(Filename))
             {
                 throw new FileNotFoundException();
             }
@@ -645,7 +604,7 @@ namespace Registry
                     };
 
                     OnMessage(args);
-                    
+
                     break;
                 }
 
@@ -697,7 +656,7 @@ namespace Registry
                                 break;
 
                             case "":
-                                DataRecords.Add(record.AbsoluteOffset - 4096, (DataNode) record);
+                                //  DataRecords.Add(record.AbsoluteOffset - 4096, (DataNode) record);
                                 break;
                             default:
 
@@ -769,7 +728,6 @@ namespace Registry
 
             var keys = GetSubKeysAndValues(Root);
 
-            
 
             Root.SubKeys.AddRange(keys);
 
@@ -851,8 +809,6 @@ namespace Registry
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
             };
 
-
-
             OnMessage(_msgArgs);
 
             var unreferencedNKCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NKCellRecord);
@@ -873,7 +829,6 @@ namespace Registry
                     var regKey = new RegistryKey(nk, null)
                     {
                         KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
-                       
                     };
 
                     //Build ValueOffsets for this NKRecord
@@ -883,87 +838,53 @@ namespace Registry
 
                         DataNode offsetList = null;
 
-                        if (DataRecords.ContainsKey(regKey.NKRecord.ValueListCellIndex))
+                        var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
+
+                        var sizeNum = Math.Abs(BitConverter.ToUInt32(size, 0));
+
+                        if (sizeNum > regKey.NKRecord.ValueListCount*4 + 4)
                         {
-                            offsetList = DataRecords[regKey.NKRecord.ValueListCellIndex];
-                            //  offsetList.IsReferenced = true;
+                            //ValueListCount is the number of offsets we should be looking for. they are 4 bytes long
+                            //If the size of the data record at regKey.NKRecord.ValueListCellIndex exceeds the total number of bytes plus the size (another 4 bytes), reset it to a more sane value to avoid crazy long reads
+                            sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
                         }
-                        else
+
+
+                        try
                         {
+                            var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
+                                (int) sizeNum);
+
+                            var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
+
+                            offsetList = dr;
+                        }
+                        catch (Exception)
+                        {
+                            //sometimes the data node doesnt have enough data to even do this, or its wrong data
                             if (Verbosity == VerbosityEnum.Full)
                             {
                                 _msgArgs = new MessageEventArgs
                                 {
                                     Detail =
                                         string.Format(
-                                            "When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                            "\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
                                             nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     Exception = null,
                                     Message =
                                         string.Format(
-                                            "When getting values for nk record at relative offset 0x{0:X}, no data record found at offset 0x{1:X} containing value offsets. Getting data from hive...",
+                                            "\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
                                             nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
                                     MsgType = MessageEventArgs.MsgTypeEnum.Warning
                                 };
 
                                 OnMessage(_msgArgs);
                             }
-
-
-                            //if we are here that means there was data cells next to each other and as such, they could not be found via normal means.
-                            //so we read it from the hive directly
-
-                            var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
-
-                            var sizeNum = Math.Abs(BitConverter.ToUInt32(size, 0));
-
-                            if (sizeNum > regKey.NKRecord.ValueListCount*4 + 4)
-                            {
-                                //ValueListCount is the number of offsets we should be looking for. they are 4 bytes long
-                                //If the size of the data record at regKey.NKRecord.ValueListCellIndex exceedsthe total number of bytes plus the size (another 4 bytes), reset it to a more sane value to avoid crazy long reads
-                                sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
-                            }
-
-
-                            try
-                            {
-                                var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
-                                    (int) sizeNum);
-
-                                var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
-                                DataRecords.Add(regKey.NKRecord.ValueListCellIndex, dr);
-
-                                offsetList = dr;
-                            }
-                            catch (Exception)
-                            {
-                                //sometimes the data node doesnt have enough data to even do this, or its wrong data
-                                if (Verbosity == VerbosityEnum.Full)
-                                {
-                                    _msgArgs = new MessageEventArgs
-                                    {
-                                        Detail =
-                                            string.Format(
-                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
-                                                nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                        Exception = null,
-                                        Message =
-                                            string.Format(
-                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
-                                                nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
-                                    };
-
-                                    OnMessage(_msgArgs);
-                                }
-                            }
                         }
+
 
                         if (offsetList != null)
                         {
-                            // offsetList.IsReferenced = true;
-
-
                             try
                             {
                                 for (var i = 0; i < regKey.NKRecord.ValueListCount; i++)
@@ -1034,7 +955,10 @@ namespace Registry
                                 }
                                 else
                                 {
+                                    //TODO WHAT IS THIS FOR?
                                     associatedVKRecordOffsets.Add(val.RelativeOffset);
+
+                       
 
                                     var kv = new KeyValue(val);
 
@@ -1163,7 +1087,7 @@ namespace Registry
                             deletedRegistryKey.Value.KeyName);
 
                         deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;
-                        
+
 
                         //right now you get the first layer of children but thats it
 
@@ -1183,15 +1107,19 @@ namespace Registry
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
 
-                        RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset, deletedRegistryKey.Value);
+                        RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset,
+                            deletedRegistryKey.Value);
 
-                        if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "")) == false)
+                        if (
+                            KeyPathKeyMap.ContainsKey(
+                                deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "")) ==
+                            false)
                         {
-                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), deletedRegistryKey.Value);
+                            KeyPathKeyMap.Add(
+                                deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""),
+                                deletedRegistryKey.Value);
                         }
-                            
 
-                    
 
                         if (Verbosity == VerbosityEnum.Full)
                         {
@@ -1247,7 +1175,7 @@ namespace Registry
                 {
                     KeyPathKeyMap.Add(keyNormalized, sk);
                 }
-                    
+
 
                 UpdateChildPaths(sk);
             }
@@ -1262,12 +1190,12 @@ namespace Registry
             const int regfHeader = 0x66676572;
             const int hbinHeader = 0x6e696268;
 
-            if (_filename == null)
+            if (Filename == null)
             {
                 throw new ArgumentNullException("Filename cannot be null");
             }
 
-            if (!File.Exists(_filename))
+            if (!File.Exists(Filename))
             {
                 throw new FileNotFoundException();
             }

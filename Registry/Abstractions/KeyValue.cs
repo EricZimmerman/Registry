@@ -17,11 +17,10 @@ namespace Registry.Abstractions
         /// <summary>
         ///     Initializes a new instance of the <see cref="KeyValue" /> class.
         /// </summary>
-
         public KeyValue(VKCellRecord vk)
         {
             VKRecord = vk;
-            
+
             InternalGUID = Guid.NewGuid().ToString();
         }
 
@@ -37,7 +36,6 @@ namespace Registry.Abstractions
         public string ValueData
         {
             get { return VKRecord.ValueData.ToString(); }
-            
         }
 
         /// <summary>
@@ -46,13 +44,11 @@ namespace Registry.Abstractions
         public byte[] ValueDataRaw
         {
             get { return VKRecord.ValueDataRaw; }
-            
         }
 
         public string ValueName
         {
             get { return VKRecord.ValueName; }
-            
         }
 
         /// <summary>
@@ -61,7 +57,6 @@ namespace Registry.Abstractions
         public string ValueSlack
         {
             get { return BitConverter.ToString(VKRecord.ValueDataSlack); }
-            
         }
 
         /// <summary>
@@ -70,7 +65,6 @@ namespace Registry.Abstractions
         public byte[] ValueSlackRaw
         {
             get { return VKRecord.ValueDataSlack; }
-            
         }
 
         /// <summary>
@@ -79,7 +73,6 @@ namespace Registry.Abstractions
         public string ValueType
         {
             get { return VKRecord.DataType.ToString(); }
-            
         }
 
         /// <summary>

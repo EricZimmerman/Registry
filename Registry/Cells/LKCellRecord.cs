@@ -53,23 +53,9 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            IsFree = _size > 0;
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
-
             Check.That(Signature).IsEqualTo("lk");
 
-            Flags = (FlagEnum) BitConverter.ToUInt16(rawBytes, 6);
-
-            var ts = BitConverter.ToInt64(rawBytes, 0x8);
-
-            LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
-
-            ParentCellIndex = BitConverter.ToUInt32(rawBytes, 0x14);
-
-            SubkeyCountsStable = BitConverter.ToUInt32(rawBytes, 0x18);
-            SubkeyCountsVolatile = BitConverter.ToUInt32(rawBytes, 0x1c);
-
+            //TODO FINISH THIS LIKE NK
 
             //RootCellIndex
             var num = BitConverter.ToUInt32(rawBytes, 0x20);
@@ -167,43 +153,58 @@ namespace Registry.Cells
         ///         slack slace in the data node when they hold classnames
         ///     </remarks>
         /// </summary>
-        public uint ClassCellIndex { get; private set; }
+        public uint ClassCellIndex { get; }
 
         /// <summary>
         ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
-        public ushort ClassLength { get; private set; }
+        public ushort ClassLength { get; }
 
-        public byte Debug { get; private set; }
-        public FlagEnum Flags { get; private set; }
+        public byte Debug { get; }
+
+        public FlagEnum Flags
+        {
+            get { return (FlagEnum) BitConverter.ToUInt16(RawBytes, 6); }
+        }
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset LastWriteTimestamp { get; private set; }
+        public DateTimeOffset LastWriteTimestamp
+        {
+            get
+            {
+                var ts = BitConverter.ToInt64(RawBytes, 0x8);
 
-        public uint MaximumClassLength { get; private set; }
-        public ushort MaximumNameLength { get; private set; }
-        public uint MaximumValueDataLength { get; private set; }
-        public uint MaximumValueNameLength { get; private set; }
+                return DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+            }
+        }
+
+        public uint MaximumClassLength { get; }
+        public ushort MaximumNameLength { get; }
+        public uint MaximumValueDataLength { get; }
+        public uint MaximumValueNameLength { get; }
 
         /// <summary>
         ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public ushort NameLength { get; private set; }
-        public string Padding { get; private set; }
+        public ushort NameLength { get; }
+        public string Padding { get; }
 
         /// <summary>
         ///     The relative offset to the parent key for this record
         /// </summary>
-        public uint ParentCellIndex { get; private set; }
+        public uint ParentCellIndex
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
+        }
 
         /// <summary>
         ///     The relative offset to the security record for this record
         /// </summary>
-        public uint SecurityCellIndex { get; private set; }
+        public uint SecurityCellIndex { get; }
 
         /// <summary>
         ///     When true, this key has been deleted
@@ -217,30 +218,44 @@ namespace Registry.Cells
         /// <summary>
         ///     The number of subkeys this key contains
         /// </summary>
-        public uint SubkeyCountsStable { get; private set; }
+        public uint SubkeyCountsStable
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x18); }
+        }
 
-        public uint SubkeyCountsVolatile { get; private set; }
+        public uint SubkeyCountsVolatile
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x1c); }
+        }
 
         /// <summary>
         ///     The relative offset to the root cell this record is linked to.
         /// </summary>
-        public uint RootCellIndex { get; private set; }
+        public uint RootCellIndex { get; }
 
-        public uint HivePointer { get; private set; }
-        public int UserFlags { get; private set; }
-        public int VirtualControlFlags { get; private set; }
-        public uint WorkVar { get; private set; }
+        public uint HivePointer { get; }
+        public int UserFlags { get; }
+        public int VirtualControlFlags { get; }
+        public uint WorkVar { get; }
         // public properties...
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
         }
 
-        public bool IsFree { get; private set; }
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+        }
 
         public int Size
         {
