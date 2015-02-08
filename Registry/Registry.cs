@@ -958,7 +958,7 @@ namespace Registry
                                     //TODO WHAT IS THIS FOR?
                                     associatedVKRecordOffsets.Add(val.RelativeOffset);
 
-                        
+                       
 
                                     var kv = new KeyValue(val);
 
