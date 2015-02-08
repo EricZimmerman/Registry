@@ -23,35 +23,46 @@ namespace Registry.Lists
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-            IsFree = _size > 0;
+
 
             if (IsFree)
             {
                 return;
             }
 
-            NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsEqualTo("db");
-
-            OffsetToOffsets = BitConverter.ToUInt32(rawBytes, 0x8);
         }
 
         /// <summary>
         ///     The relative offset to another data node that contains a list of relative offsets to data for a VK record
         /// </summary>
-        public uint OffsetToOffsets { get; private set; }
+        public uint OffsetToOffsets
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x8); }
+        }
 
         // public properties...
 
-        public bool IsFree { get; private set; }
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
         public bool IsReferenced { get; internal set; }
-        public int NumberOfEntries { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+
+        public int NumberOfEntries
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
+        }
+
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+        }
 
         public int Size
         {

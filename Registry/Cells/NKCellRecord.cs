@@ -52,15 +52,15 @@ namespace Registry.Cells
             //if (relativeOffset == 0x0023B860)
             //    System.Diagnostics.Debug.Write("nk trap");
 
-            //if (AbsoluteOffset == 5136)
-            //    System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
+//            if (AbsoluteOffset == 127722792)
+//                System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
 
             ValueOffsets = new List<ulong>();
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
             Check.That(Signature).IsEqualTo("nk");
-            
+
             var paddingOffset = 0x50 + NameLength;
 
             var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
@@ -76,7 +76,6 @@ namespace Registry.Cells
                 Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
 
-
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
 
             if (!IsFree)
@@ -87,7 +86,6 @@ namespace Registry.Cells
         }
 
         // public properties...
-
 
         /// <summary>
         ///     The relative offset to a data node containing the classname
@@ -106,12 +104,8 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
-                else
-                {
-                    return num;
-                }
+                return num;
             }
-            
         }
 
         /// <summary>
@@ -125,16 +119,11 @@ namespace Registry.Cells
         public byte Debug
         {
             get { return RawBytes[0x3b]; }
-            
         }
 
         public FlagEnum Flags
         {
-            get
-            {
-                return (FlagEnum)BitConverter.ToUInt16(RawBytes, 6);
-            }
-            
+            get { return (FlagEnum) BitConverter.ToUInt16(RawBytes, 6); }
         }
 
         /// <summary>
@@ -147,9 +136,7 @@ namespace Registry.Cells
                 var ts = BitConverter.ToInt64(RawBytes, 0x8);
 
                 return DateTimeOffset.FromFileTime(ts).ToUniversalTime();
-
             }
-            
         }
 
         public uint MaximumClassLength
@@ -160,19 +147,16 @@ namespace Registry.Cells
         public ushort MaximumNameLength
         {
             get { return BitConverter.ToUInt16(RawBytes, 0x38); }
-            
         }
 
         public uint MaximumValueDataLength
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x44); }
-            
         }
 
         public uint MaximumValueNameLength
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x40); }
-            
         }
 
         /// <summary>
@@ -222,16 +206,14 @@ namespace Registry.Cells
 
                 return _name;
             }
-            
         }
 
         public ushort NameLength
         {
             get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
-            
         }
 
-        public string Padding { get; private set; }
+        public string Padding { get; }
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -239,7 +221,6 @@ namespace Registry.Cells
         public uint ParentCellIndex
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x14); }
-            
         }
 
         /// <summary>
@@ -248,7 +229,6 @@ namespace Registry.Cells
         public uint SecurityCellIndex
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x30); }
-            
         }
 
         /// <summary>
@@ -266,13 +246,11 @@ namespace Registry.Cells
         public uint SubkeyCountsStable
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x18); }
-            
         }
 
         public uint SubkeyCountsVolatile
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x1c); }
-            
         }
 
         /// <summary>
@@ -289,12 +267,8 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
-                else
-                {
-                    return num;
-                }
+                return num;
             }
-            
         }
 
         public uint SubkeyListsVolatileCellIndex
@@ -307,12 +281,8 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
-                else
-                {
-                    return num;
-                }
+                return num;
             }
-            
         }
 
         public int UserFlags
@@ -322,10 +292,7 @@ namespace Registry.Cells
                 var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
 
                 return Convert.ToInt32(rawFlags.Substring(0, 4));
-
-
             }
-            
         }
 
         /// <summary>
@@ -335,18 +302,14 @@ namespace Registry.Cells
         {
             get
             {
-              var   num = BitConverter.ToUInt32(RawBytes, 0x2c);
+                var num = BitConverter.ToUInt32(RawBytes, 0x2c);
 
                 if (num == 0xFFFFFFFF)
                 {
-                    return  0;
+                    return 0;
                 }
-                else
-                {
-                    return  num;
-                }
+                return num;
             }
-            private set { throw new NotImplementedException(); }
         }
 
         /// <summary>
@@ -355,7 +318,6 @@ namespace Registry.Cells
         public uint ValueListCount
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x28); }
-            
         }
 
         public int VirtualControlFlags
@@ -363,17 +325,14 @@ namespace Registry.Cells
             get
             {
                 var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
-                
+
                 return Convert.ToInt32(rawFlags.Substring(4, 4));
-                
             }
-            
         }
 
         public uint WorkVar
         {
             get { return BitConverter.ToUInt32(RawBytes, 0x48); }
-            
         }
 
         // public properties...
@@ -384,23 +343,16 @@ namespace Registry.Cells
 
         public bool IsFree
         {
-            get {
-                return _size > 0;
-            
-            }
-            
+            get { return _size > 0; }
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
         public string Signature
         {
-            get
-            {
-                return Encoding.ASCII.GetString(RawBytes, 4, 2);
-            }
-            
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
         }
 
         public int Size

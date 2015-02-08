@@ -29,6 +29,10 @@ namespace Registry.Other
             SeSelfRelative = 0x8000
         }
 
+        private readonly uint sizeDacl;
+        private readonly uint sizeGroupSid;
+        private readonly uint sizeOwnerSid;
+        private readonly uint sizeSacl;
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="SKSecurityDescriptor" /> class.
@@ -37,60 +41,104 @@ namespace Registry.Other
         {
             RawBytes = rawBytes;
 
-            Revision = rawBytes[0];
+            sizeSacl = DaclOffset - SaclOffset;
+            sizeDacl = OwnerOffset - DaclOffset;
+            sizeOwnerSid = GroupOffset - OwnerOffset;
+            sizeGroupSid = (uint) (rawBytes.Length - GroupOffset);
 
-            Control = (ControlEnum) BitConverter.ToUInt16(rawBytes, 0x02);
-
-            OwnerOffset = BitConverter.ToUInt32(rawBytes, 0x04);
-            GroupOffset = BitConverter.ToUInt32(rawBytes, 0x08);
-
-            SaclOffset = BitConverter.ToUInt32(rawBytes, 0x0c);
-            DaclOffset = BitConverter.ToUInt32(rawBytes, 0x10);
-
-            var sizeSacl = DaclOffset - SaclOffset;
-            var sizeDacl = OwnerOffset - DaclOffset;
-            var sizeOwnerSid = GroupOffset - OwnerOffset;
-            var sizeGroupSid = rawBytes.Length - GroupOffset;
-
-            var rawOwner = rawBytes.Skip((int) OwnerOffset).Take((int) sizeOwnerSid).ToArray();
-            var rawGroup = rawBytes.Skip((int) GroupOffset).Take((int) sizeGroupSid).ToArray();
-
-            OwnerSID = Helpers.ConvertHexStringToSidString(rawOwner);
-            GroupSID = Helpers.ConvertHexStringToSidString(rawGroup);
-
-            OwnerSIDType = Helpers.GetSIDTypeFromSIDString(OwnerSID);
-            GroupSIDType = Helpers.GetSIDTypeFromSIDString(GroupSID);
-
-            if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
-            {
-                var rawDacl = rawBytes.Skip((int) DaclOffset).Take((int) sizeDacl).ToArray();
-                DACL = new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
-            }
-
-            if ((Control & ControlEnum.SeSaclPresent) == ControlEnum.SeSaclPresent)
-            {
-                var rawSacl = rawBytes.Skip((int) SaclOffset).Take((int) sizeSacl).ToArray();
-                SACL = new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
-            }
 
             Padding = String.Empty; //TODO VERIFY ITS ALWAYS ZEROs
         }
 
         // public properties...
-        public ControlEnum Control { get; private set; }
-        public xACLRecord DACL { get; private set; }
-        public uint DaclOffset { get; private set; }
-        public uint GroupOffset { get; private set; }
-        public string GroupSID { get; private set; }
-        public Helpers.SidTypeEnum GroupSIDType { get; private set; }
-        public uint OwnerOffset { get; private set; }
-        public string OwnerSID { get; private set; }
-        public Helpers.SidTypeEnum OwnerSIDType { get; private set; }
+        public ControlEnum Control
+        {
+            get { return (ControlEnum) BitConverter.ToUInt16(RawBytes, 0x02); }
+        }
+
+        public xACLRecord DACL
+        {
+            get
+            {
+                if ((Control & ControlEnum.SeDaclPresent) == ControlEnum.SeDaclPresent)
+                {
+                    var rawDacl = RawBytes.Skip((int) DaclOffset).Take((int) sizeDacl).ToArray();
+                    return new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
+                }
+
+                return null;
+            }
+        }
+
+        public uint DaclOffset
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x10); }
+        }
+
+        public uint GroupOffset
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
+        }
+
+        public string GroupSID
+        {
+            get
+            {
+                var rawGroup = RawBytes.Skip((int) GroupOffset).Take((int) sizeGroupSid).ToArray();
+                return Helpers.ConvertHexStringToSidString(rawGroup);
+            }
+        }
+
+        public Helpers.SidTypeEnum GroupSIDType
+        {
+            get { return Helpers.GetSIDTypeFromSIDString(GroupSID); }
+        }
+
+        public uint OwnerOffset
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x04); }
+        }
+
+        public string OwnerSID
+        {
+            get
+            {
+                var rawOwner = RawBytes.Skip((int) OwnerOffset).Take((int) sizeOwnerSid).ToArray();
+                return Helpers.ConvertHexStringToSidString(rawOwner);
+            }
+        }
+
+        public Helpers.SidTypeEnum OwnerSIDType
+        {
+            get { return Helpers.GetSIDTypeFromSIDString(OwnerSID); }
+        }
+
         public string Padding { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public byte Revision { get; private set; }
-        public xACLRecord SACL { get; private set; }
-        public uint SaclOffset { get; private set; }
+        public byte[] RawBytes { get; }
+
+        public byte Revision
+        {
+            get { return RawBytes[0]; }
+        }
+
+        public xACLRecord SACL
+        {
+            get
+            {
+                if ((Control & ControlEnum.SeSaclPresent) == ControlEnum.SeSaclPresent)
+                {
+                    var rawSacl = RawBytes.Skip((int) SaclOffset).Take((int) sizeSacl).ToArray();
+                    return new xACLRecord(rawSacl, xACLRecord.ACLTypeEnum.Security);
+                }
+                return null;
+            }
+        }
+
+        public uint SaclOffset
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
+        }
+
         // public methods...
         public override string ToString()
         {

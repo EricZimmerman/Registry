@@ -28,61 +28,80 @@ namespace Registry.Other
 
             ACLType = aclTypetype;
 
-            AclRevision = rawBytes[0];
-
             var rev = (int) AclRevision;
 
             Check.That(rev.ToString()).IsOneOfThese("1", "2", "4");
-
-            Sbz1 = rawBytes[1];
-
-            AclSize = BitConverter.ToUInt16(rawBytes, 0x2);
-
-            AceCount = BitConverter.ToUInt16(rawBytes, 0x4);
-            Sbz2 = BitConverter.ToUInt16(rawBytes, 0x6);
-
-            var index = 0x8; // the start of ACE structures
-
-            var chunks = new List<byte[]>();
-
-            for (var i = 0; i < AceCount; i++)
-            {
-                if (index > rawBytes.Length)
-                {
-                    break;
-                }
-                var aceSize = rawBytes[index + 2];
-                var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
-
-                chunks.Add(rawAce);
-
-                index += aceSize;
-            }
-
-            ACERecords = new List<ACERecord>();
-
-            foreach (var chunk in chunks)
-            {
-                if (chunk.Length <= 0)
-                {
-                    continue;
-                }
-
-                var ace = new ACERecord(chunk);
-
-                ACERecords.Add(ace);
-            }
         }
 
         // public properties...
-        public ushort AceCount { get; private set; }
-        public List<ACERecord> ACERecords { get; private set; }
-        public byte AclRevision { get; private set; }
-        public ushort AclSize { get; private set; }
-        public ACLTypeEnum ACLType { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public byte Sbz1 { get; private set; }
-        public ushort Sbz2 { get; private set; }
+        public ushort AceCount
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x4); }
+        }
+
+        public List<ACERecord> ACERecords
+        {
+            get
+            {
+                var index = 0x8; // the start of ACE structures
+
+                var chunks = new List<byte[]>();
+
+                for (var i = 0; i < AceCount; i++)
+                {
+                    if (index > RawBytes.Length)
+                    {
+                        break;
+                    }
+                    var aceSize = RawBytes[index + 2];
+                    var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
+
+                    chunks.Add(rawAce);
+
+                    index += aceSize;
+                }
+
+                var records = new List<ACERecord>();
+
+                foreach (var chunk in chunks)
+                {
+                    if (chunk.Length <= 0)
+                    {
+                        continue;
+                    }
+
+                    var ace = new ACERecord(chunk);
+
+                    records.Add(ace);
+                }
+
+                return records;
+            }
+        }
+
+        public byte AclRevision
+        {
+            get { return RawBytes[0]; }
+        }
+
+        public ushort AclSize
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x2); }
+        }
+
+        public ACLTypeEnum ACLType { get; }
+        public byte[] RawBytes { get; }
+
+        public byte Sbz1
+        {
+            get { return RawBytes[1]; }
+        }
+
+        public ushort Sbz2
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x6); }
+        }
+
         // public methods...
         public override string ToString()
         {

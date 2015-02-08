@@ -26,62 +26,76 @@ namespace Registry.Lists
 
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-            IsFree = _size > 0;
 
-            NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
 
             Check.That(Signature).IsOneOfThese("lh", "lf");
-
-            Offsets = new Dictionary<uint, string>();
-
-            var index = 0x8;
-            var counter = 0;
-
-            while (counter < NumberOfEntries)
-            {
-                if (index >= rawBytes.Length)
-                {
-                    // i have seen cases where there isnt enough data, so get what we can
-                    break;
-                }
-                var os = BitConverter.ToUInt32(rawBytes, index);
-                index += 4;
-
-                var hash = string.Empty;
-
-                if (Signature == "lf")
-                {
-                    //first 4 chars of string
-                    hash = Encoding.ASCII.GetString(rawBytes, index, 4);
-                }
-                else
-                {
-                    //numerical hash
-                    hash = BitConverter.ToUInt32(rawBytes, index).ToString();
-                }
-
-                index += 4;
-
-                Offsets.Add(os, hash);
-
-                counter += 1;
-            }
         }
 
         /// <summary>
         ///     A dictionary of relative offsets and hashes to other records
         ///     <remarks>The offset is the key and the hash value is the value</remarks>
         /// </summary>
-        public Dictionary<uint, string> Offsets { get; private set; }
+        public Dictionary<uint, string> Offsets
+        {
+            get
+            {
+                var _offsets = new Dictionary<uint, string>();
 
-        public bool IsFree { get; private set; }
+                var index = 0x8;
+                var counter = 0;
+
+                while (counter < NumberOfEntries)
+                {
+                    if (index >= RawBytes.Length)
+                    {
+                        // i have seen cases where there isnt enough data, so get what we can
+                        break;
+                    }
+                    var os = BitConverter.ToUInt32(RawBytes, index);
+                    index += 4;
+
+                    var hash = string.Empty;
+
+                    if (Signature == "lf")
+                    {
+                        //first 4 chars of string
+                        hash = Encoding.ASCII.GetString(RawBytes, index, 4);
+                    }
+                    else
+                    {
+                        //numerical hash
+                        hash = BitConverter.ToUInt32(RawBytes, index).ToString();
+                    }
+
+                    index += 4;
+
+                    _offsets.Add(os, hash);
+
+                    counter += 1;
+                }
+                return _offsets;
+            }
+        }
+
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
         public bool IsReferenced { get; internal set; }
-        public int NumberOfEntries { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+
+        public int NumberOfEntries
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
+        }
+
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+        }
 
         public int Size
         {

@@ -12,7 +12,7 @@ namespace Registry.Lists
     internal class LIListRecord : IListTemplate, IRecordBase
     {
         // private fields...
-        private readonly List<uint> _offsets;
+
         private readonly int _size;
         // public constructors...
         /// <summary>
@@ -25,39 +25,14 @@ namespace Registry.Lists
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-            IsFree = _size > 0;
+
 
             if (IsFree)
             {
                 return;
             }
 
-            NumberOfEntries = BitConverter.ToUInt16(rawBytes, 0x06);
-
-            Signature = Encoding.ASCII.GetString(rawBytes, 4, 2);
-
             Check.That(Signature).IsEqualTo("li");
-
-            _offsets = new List<uint>();
-
-            var index = 0x8;
-            var counter = 0;
-
-            while (counter < NumberOfEntries)
-            {
-                var os = BitConverter.ToUInt32(rawBytes, index);
-                index += 4;
-
-                if (os == 0x0)
-                {
-                    //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
-                    break;
-                }
-
-                _offsets.Add(os);
-
-                counter += 1;
-            }
         }
 
         /// <summary>
@@ -65,17 +40,54 @@ namespace Registry.Lists
         /// </summary>
         public List<uint> Offsets
         {
-            get { return _offsets; }
+            get
+            {
+                var offsets = new List<uint>();
+
+                var index = 0x8;
+                var counter = 0;
+
+                while (counter < NumberOfEntries)
+                {
+                    var os = BitConverter.ToUInt32(RawBytes, index);
+                    index += 4;
+
+                    if (os == 0x0)
+                    {
+                        //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
+                        break;
+                    }
+
+                    offsets.Add(os);
+
+                    counter += 1;
+                }
+
+                return offsets;
+            }
         }
 
         // public properties...
 
-        public bool IsFree { get; private set; }
+        public bool IsFree
+        {
+            get { return _size > 0; }
+        }
+
         public bool IsReferenced { get; internal set; }
-        public int NumberOfEntries { get; private set; }
-        public byte[] RawBytes { get; private set; }
-        public long RelativeOffset { get; private set; }
-        public string Signature { get; private set; }
+
+        public int NumberOfEntries
+        {
+            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
+        }
+
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
+
+        public string Signature
+        {
+            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+        }
 
         public int Size
         {
@@ -109,7 +121,7 @@ namespace Registry.Lists
 
             var i = 0;
 
-            foreach (var offset in _offsets)
+            foreach (var offset in Offsets)
             {
                 sb.AppendLine(string.Format("------------ Offset #{0} ------------", i));
                 sb.AppendLine(string.Format("Offset: 0x{0:X}", offset));

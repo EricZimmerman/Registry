@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -53,6 +54,9 @@ namespace Registry.Cells
         }
 
         private const uint DEVPROP_MASK_TYPE = 0x00000FFF;
+        private readonly byte[] _datablockRaw;
+        private readonly uint _dataLengthInternal;
+        private readonly int _internalDataOffset;
         // private fields...
         // public constructors...
         /// <summary>
@@ -67,22 +71,27 @@ namespace Registry.Cells
             Size = BitConverter.ToInt32(rawBytes, 0);
 
 
+            if (RelativeOffset == 0x5DA35D0)
+            {
+                Debug.Write(1);
+            }
+
             Check.That(Signature).IsEqualTo("vk");
 
             DataOffets = new List<ulong>();
 
-            var dataLengthInternal = DataLength;
+            _dataLengthInternal = DataLength;
 
             //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
-            var dataIsResident = Convert.ToString(dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
+            var dataIsResident = Convert.ToString(_dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
 
             //this is used later to pull the data from the raw bytes. By setting this here we do not need a bunch of if/then stuff later
-            var internalDataOffset = 4;
+            _internalDataOffset = 4;
 
             if (dataIsResident)
             {
                 //normalize the data for future use
-                dataLengthInternal = dataLengthInternal - 0x80000000;
+                _dataLengthInternal = _dataLengthInternal - 0x80000000;
 
                 //A data size of 4 uses all 4 bytes of the data offset
                 //A data size of 2 uses the last 2 bytes of the data offset (on a little-endian system)
@@ -92,11 +101,9 @@ namespace Registry.Cells
                 //if (dataLengthInternal == 1)
                 //    Debug.Write("dataLengthInternal == 1");
 
-                internalDataOffset = 0;
+                _internalDataOffset = 0;
             }
 
-            //we need to preserve the datatype as it exists (so we can see unsupported types easily)
-            DataTypeRaw = BitConverter.ToUInt32(rawBytes, 0x10) & DEVPROP_MASK_TYPE;
 
             //force to a known datatype 
             var dataTypeInternal = DataTypeRaw;
@@ -108,11 +115,8 @@ namespace Registry.Cells
 
             DataType = (DataTypeEnum) dataTypeInternal;
 
-
             //  Unknown = BitConverter.ToUInt16(rawBytes, 0x16);
 
-
-            byte[] datablockRaw;
             var dataBlockSize = 0;
 
             if (dataIsResident)
@@ -128,19 +132,19 @@ namespace Registry.Cells
                 if (DataType == DataTypeEnum.RegDwordBigEndian)
                 {
                     //this is a special case where the data length shows up as 2, but a dword needs 4 bytes, so adjust
-                    dataLengthInternal = 4;
+                    _dataLengthInternal = 4;
                 }
                 //Since its resident, the data lives in the OffsetToData.
-                datablockRaw = new byte[dataLengthInternal];
+                _datablockRaw = new byte[_dataLengthInternal];
 
                 //make a copy for processing below
                 //Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4); org
-                Array.Copy(rawBytes, 0xc, datablockRaw, 0, dataLengthInternal);
+                Array.Copy(rawBytes, 0xc, _datablockRaw, 0, _dataLengthInternal);
 
                 //set our data length to what is available since its resident and unknown. it can be used for anything
                 if (DataType == DataTypeEnum.RegUnknown)
                 {
-                    dataLengthInternal = 4;
+                    _dataLengthInternal = 4;
                 }
             }
             else
@@ -207,17 +211,17 @@ namespace Registry.Cells
                 {
                     try
                     {
-                        datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                        _datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
                     }
                     catch (Exception)
                     {
                         //crazy things can happen in IsFree records
-                        datablockRaw = new byte[0];
+                        _datablockRaw = new byte[0];
                     }
                 }
                 else
                 {
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                    _datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
                 }
 
 
@@ -225,31 +229,31 @@ namespace Registry.Cells
                 //value is dataLengthInternal long. rest is slack
 
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
-                if (dataLengthInternal > 16344 && version > 1.3)
+                if (_dataLengthInternal > 16344 && version > 1.3)
                     // RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3)
                 {
                     // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType data
 
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+                    _datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
 
-                    var db = new DBListRecord(datablockRaw, 4096 + OffsetToData);
+                    var db = new DBListRecord(_datablockRaw, 4096 + OffsetToData);
 
                     // db now contains a pointer to where we can get db.NumberOfEntries offsets to our data and reassemble it
 
                     datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, 4);
                     dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
 
-                    datablockRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, dataBlockSize);
+                    _datablockRaw = RegistryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, dataBlockSize);
 
                     //datablockRaw now contains our list of pointers to fragmented Data
 
                     //make a place to reassemble things
-                    var bigDataRaw = new ArrayList((int) dataLengthInternal);
+                    var bigDataRaw = new ArrayList((int) _dataLengthInternal);
 
                     for (var i = 1; i <= db.NumberOfEntries; i++)
                     {
                         // read the offset and go get that data. use i * 4 so we get 4, 8, 12, 16, etc
-                        var os = BitConverter.ToUInt32(datablockRaw, i*4);
+                        var os = BitConverter.ToUInt32(_datablockRaw, i*4);
 
                         // in order to accurately mark data cells as Referenced later, add these offsets to a list
                         DataOffets.Add(os);
@@ -265,13 +269,13 @@ namespace Registry.Cells
                         bigDataRaw.AddRange(tempDataRaw.Skip(4).Take(16344).ToArray());
                     }
 
-                    datablockRaw = (byte[]) bigDataRaw.ToArray(typeof (byte));
+                    _datablockRaw = (byte[]) bigDataRaw.ToArray(typeof (byte));
 
                     //reset this so slack calculation works
-                    dataBlockSize = datablockRaw.Length;
+                    dataBlockSize = _datablockRaw.Length;
 
                     //since dataBlockRaw doesnt have the size on it in this case, adjust internalDataOffset accordingly
-                    internalDataOffset = 0;
+                    _internalDataOffset = 0;
                 }
 
                 //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
@@ -286,27 +290,27 @@ namespace Registry.Cells
 
 
             //ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
-            ValueDataRaw = new byte[dataLengthInternal];
+            ValueDataRaw = new byte[_dataLengthInternal];
 
-            if (dataLengthInternal + internalDataOffset > datablockRaw.Length)
+            if (_dataLengthInternal + _internalDataOffset > _datablockRaw.Length)
             {
                 //we dont have enough data to copy, so take what we can get
-                if (datablockRaw.Length > 0)
+                if (_datablockRaw.Length > 0)
                 {
                     try
                     {
-                        Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0,
-                            datablockRaw.Length - internalDataOffset);
+                        Array.Copy(_datablockRaw, _internalDataOffset, ValueDataRaw, 0,
+                            _datablockRaw.Length - _internalDataOffset);
                     }
                     catch (Exception)
                     {
-                        Array.Copy(datablockRaw, 0, ValueDataRaw, 0, datablockRaw.Length);
+                        Array.Copy(_datablockRaw, 0, ValueDataRaw, 0, _datablockRaw.Length);
                     }
                 }
             }
             else
             {
-                Array.Copy(datablockRaw, internalDataOffset, ValueDataRaw, 0, dataLengthInternal);
+                Array.Copy(_datablockRaw, _internalDataOffset, ValueDataRaw, 0, _dataLengthInternal);
             }
 
 
@@ -317,8 +321,8 @@ namespace Registry.Cells
             //we add 4 to account for the length of where the value lives, then divide by 8 and round up.
             //this number * 8 is the maximum size the data record should be to hold the value.
             //take away what we used (dataLengthInternal) and then account for our offset to said data (internalDataOffset)
-            var maxSlackSize = Math.Ceiling((double) (dataLengthInternal + 4)/8)*8 - dataLengthInternal -
-                               internalDataOffset;
+            var maxSlackSize = Math.Ceiling((double) (_dataLengthInternal + 4)/8)*8 - _dataLengthInternal -
+                               _internalDataOffset;
 
             //ValueDataSlack =
             //    datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
@@ -327,11 +331,11 @@ namespace Registry.Cells
 
             ValueDataSlack = new byte[0];
 
-            if (datablockRaw.Length > dataLengthInternal + internalDataOffset)
+            if (_datablockRaw.Length > _dataLengthInternal + _internalDataOffset)
             {
                 ValueDataSlack = new Byte[Math.Abs((int) maxSlackSize)];
 
-                Array.Copy(datablockRaw, (int) (dataLengthInternal + internalDataOffset), ValueDataSlack, 0,
+                Array.Copy(_datablockRaw, (int) (_dataLengthInternal + _internalDataOffset), ValueDataSlack, 0,
                     (int) (Math.Abs(maxSlackSize)));
             }
 
@@ -340,143 +344,35 @@ namespace Registry.Cells
             //.Take((int)(Math.Abs(maxSlackSize)))
             //.ToArray();
 
-            if (IsFree)
+            var paddingOffset = 0x18 + NameLength;
+
+            var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
+
+            var actualPaddingOffset = paddingBlock*8;
+
+            var paddingLength = actualPaddingOffset - paddingOffset;
+
+            Padding = string.Empty;
+
+            if (paddingLength > 0)
             {
-                // since its free but the data length is less than what we have, take what we do have and live with it
-                if (datablockRaw.Length < dataLengthInternal)
-                {
-                    ValueData = datablockRaw;
-                    return;
-                }
+                Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
 
-            //this is a failsafe for when IsFree == true. a lot of time the data is there, but if not, stick what we do have in the value and call it a day
-            try
+            if (!IsFree)
             {
-                switch (DataType)
-                {
-                    case DataTypeEnum.RegFileTime:
-                        var ts = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
-
-                        ValueData = DateTimeOffset.FromFileTime((long) ts).ToUniversalTime();
-
-                        break;
-
-                    case DataTypeEnum.RegExpandSz:
-                    case DataTypeEnum.RegMultiSz:
-                    case DataTypeEnum.RegSz:
-                        if ((int) dataLengthInternal > datablockRaw.Length || ValueDataRaw == null)
-                        {
-                            ValueData = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
-                        }
-                        else
-                        {
-                            ValueData = Encoding.Unicode.GetString(datablockRaw, internalDataOffset,
-                                (int) dataLengthInternal)
-                                .Replace("\0", "");
-                        }
-
-                        //
-                        //ValueData =
-                        //Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
-
-                        break;
-
-                    case DataTypeEnum.RegNone: // spec says RegNone means "No defined data type", and not "no data"
-                    case DataTypeEnum.RegBinary:
-                    case DataTypeEnum.RegResourceRequirementsList:
-                    case DataTypeEnum.RegResourceList:
-                    case DataTypeEnum.RegFullResourceDescription:
-
-                        ValueData = new byte[Math.Abs(dataLengthInternal)];
-
-                        Array.Copy(datablockRaw, internalDataOffset, (byte[]) ValueData, 0, Math.Abs(dataLengthInternal));
-
-
-                        //ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
-
-                        break;
-
-                    case DataTypeEnum.RegDword:
-                        ValueData = dataLengthInternal == 4 ? BitConverter.ToUInt32(datablockRaw, 0) : 0;
-
-                        break;
-
-                    case DataTypeEnum.RegDwordBigEndian:
-                        if (datablockRaw.Length > 0)
-                        {
-                            var reversedBlock = datablockRaw;
-
-                            Array.Reverse(reversedBlock);
-
-                            ValueData = BitConverter.ToUInt32(reversedBlock, 0);
-                        }
-
-                        break;
-
-                    case DataTypeEnum.RegQword:
-                        ValueData = BitConverter.ToUInt64(datablockRaw, internalDataOffset);
-
-                        break;
-
-
-                    case DataTypeEnum.RegUnknown:
-                        ValueData = datablockRaw;
-
-                        ValueDataSlack = new byte[0];
-
-                        break;
-
-                    case DataTypeEnum.RegLink:
-                        ValueData =
-                            Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int) dataLengthInternal)
-                                .Replace("\0", " ")
-                                .Trim();
-                        break;
-
-                    default:
-
-
-                        DataType = DataTypeEnum.RegUnknown;
-                        ValueData = datablockRaw;
-
-                        ValueDataSlack = new byte[0];
-
-                        break;
-                }
-
-                var paddingOffset = 0x18 + NameLength;
-
-                var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
-
-                var actualPaddingOffset = paddingBlock*8;
-
-                var paddingLength = actualPaddingOffset - paddingOffset;
-
-                Padding = string.Empty;
-
-                if (paddingLength > 0)
-                {
-                    Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
-                }
-
-                if (!IsFree)
-                {
-                    //When records ARE free, different rules apply, so we process thsoe all at once later
-                    Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-                }
+                //When records ARE free, different rules apply, so we process thsoe all at once later
+                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
             }
-
-            catch (Exception)
+            else
             {
-                //if its a free record, errors are expected, but if not, throw so the issue can be addressed
-                if (IsFree)
+                //sometimes we get a huge chunk of rawBytes here, so truncate it appropriately
+                if (rawBytes.Length > actualPaddingOffset)
                 {
-                    ValueData = datablockRaw;
-                }
-                else
-                {
-                    throw;
+                    var tempBytes = new byte[actualPaddingOffset];
+
+                    Array.Copy(rawBytes, 0, tempBytes, 0, (long) actualPaddingOffset);
+                    RawBytes = tempBytes;
                 }
             }
         }
@@ -496,7 +392,11 @@ namespace Registry.Cells
         }
 
         public DataTypeEnum DataType { get; set; }
-        public uint DataTypeRaw { get; set; }
+        //we need to preserve the datatype as it exists (so we can see unsupported types easily)
+        public uint DataTypeRaw
+        {
+            get { return BitConverter.ToUInt32(RawBytes, 0x10) & DEVPROP_MASK_TYPE; }
+        }
 
         public ushort NameLength
         {
@@ -526,7 +426,135 @@ namespace Registry.Cells
         /// <summary>
         ///     The normalized Value of this value record. This is what is visible under the 'Data' column in RegEdit
         /// </summary>
-        public object ValueData { get; set; }
+        public object ValueData
+        {
+            get
+            {
+                object val = _datablockRaw;
+
+                if (IsFree)
+                {
+                    // since its free but the data length is less than what we have, take what we do have and live with it
+                    if (_datablockRaw.Length < _dataLengthInternal)
+                    {
+                        val = _datablockRaw;
+                        return val;
+                    }
+                }
+
+                //this is a failsafe for when IsFree == true. a lot of time the data is there, but if not, stick what we do have in the value and call it a day
+                try
+                {
+                    switch (DataType)
+                    {
+                        case DataTypeEnum.RegFileTime:
+                            var ts = BitConverter.ToUInt64(_datablockRaw, _internalDataOffset);
+
+                            val = DateTimeOffset.FromFileTime((long) ts).ToUniversalTime();
+
+                            break;
+
+                        case DataTypeEnum.RegExpandSz:
+                        case DataTypeEnum.RegMultiSz:
+                        case DataTypeEnum.RegSz:
+                            if ((int) _dataLengthInternal > _datablockRaw.Length || ValueDataRaw == null)
+                            {
+                                val = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
+                            }
+                            else
+                            {
+                                val = Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset,
+                                    (int) _dataLengthInternal)
+                                    .Replace("\0", "");
+                            }
+
+                            //
+                            //ValueData =
+                            //Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
+
+                            break;
+
+                        case DataTypeEnum.RegNone: // spec says RegNone means "No defined data type", and not "no data"
+                        case DataTypeEnum.RegBinary:
+                        case DataTypeEnum.RegResourceRequirementsList:
+                        case DataTypeEnum.RegResourceList:
+                        case DataTypeEnum.RegFullResourceDescription:
+
+                            val = new byte[Math.Abs(_dataLengthInternal)];
+
+                            Array.Copy(_datablockRaw, _internalDataOffset, (byte[]) val, 0,
+                                Math.Abs(_dataLengthInternal));
+
+
+                            //ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
+
+                            break;
+
+                        case DataTypeEnum.RegDword:
+                            val = _dataLengthInternal == 4 ? BitConverter.ToUInt32(_datablockRaw, 0) : 0;
+
+                            break;
+
+                        case DataTypeEnum.RegDwordBigEndian:
+                            if (_datablockRaw.Length > 0)
+                            {
+                                var reversedBlock = _datablockRaw;
+
+                                Array.Reverse(reversedBlock);
+
+                                val = BitConverter.ToUInt32(reversedBlock, 0);
+                            }
+
+                            break;
+
+                        case DataTypeEnum.RegQword:
+                            val = BitConverter.ToUInt64(_datablockRaw, _internalDataOffset);
+
+                            break;
+
+
+                        case DataTypeEnum.RegUnknown:
+                            val = _datablockRaw;
+
+                            ValueDataSlack = new byte[0];
+
+                            break;
+
+                        case DataTypeEnum.RegLink:
+                            val =
+                                Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset, (int) _dataLengthInternal)
+                                    .Replace("\0", " ")
+                                    .Trim();
+                            break;
+
+                        default:
+
+
+                            DataType = DataTypeEnum.RegUnknown;
+                            val = _datablockRaw;
+
+                            ValueDataSlack = new byte[0];
+
+                            break;
+                    }
+                }
+
+                catch (Exception)
+                {
+                    //if its a free record, errors are expected, but if not, throw so the issue can be addressed
+                    if (IsFree)
+                    {
+                        val = _datablockRaw;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+
+                return val;
+            }
+        }
 
         /// <summary>
         ///     The raw contents of this value record's Value
@@ -572,28 +600,46 @@ namespace Registry.Cells
                     }
                     else
                     {
-                        // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
-                        var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
-
-                        var foundMatch = false;
-                        try
+                        if (IsFree)
                         {
-                            foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
-                            // look for hex chars followed by 00 separators
-                        }
-                        catch (ArgumentException)
-                        {
-                            // Syntax error in the regular expression
-                        }
-
-                        if (foundMatch)
-                        {
-                            // we found what appears to be unicode
-                            _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                            //make sure we have enough data
+                            if (RawBytes.Length >= NameLength + 0x18)
+                            {
+                                _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                            }
+                            else
+                            {
+                                _valName = "(Unable to determine name)";
+                            }
                         }
                         else
                         {
-                            _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                            // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
+
+
+                            var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
+
+
+                            var foundMatch = false;
+                            try
+                            {
+                                foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
+                                // look for hex chars followed by 00 separators
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Syntax error in the regular expression
+                            }
+
+                            if (foundMatch)
+                            {
+                                // we found what appears to be unicode
+                                _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                            }
+                            else
+                            {
+                                _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                            }
                         }
                     }
                 }
@@ -620,7 +666,6 @@ namespace Registry.Cells
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-            //private set { throw new NotImplementedException(); }
         }
 
         public int Size { get; }

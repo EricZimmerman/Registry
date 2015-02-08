@@ -21,14 +21,15 @@ namespace Registry.Abstractions
             HasActiveParent = 2
         }
 
+        private string _keyPath;
         // public constructors...
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
             NKRecord = nk;
-            
+
 
             Parent = parent;
-            
+
             InternalGUID = Guid.NewGuid().ToString();
 
             SubKeys = new List<RegistryKey>();
@@ -62,10 +63,7 @@ namespace Registry.Abstractions
         public string KeyName
         {
             get { return NKRecord.Name; }
-            
         }
-
-        private string _keyPath;
 
         /// <summary>
         ///     The full path to the  key, including its KeyName
@@ -98,7 +96,6 @@ namespace Registry.Abstractions
         public DateTimeOffset? LastWriteTime
         {
             get { return NKRecord.LastWriteTimestamp; }
-            
         }
 
         /// <summary>
@@ -125,7 +122,7 @@ namespace Registry.Abstractions
             sb.AppendLine(string.Format("Key Path: {0}", KeyPath));
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("LastWriteTime: {0}", LastWriteTime));
+            sb.AppendLine(string.Format("Last Write Time: {0}", LastWriteTime));
             sb.AppendLine();
 
             // sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
