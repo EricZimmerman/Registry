@@ -30,6 +30,7 @@ namespace Registry.Other
             "vk"
         };
 
+        private readonly bool _recoverDeleted;
         private readonly float _version;
         private byte[] _rawBytes;
         // protected internal constructors...
@@ -37,9 +38,11 @@ namespace Registry.Other
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
         ///     <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
-        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, float version)
+        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, float version, bool recoverDeleted)
         {
             RelativeOffset = relativeOffset;
+
+            _recoverDeleted = recoverDeleted;
 
             _version = version;
 
@@ -149,10 +152,22 @@ namespace Registry.Other
                 //if (offsetInHbin == 0x00005B08)
                 //    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
 
+//                if (offsetInHbin + RelativeOffset == 0x70e3020)
+//                {
+//                    Debug.Write(1);
+//                }
+
 
                 var recordSize = BitConverter.ToUInt32(_rawBytes, offsetInHbin);
 
                 var readSize = (int) recordSize;
+
+                if (!_recoverDeleted && readSize > 0)
+                {
+                    //since we do not want to get deleted stuff, if the cell size > 0, its free, so skip it
+                    offsetInHbin += readSize;
+                    continue;
+                }
 
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
                 readSize = Math.Abs(readSize);
@@ -313,19 +328,25 @@ namespace Registry.Other
 
                 if (listRecord != null)
                 {
-                    carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+                    if (_recoverDeleted)
+                    {
+                        carvedRecords = ExtractRecordsFromSlack(listRecord.RawBytes, listRecord.RelativeOffset);
+                    }
 
                     records.Add((IRecordBase) listRecord);
                 }
 
-                if (dataRecord != null)
+                if (dataRecord != null && _recoverDeleted)
                 {
                     carvedRecords = ExtractRecordsFromSlack(dataRecord.RawBytes, dataRecord.RelativeOffset);
                 }
 
                 if (carvedRecords != null)
                 {
-                    records.AddRange(carvedRecords);
+                    if (carvedRecords.Count > 0)
+                    {
+                        records.AddRange(carvedRecords);
+                    }
                 }
 
                 offsetInHbin += readSize;
@@ -339,8 +360,7 @@ namespace Registry.Other
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
             // a list of our known signatures, so we can only show when these are found vs data cells
-
-
+            
             var records = new List<IRecordBase>();
 
             var offsetList = new List<int>();

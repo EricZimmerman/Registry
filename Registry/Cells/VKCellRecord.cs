@@ -485,9 +485,6 @@ namespace Registry.Cells
                             Array.Copy(_datablockRaw, _internalDataOffset, (byte[]) val, 0,
                                 Math.Abs(_dataLengthInternal));
 
-
-                            //ValueData = datablockRaw.Skip(internalDataOffset).Take(Math.Abs(dataBlockSize)).ToArray();
-
                             break;
 
                         case DataTypeEnum.RegDword:

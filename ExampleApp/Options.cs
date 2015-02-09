@@ -21,7 +21,14 @@ internal class Options
 
     [Option('a', DefaultValue = false, Required = false,
         HelpText = "If true, only recovered deleted keys/values will be exported")]
+
     public bool ExportDeletedOnly { get; set; }
+
+
+    [Option('r', DefaultValue = false, Required = false,
+    HelpText = "If true, recover and process deleted Registry keys/values")]
+    public bool RecoverDeleted { get; set; }
+
 
     public string GetUsage()
     {
@@ -30,6 +37,7 @@ internal class Options
         usage.AppendLine("-d <directory>: Process files found in <directory>");
         usage.AppendLine("-f <file>: Process <file>");
         usage.AppendLine("-p: Pause after processing each file");
+        usage.AppendLine("-r: Recover and process deleted Registry keys/values");
         usage.AppendLine(
             "-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
         usage.AppendLine("-a: Only export deleted key/values");

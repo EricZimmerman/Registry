@@ -26,8 +26,7 @@ namespace Registry.Abstractions
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
             NKRecord = nk;
-
-
+            
             Parent = parent;
 
             InternalGUID = Guid.NewGuid().ToString();
@@ -48,14 +47,7 @@ namespace Registry.Abstractions
         public string InternalGUID { get; set; }
 
         public KeyFlagsEnum KeyFlags { get; set; }
-        ///// <summary>
-        /////     When true, this key has been recovered and placed as a subkey to the key referenced by NKRecord.ParentCellIndex.
-        /////     <remarks>
-        /////         The parent key is determined by checking whether ParentCellIndex 1) exists and 2)
-        /////         ParentCellIndex.IsReferenced == true.
-        /////     </remarks>
-        ///// </summary>
-        //public bool IsDeleted { get; set; }
+
 
         /// <summary>
         ///     The name of this key. For the full path, see KeyPath
@@ -81,10 +73,10 @@ namespace Registry.Abstractions
                 if (Parent == null)
                 {
                     //This is the root key
-                    return string.Format(@"{0}", KeyName);
+                    return string.Format("{0}", KeyName);
                 }
 
-                return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
+              return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
             }
 
             set { _keyPath = value; }

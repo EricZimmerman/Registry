@@ -106,11 +106,11 @@ namespace ExampleApp
                 try
                 {
                     fName1Test.Message += (ss, ee) => { DumpConsoleMessage(ee.Detail); };
+                    
+                    fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
 
                     fName1Test.ParseHive();
-                    fName1Test.BuildDeletedRegistryKeys();
-
-
+                 
                     DumpConsoleMessage(string.Format("Finished processing '{0}'", testFile));
                     Console.Title = string.Format("Finished processing '{0}'", testFile);
 
@@ -127,21 +127,11 @@ namespace ExampleApp
                     var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
                     var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
 
-                    //var referencedData = fName1Test.DataRecords.Where(t => t.Value.IsReferenced);
-                    //var freeData = fName1Test.DataRecords.Where(t => t.Value.IsFree);
-
-
                     var goofyCellsShouldBeUsed =
                         fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
-
                     var goofyListsShouldBeUsed =
                         fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-
-
-//                    var goofyDataShouldBeUsed =
-//                        fName1Test.DataRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
-
 
                     var sb = new StringBuilder();
 
@@ -156,7 +146,6 @@ namespace ExampleApp
                             fName1Test.CellRecords.Count(w => w.Value is SKCellRecord),
                             fName1Test.CellRecords.Count(w => w.Value is LKCellRecord)));
                     sb.AppendLine(string.Format("Found {0:N0} List records", fName1Test.ListRecords.Count));
-                    //  sb.AppendLine(string.Format("Found {0:N0} Data records", fName1Test.DataRecords.Count));
 
                     sb.AppendLine();
 
@@ -164,16 +153,17 @@ namespace ExampleApp
                         referencedCells.Count(), referencedCells.Count()/(double) fName1Test.CellRecords.Count));
                     sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
                         referencedList.Count(), referencedList.Count()/(double) fName1Test.ListRecords.Count));
-//                        sb.AppendLine(string.Format("There are {0:N0} data records marked as being referenced ({1:P})",
-//                        referencedData.Count(), referencedData.Count() / (double)fName1Test.DataRecords.Count));
 
-                    sb.AppendLine();
+                    if (result.Value.RecoverDeleted)
+                    {
+                       sb.AppendLine();
                     sb.AppendLine("Free record info");
                     sb.AppendLine(string.Format(
                         "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                         freeCells.Count(), nkFree, vkFree, skFree, lkFree));
                     sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
-//                          sb.AppendLine(string.Format("{0:N0} free Data records", freeData.Count()));
+
+                    }
 
                     sb.AppendLine();
                     sb.AppendLine(string.Format(
@@ -192,9 +182,6 @@ namespace ExampleApp
                         string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
                             fName1Test.ListRecords.Count ==
                             freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
-//                          sb.AppendLine(string.Format("Data:  Free + referenced + marked as in use but not referenced == Total? {0}",
-//                        fName1Test.DataRecords.Count ==
-//                        freeData.Count() + referencedData.Count() + goofyDataShouldBeUsed.Count()));
 
                     DumpConsoleMessage(sb.ToString());
 
@@ -219,10 +206,10 @@ namespace ExampleApp
                         {
                             myName = "_EricZ_all.txt";
                         }
-
-                        DumpConsoleMessage(string.Format("Exporting hive data to '{0}'", myName));
-
+                        
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
+
+                        DumpConsoleMessage(string.Format("Exporting hive data to '{0}'", outfile));
 
                         fName1Test.ExportDataToCommonFormat(outfile, deletedOnly);
                     }

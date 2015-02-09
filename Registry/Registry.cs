@@ -88,6 +88,8 @@ namespace Registry
         public HiveTypeEnum HiveType { get; private set; }
         public string HivePath { get; private set; }
 
+        public bool RecoverDeleted { get; set; }
+
         /// <summary>
         ///     Contains all recovered
         /// </summary>
@@ -147,22 +149,34 @@ namespace Registry
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
         {
+            if (key.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.HasActiveParent) &&
+                key.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.Deleted))
+            {
+                return;
+            }
+
             foreach (var subkey in key.SubKeys)
             {
+                if (subkey.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.HasActiveParent) &&
+              subkey.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.Deleted))
+                {
+                    return;
+                }
+
                 keyCount += 1;
 
-                sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
-                    subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
-                    subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
-
+                    sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
+                        subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
+                        subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                
                 foreach (var val in subkey.Values)
                 {
                     valueCount += 1;
 
-
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
-                        val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
-                        BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
+             
+                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
+                            val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
+                            BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                 }
 
                 DumpKeyCommonFormat(subkey, sw, ref keyCount, ref valueCount);
@@ -187,8 +201,7 @@ namespace Registry
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
 
             KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), key);
-
-
+            
             if (Verbosity == VerbosityEnum.Full)
             {
                 var args = new MessageEventArgs
@@ -203,7 +216,6 @@ namespace Registry
             }
 
             key.KeyFlags = RegistryKey.KeyFlagsEnum.HasActiveParent;
-            //key.KeyFlags = key.KeyFlags | RegistryKey.KeyFlagsEnum.HasActiveParent;
 
             var keys = new List<RegistryKey>();
 
@@ -420,6 +432,11 @@ namespace Registry
         /// <returns></returns>
         protected internal static byte[] ReadBytesFromHive(long offset, int length)
         {
+//            if (offset == 0x70e3020 + 0x1000)
+//            {
+//                Debug.Write(1);
+//            }
+
             var absLen = Math.Abs(length);
             var retArray = new byte[absLen];
             Array.Copy(FileBytes, offset, retArray, 0, absLen);
@@ -440,8 +457,9 @@ namespace Registry
             {
                 sw.AutoFlush = true;
 
-                if (!deletedOnly)
+                if (deletedOnly == false)
                 {
+                    //dump active stuff
                     if (Root.LastWriteTime != null)
                     {
                         KeyCount = 1;
@@ -461,7 +479,7 @@ namespace Registry
 
                     DumpKeyCommonFormat(Root, sw, ref KeyCount, ref ValueCount);
                 }
-
+                
                 var theRest = CellRecords.Where(a => a.Value.IsReferenced == false);
                 //may not need to if we do not care about orphaned values
 
@@ -469,10 +487,13 @@ namespace Registry
                 {
                     if (keyValuePair.Value.Signature == "vk")
                     {
-                        ValueCountDeleted += 1;
+                        
+                            ValueCountDeleted += 1;
                         var val = keyValuePair.Value as VKCellRecord;
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "",
                             val.ValueName, (int) val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
+                      
+                        
                     }
 
                     if (keyValuePair.Value.Signature == "nk")
@@ -597,7 +618,7 @@ namespace Registry
                 {
                     var args = new MessageEventArgs
                     {
-                        Detail = string.Format("Percent done: {0:P}", (double) offsetInHive/hivelen),
+                        Detail = string.Format("hbin header incorrect at offset 0x{0:X}!!! Percent done: {1:P}", offsetInHive,(double) offsetInHive/hivelen),
                         Exception = null,
                         Message = string.Format("hbin header incorrect at offset 0x{0:X}!!!", offsetInHive),
                         MsgType = MessageEventArgs.MsgTypeEnum.Error
@@ -605,6 +626,12 @@ namespace Registry
 
                     OnMessage(args);
 
+                    if (RecoverDeleted) //TODO ? always or only if recoverdeleted
+                    {
+                        //TODO need to try to recover records from the bad chunk
+                    }
+                        
+                    
                     break;
                 }
 
@@ -630,7 +657,7 @@ namespace Registry
 
                 try
                 {
-                    var h = new HBinRecord(rawhbin, offsetInHive - 4096, version);
+                    var h = new HBinRecord(rawhbin, offsetInHive - 4096, version,RecoverDeleted);
 
                     h.Message += (ss, ee) => { OnMessage(ee); };
 
@@ -695,6 +722,7 @@ namespace Registry
 
             OnMessage(_msgArgs);
 
+            Debug.WriteLine("Initial processing complete. Building tree...");
 
             //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
             //here we are looking for the flag
@@ -728,14 +756,15 @@ namespace Registry
 
             var keys = GetSubKeysAndValues(Root);
 
+            Debug.WriteLine("Processing complete!");
 
             Root.SubKeys.AddRange(keys);
 
             _msgArgs = new MessageEventArgs
             {
-                Detail = "Processing complete! Call BuildDeletedRegistryKeys to rebuild deleted record structures",
+                Detail = "Processing complete!",
                 Exception = null,
-                Message = "Processing complete! Call BuildDeletedRegistryKeys to rebuild deleted record structures",
+                Message = "Processing complete!",
                 MsgType = MessageEventArgs.MsgTypeEnum.Info
             };
 
@@ -791,6 +820,11 @@ namespace Registry
                 }
             }
 
+            if (RecoverDeleted)
+            {
+                BuildDeletedRegistryKeys();
+            }
+
 
             return true;
         }
@@ -799,7 +833,7 @@ namespace Registry
         ///     Associates vk records with NK records and builds a heirarchy of nk records
         ///     <remarks>Results of this method will be available in DeletedRegistryKeys</remarks>
         /// </summary>
-        public void BuildDeletedRegistryKeys()
+        private void BuildDeletedRegistryKeys()
         {
             _msgArgs = new MessageEventArgs
             {
@@ -838,49 +872,49 @@ namespace Registry
 
                         DataNode offsetList = null;
 
-                        var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
+                            var size = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096, 4);
 
-                        var sizeNum = Math.Abs(BitConverter.ToUInt32(size, 0));
+                            var sizeNum = Math.Abs(BitConverter.ToUInt32(size, 0));
 
-                        if (sizeNum > regKey.NKRecord.ValueListCount*4 + 4)
-                        {
-                            //ValueListCount is the number of offsets we should be looking for. they are 4 bytes long
-                            //If the size of the data record at regKey.NKRecord.ValueListCellIndex exceeds the total number of bytes plus the size (another 4 bytes), reset it to a more sane value to avoid crazy long reads
-                            sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
-                        }
-
-
-                        try
-                        {
-                            var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
-                                (int) sizeNum);
-
-                            var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
-
-                            offsetList = dr;
-                        }
-                        catch (Exception)
-                        {
-                            //sometimes the data node doesnt have enough data to even do this, or its wrong data
-                            if (Verbosity == VerbosityEnum.Full)
+                            if (sizeNum > regKey.NKRecord.ValueListCount*4 + 4)
                             {
-                                _msgArgs = new MessageEventArgs
-                                {
-                                    Detail =
-                                        string.Format(
-                                            "\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
-                                            nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                    Exception = null,
-                                    Message =
-                                        string.Format(
-                                            "\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
-                                            nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
-                                    MsgType = MessageEventArgs.MsgTypeEnum.Warning
-                                };
-
-                                OnMessage(_msgArgs);
+                                //ValueListCount is the number of offsets we should be looking for. they are 4 bytes long
+                            //If the size of the data record at regKey.NKRecord.ValueListCellIndex exceeds the total number of bytes plus the size (another 4 bytes), reset it to a more sane value to avoid crazy long reads
+                                sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
                             }
-                        }
+
+
+                            try
+                            {
+                                var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
+                                    (int) sizeNum);
+
+                                var dr = new DataNode(rawData, regKey.NKRecord.ValueListCellIndex);
+
+                                offsetList = dr;
+                            }
+                            catch (Exception)
+                            {
+                                //sometimes the data node doesnt have enough data to even do this, or its wrong data
+                                if (Verbosity == VerbosityEnum.Full)
+                                {
+                                    _msgArgs = new MessageEventArgs
+                                    {
+                                        Detail =
+                                            string.Format(
+                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
+                                                nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                        Exception = null,
+                                        Message =
+                                            string.Format(
+                                                "\t**** When getting values for nk record at relative offset 0x{0:X}, not enoughinvalid/invalid data was found at offset 0x{1:X} to look for value offsets. Value recovery is not possible",
+                                                nk.RelativeOffset, regKey.NKRecord.ValueListCellIndex),
+                                        MsgType = MessageEventArgs.MsgTypeEnum.Warning
+                                    };
+
+                                    OnMessage(_msgArgs);
+                                }
+                            }
 
 
                         if (offsetList != null)
@@ -955,11 +989,8 @@ namespace Registry
                                 }
                                 else
                                 {
-                                    //TODO WHAT IS THIS FOR?
                                     associatedVKRecordOffsets.Add(val.RelativeOffset);
-
-                       
-
+                                    
                                     var kv = new KeyValue(val);
 
                                     regKey.Values.Add(kv);
@@ -1007,8 +1038,7 @@ namespace Registry
 
                         OnMessage(_msgArgs);
                     }
-
-
+                    
                     _deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
                 }
                 catch (Exception ex)
@@ -1088,22 +1118,8 @@ namespace Registry
 
                         deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;
 
-
-                        //right now you get the first layer of children but thats it
-
                         UpdateChildPaths(deletedRegistryKey.Value);
-
-                        //foreach (var sk in deletedRegistryKey.Value.SubKeys)
-                        //{
-                        //    sk.KeyPath = string.Format(@"{0}\{1}", deletedRegistryKey.Value.KeyPath,
-                        //        sk.KeyName);
-
-                        //    RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
-                        //    
-                        //    KeyPathKeyMap.Add(sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), sk);
-
-                        //}
-
+                        
                         //add a copy of deletedRegistryKey under its original parent
                         pk.SubKeys.Add(deletedRegistryKey.Value);
 
@@ -1119,7 +1135,7 @@ namespace Registry
                                 deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""),
                                 deletedRegistryKey.Value);
                         }
-
+                            
 
                         if (Verbosity == VerbosityEnum.Full)
                         {
@@ -1175,7 +1191,7 @@ namespace Registry
                 {
                     KeyPathKeyMap.Add(keyNormalized, sk);
                 }
-
+                    
 
                 UpdateChildPaths(sk);
             }
