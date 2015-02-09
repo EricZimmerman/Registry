@@ -134,7 +134,7 @@ namespace Registry
             get { return _softParsingErrors; }
         }
 
-        public static VerbosityEnum Verbosity { get; private set; }
+        public static VerbosityEnum Verbosity { get;  set; }
         public event EventHandler<MessageEventArgs> Message;
 
         protected virtual void OnMessage(MessageEventArgs e)
@@ -642,10 +642,11 @@ namespace Registry
                     var args = new MessageEventArgs
                     {
                         Detail =
-                            string.Format("Size 0x{0:X}\t\t\t\tPercent done: {1:P}", hbinSize,
+                            string.Format("Processing hbin at Absolute offset 0x{0:X} with size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize,
                                 (double) offsetInHive/hivelen),
                         Exception = null,
-                        Message = string.Format("Pulling hbin at offset 0x{0:X}.", offsetInHive),
+                        Message = string.Format("Processing hbin at Absolute offset 0x{0:X} with size 0x{1:X}\t\t\t\tPercent done: {2:P}", offsetInHive, hbinSize,
+                                (double)offsetInHive / hivelen),
                         MsgType = MessageEventArgs.MsgTypeEnum.Info
                     };
 
@@ -771,7 +772,7 @@ namespace Registry
             OnMessage(_msgArgs);
 
             //All processing is complete, so we do some tests to see if we really saw everything
-            if (HiveLength() != TotalBytesRead)
+            if (RecoverDeleted && HiveLength() != TotalBytesRead)
             {
                 var remainingHive = ReadBytesFromHive(TotalBytesRead, (int) (HiveLength() - TotalBytesRead));
 

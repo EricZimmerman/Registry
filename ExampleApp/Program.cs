@@ -108,6 +108,7 @@ namespace ExampleApp
                     fName1Test.Message += (ss, ee) => { DumpConsoleMessage(ee.Detail); };
                     
                     fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
+                    RegistryHive.Verbosity = result.Value.Verbose ? RegistryHive.VerbosityEnum.Full : RegistryHive.VerbosityEnum.Normal;
 
                     fName1Test.ParseHive();
                  

@@ -146,6 +146,8 @@ namespace Registry.Other
 
             RegistryHive.TotalBytesRead += 0x20;
 
+           
+
             while (offsetInHbin < Size)
             {
                 //Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
