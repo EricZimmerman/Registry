@@ -146,18 +146,21 @@ namespace Registry.Other
 
             RegistryHive.TotalBytesRead += 0x20;
 
+//            if (AbsoluteOffset == 0x6000)
+//            Debug.Write(1);
            
 
             while (offsetInHbin < Size)
             {
-                //Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
+//                Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
+//                Debug.WriteLine("abs off is 0x{0:X8}", offsetInHbin + RelativeOffset + 0x1000);
                 //if (offsetInHbin == 0x00005B08)
                 //    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
 
-//                if (offsetInHbin + RelativeOffset == 0x70e3020)
-//                {
-//                    Debug.Write(1);
-//                }
+                //                if (offsetInHbin + RelativeOffset == 0x70e3020)
+                //                {
+                //                    Debug.Write(1);
+                //                }
 
 
                 var recordSize = BitConverter.ToUInt32(_rawBytes, offsetInHbin);
@@ -201,11 +204,11 @@ namespace Registry.Other
                     {
                         Detail =
                             string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000),
                         Exception = null,
                         Message =
                             string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset),
+                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000),
                         MsgType = MessageEventArgs.MsgTypeEnum.Info
                     };
 

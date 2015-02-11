@@ -107,7 +107,8 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclRevision));
+            sb.AppendLine(string.Format("ACL Revision: 0x{0:X}", AclRevision));
+            sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclSize));
             sb.AppendLine(string.Format("ACL Type: {0}", ACLType));
 
             sb.AppendLine(string.Format("ACE Records Count: {0}", AceCount));

@@ -364,17 +364,17 @@ namespace Registry.Cells
                 //When records ARE free, different rules apply, so we process thsoe all at once later
                 Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
             }
-            else
-            {
-                //sometimes we get a huge chunk of rawBytes here, so truncate it appropriately
-                if (rawBytes.Length > actualPaddingOffset)
-                {
-                    var tempBytes = new byte[actualPaddingOffset];
-
-                    Array.Copy(rawBytes, 0, tempBytes, 0, (long) actualPaddingOffset);
-                    RawBytes = tempBytes;
-                }
-            }
+//            else
+//            {
+//                //sometimes we get a huge chunk of rawBytes here, so truncate it appropriately
+//                if (rawBytes.Length > actualPaddingOffset)
+//                {
+//                    var tempBytes = new byte[actualPaddingOffset];
+//
+//                    Array.Copy(rawBytes, 0, tempBytes, 0, (long) actualPaddingOffset);
+//                    RawBytes = tempBytes;
+//                }
+//            }
         }
 
         public string Padding { get; }
