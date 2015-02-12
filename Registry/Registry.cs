@@ -529,7 +529,7 @@ namespace Registry
             return null;
         }
 
-        public RegistryKey FindKey(long relativeOffset, RegistryKey parent)
+        public RegistryKey FindKey(long relativeOffset)
         {
             if (RelativeOffsetKeyMap.ContainsKey(relativeOffset))
             {
@@ -1112,7 +1112,7 @@ namespace Registry
                     if (parentNk.IsReferenced && parentNk.IsFree == false)
                     {
                         //parent exists in our primary tree, so get that key
-                        var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex, Root);
+                        var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex);
 
                         deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
                             deletedRegistryKey.Value.KeyName);

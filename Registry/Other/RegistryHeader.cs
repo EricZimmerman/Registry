@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using NFluent;
 
@@ -43,16 +44,30 @@ namespace Registry.Other
                 .Replace("\0", string.Empty)
                 .Replace("\\??\\", string.Empty);
 
-            CheckSum = BitConverter.ToUInt32(rawBytes, 0x1fc); //TODO 4.27 The “regf” Checksum 
+           
+
+            CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc); //TODO 4.27 The “regf” Checksum 
+
+            var index = 0;
+            var xsum = 0;
+            while (index <= 0x1fb)
+            {
+                xsum ^= BitConverter.ToInt32(rawBytes, index);
+                index += 0x04;
+            }
+            CalculatedChecksum = xsum;
 
             BootType = BitConverter.ToUInt32(rawBytes, 0xff8);
             BootRecover = BitConverter.ToUInt32(rawBytes, 0xffc);
         }
 
+        public int CalculatedChecksum;
+
+
         // public properties...
         public uint BootRecover { get; }
         public uint BootType { get; }
-        public uint CheckSum { get; }
+        public int CheckSum { get; }
         public uint Cluster { get; }
 
         /// <summary>
@@ -89,6 +104,13 @@ namespace Registry.Other
         public string Signature { get; }
 
         public uint Type { get; }
+
+        public bool ValidateCheckSum()
+        {
+            return CheckSum == CalculatedChecksum;
+        }
+
+        
 
         public override string ToString()
         {
@@ -127,6 +149,10 @@ namespace Registry.Other
 
             sb.AppendLine();
             sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CheckSum));
+            sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CalculatedChecksum));
+            sb.AppendLine(string.Format("CheckSums match: {0}", CalculatedChecksum == CheckSum));
+
+
 
             sb.AppendLine();
             sb.AppendLine(string.Format("BootType: 0x{0:X}", BootType));
