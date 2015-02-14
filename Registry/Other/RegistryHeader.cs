@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using NFluent;
 
@@ -10,6 +9,7 @@ namespace Registry.Other
     // public classes...
     public class RegistryHeader
     {
+        public int CalculatedChecksum;
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="RegistryHeader" /> class.
@@ -27,8 +27,8 @@ namespace Registry.Other
 
             LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
 
-            MajorVersion = BitConverter.ToUInt32(rawBytes, 0x14);
-            MinorVersion = BitConverter.ToUInt32(rawBytes, 0x18);
+            MajorVersion = BitConverter.ToInt32(rawBytes, 0x14);
+            MinorVersion = BitConverter.ToInt32(rawBytes, 0x18);
 
             Type = BitConverter.ToUInt32(rawBytes, 0x1c);
 
@@ -44,7 +44,6 @@ namespace Registry.Other
                 .Replace("\0", string.Empty)
                 .Replace("\\??\\", string.Empty);
 
-           
 
             CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc); //TODO 4.27 The “regf” Checksum 
 
@@ -60,9 +59,6 @@ namespace Registry.Other
             BootType = BitConverter.ToUInt32(rawBytes, 0xff8);
             BootRecover = BitConverter.ToUInt32(rawBytes, 0xffc);
         }
-
-        public int CalculatedChecksum;
-
 
         // public properties...
         public uint BootRecover { get; }
@@ -87,8 +83,8 @@ namespace Registry.Other
         /// </summary>
         public uint Length { get; }
 
-        public uint MajorVersion { get; }
-        public uint MinorVersion { get; }
+        public int MajorVersion { get; }
+        public int MinorVersion { get; }
 
         /// <summary>
         ///     The offset in the first hbin record where root key is found
@@ -109,8 +105,6 @@ namespace Registry.Other
         {
             return CheckSum == CalculatedChecksum;
         }
-
-        
 
         public override string ToString()
         {
@@ -151,7 +145,6 @@ namespace Registry.Other
             sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CheckSum));
             sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CalculatedChecksum));
             sb.AppendLine(string.Format("CheckSums match: {0}", CalculatedChecksum == CheckSum));
-
 
 
             sb.AppendLine();

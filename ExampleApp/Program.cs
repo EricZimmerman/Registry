@@ -7,6 +7,11 @@ using System.Text;
 using CommandLine;
 using Registry;
 using Registry.Cells;
+using NLog.Config;
+using NLog.Targets;
+using NLog.Targets.Wrappers;
+using NLog;
+using System.Reflection;
 
 // namespaces...
 
@@ -15,19 +20,88 @@ namespace ExampleApp
     // internal classes...
     internal class Program
     {
-        private static void DumpConsoleMessage(string msg)
-        {
-            if (msg.Length > 0)
-            {
-                Console.WriteLine("{0}: {1}", DateTimeOffset.Now, msg);
-            }
-            else
-            {
-                Console.WriteLine();
-            }
-        }
+        //private static void DumpConsoleMessage(string msg)
+        //{
+        //    if (msg.Length > 0)
+        //    {
+        //        Console.WriteLine("{0}: {1}", DateTimeOffset.Now, msg);
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine();
+        //    }
+        //}
 
         // private methods...
+
+            private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)
+        {
+            var config = new LoggingConfiguration();
+
+            // Step 2. Create targets and add them to the configuration 
+            var consoleTarget = new ColoredConsoleTarget();
+
+            
+
+            //var consoleWrapper = new AsyncTargetWrapper();
+            //consoleWrapper.WrappedTarget = consoleTarget;
+            //consoleWrapper.QueueLimit = 5000;
+            //consoleWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+
+       //     config.AddTarget("console", consoleWrapper);
+            config.AddTarget("console", consoleTarget);
+
+            var fileTarget = new FileTarget();
+
+            //var fileWrapper = new AsyncTargetWrapper();
+            //fileWrapper.WrappedTarget = fileTarget;
+            //fileWrapper.QueueLimit = 5000;
+            //fileWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+
+            //config.AddTarget("file", fileWrapper);
+            config.AddTarget("file", fileTarget);
+
+            //if trace use expanded callstack
+
+            var callsite = "${callsite:className=false}";
+            if (level > 1)
+            {
+                callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";
+            }
+
+            consoleTarget.Layout =@"${longdate} ${logger} " + callsite + " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
+            fileTarget.FileName = string.Format("{0}/{1}_log.txt",logFilePath,Guid.NewGuid().ToString());// "${basedir}/file.txt";
+
+            fileTarget.Layout = @"${longdate} ${logger} " + callsite + " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
+            var loglevel = LogLevel.Info;
+
+            switch (level)
+            {
+                case 1:
+                    loglevel = LogLevel.Debug;
+                    break;
+                    
+                case 2:
+                    loglevel = LogLevel.Trace;
+                    break;
+                default:
+                    break;
+            }
+
+            // Step 4. Define rules
+         //   var rule1 = new LoggingRule("*", loglevel, consoleWrapper);
+            var rule1 = new LoggingRule("*", loglevel, consoleTarget);
+            config.LoggingRules.Add(rule1);
+
+            //var rule2 = new LoggingRule("*", loglevel, fileWrapper);
+            var rule2 = new LoggingRule("*", loglevel, fileTarget);
+            config.LoggingRules.Add(rule2);
+
+            return config;
+        }
+
         private static void Main(string[] args)
         {
             var testFiles = new List<string>();
@@ -86,33 +160,52 @@ namespace ExampleApp
                 Environment.Exit(1);
             }
 
+            var verboseLevel = result.Value.VerboseLevel;
+            if (verboseLevel < 0)
+            {
+                verboseLevel = 0;
+            }
+            if (verboseLevel >2)
+            {
+                verboseLevel = 2;
+            }
+
+            var config = GetNlogConfig(verboseLevel,Path.GetDirectoryName (Assembly.GetExecutingAssembly().Location));
+            LogManager.Configuration = config;
+
+            var logger = LogManager.GetCurrentClassLogger();
 
             foreach (var testFile in testFiles)
             {
                 if (File.Exists(testFile) == false)
                 {
-                    DumpConsoleMessage(string.Format("'{0}' does not exist!", testFile));
+                    logger.Error("'{0}' does not exist!", testFile);
                     continue;
                 }
 
-                DumpConsoleMessage(string.Format("Processing '{0}'", testFile));
+                logger.Info("Processing '{0}'", testFile);
                 Console.Title = string.Format("Processing '{0}'", testFile);
 
                 var fName1Test = new RegistryHive(testFile);
+                RegistryHive.NlogConfig = config;
 
                 var sw = new Stopwatch();
                 sw.Start();
 
                 try
                 {
-                    fName1Test.Message += (ss, ee) => { DumpConsoleMessage(ee.Detail); };
+                    //fName1Test.Message += (ss, ee) => {
+                    //    //    DumpConsoleMessage(ee.Detail);
+                    //    Console.WriteLine("************* !!!!!!!!!!!!" + ee.Detail);
+
+                    //};
                     
                     fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
-                    RegistryHive.Verbosity = result.Value.Verbose ? RegistryHive.VerbosityEnum.Full : RegistryHive.VerbosityEnum.Normal;
+                                       
 
                     fName1Test.ParseHive();
-                 
-                    DumpConsoleMessage(string.Format("Finished processing '{0}'", testFile));
+
+                    logger.Info("Finished processing '{0}'", testFile);
                     Console.Title = string.Format("Finished processing '{0}'", testFile);
 
                     sw.Stop();
@@ -139,7 +232,7 @@ namespace ExampleApp
                     sb.AppendLine("Results:");
                     sb.AppendLine();
 
-                    sb.AppendLine(string.Format("Found {0:N0} hbin records", fName1Test.HBinRecords.Count));
+                    sb.AppendLine(string.Format("Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}", fName1Test.HBinRecordCount, fName1Test.HBinRecordTotalSize, fName1Test.Header.Length));
                     sb.AppendLine(
                         string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                             fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
@@ -157,12 +250,12 @@ namespace ExampleApp
 
                     if (result.Value.RecoverDeleted)
                     {
-                       sb.AppendLine();
-                    sb.AppendLine("Free record info");
-                    sb.AppendLine(string.Format(
+                        sb.AppendLine();
+                        sb.AppendLine("Free record info");
+                        sb.AppendLine(string.Format(
                         "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                         freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-                    sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
+                        sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
 
                     }
 
@@ -184,12 +277,12 @@ namespace ExampleApp
                             fName1Test.ListRecords.Count ==
                             freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
 
-                    DumpConsoleMessage(sb.ToString());
+                    logger.Info(sb.ToString());
 
 
                     if (result.Value.ExportHiveData)
                     {
-                        DumpConsoleMessage("");
+                        Console.WriteLine();
 
 
                         var baseDir = Path.GetDirectoryName(testFile);
@@ -210,7 +303,7 @@ namespace ExampleApp
                         
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
 
-                        DumpConsoleMessage(string.Format("Exporting hive data to '{0}'", outfile));
+                        logger.Info("Exporting hive data to '{0}'", outfile);
 
                         fName1Test.ExportDataToCommonFormat(outfile, deletedOnly);
                     }
@@ -221,7 +314,7 @@ namespace ExampleApp
                 }
 
 
-                Console.WriteLine("Processing took {0:N4} seconds", sw.Elapsed.TotalSeconds);
+                logger.Info("Processing took {0:N4} seconds\r\n", sw.Elapsed.TotalSeconds);
 
                 Console.WriteLine();
                 Console.WriteLine();

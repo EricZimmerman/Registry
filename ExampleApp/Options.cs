@@ -29,9 +29,9 @@ internal class Options
     HelpText = "If true, recover and process deleted Registry keys/values")]
     public bool RecoverDeleted { get; set; }
 
-    [Option('v', DefaultValue = false, Required = false,
-HelpText = "If true, display more messages when parsing")]
-    public bool Verbose { get; set; }
+    [Option('v', DefaultValue = 0, Required = false,
+HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
+    public int VerboseLevel { get; set; }
 
 
     public string GetUsage()
@@ -42,7 +42,7 @@ HelpText = "If true, display more messages when parsing")]
         usage.AppendLine("-f <file>: Process <file>");
         usage.AppendLine("-p: Pause after processing each file");
         usage.AppendLine("-r: Recover and process deleted Registry keys/values");
-        usage.AppendLine("-v: Be verbose when parsing");
+        usage.AppendLine("-v: Verbosity level. 0 = Info, 1 = Debug, 2 = Trace");
         usage.AppendLine(
             "-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
         usage.AppendLine("-a: Only export deleted key/values");

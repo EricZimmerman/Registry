@@ -26,7 +26,7 @@ namespace Registry.Abstractions
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
             NKRecord = nk;
-            
+
             Parent = parent;
 
             InternalGUID = Guid.NewGuid().ToString();
@@ -47,7 +47,6 @@ namespace Registry.Abstractions
         public string InternalGUID { get; set; }
 
         public KeyFlagsEnum KeyFlags { get; set; }
-
 
         /// <summary>
         ///     The name of this key. For the full path, see KeyPath
@@ -76,7 +75,7 @@ namespace Registry.Abstractions
                     return string.Format("{0}", KeyName);
                 }
 
-              return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
+                return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
             }
 
             set { _keyPath = value; }

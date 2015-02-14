@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
+using NLog;
 using Registry.Cells;
 using Registry.Lists;
 
@@ -30,21 +30,22 @@ namespace Registry.Other
             "vk"
         };
 
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly bool _recoverDeleted;
-        private readonly float _version;
+        private readonly int _minorVersion;
         private byte[] _rawBytes;
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
         ///     <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
-        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, float version, bool recoverDeleted)
+        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, int minorVersion, bool recoverDeleted)
         {
             RelativeOffset = relativeOffset;
 
             _recoverDeleted = recoverDeleted;
 
-            _version = version;
+            _minorVersion = minorVersion;
 
             _rawBytes = rawBytes;
 
@@ -56,6 +57,8 @@ namespace Registry.Other
             //   Debug.WriteLine("");
 
             Check.That(Signature).IsEqualTo("hbin");
+
+            _logger.Debug("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -148,7 +151,7 @@ namespace Registry.Other
 
 //            if (AbsoluteOffset == 0x6000)
 //            Debug.Write(1);
-           
+
 
             while (offsetInHbin < Size)
             {
@@ -198,21 +201,15 @@ namespace Registry.Other
                 }
 
                 //only process records with 2 letter signatures. this avoids crazy output for data cells
-                if (foundMatch && RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
+                if (foundMatch)
                 {
-                    var args = new MessageEventArgs
-                    {
-                        Detail =
-                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000),
-                        Exception = null,
-                        Message =
-                            string.Format("\tProcessing {0} record at offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                                cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000),
-                        MsgType = MessageEventArgs.MsgTypeEnum.Info
-                    };
-
-                    OnMessage(args);
+                    _logger.Debug("Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                        cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                }
+                else
+                {
+                    _logger.Debug("Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
+                        offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
                 }
 
                 ICellTemplate cellRecord = null;
@@ -255,7 +252,6 @@ namespace Registry.Other
                                 cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
 
-
                             break;
                         case "sk":
                             cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
@@ -265,9 +261,8 @@ namespace Registry.Other
                         case "vk":
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
-                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset, _version);
+                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset, _minorVersion);
                             }
-
 
                             break;
 
@@ -288,30 +283,19 @@ namespace Registry.Other
                     {
                         RegistryHive._hardParsingErrors += 1;
 
-                        var args = new MessageEventArgs
-                        {
-                            Detail =
-                                string.Format(
-                                    "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
-                                    cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                                    BitConverter.ToString(rawRecord)),
-                            Exception = ex,
-                            Message = string.Format(
-                                "Cell signature: {0}, Absolute Offset: 0x{1:X}, Error: {2}, Stack: {3}. Hex: {4}",
-                                cellSignature, offsetInHbin + RelativeOffset + 4096, ex.Message, ex.StackTrace,
-                                BitConverter.ToString(rawRecord)),
-                            MsgType = MessageEventArgs.MsgTypeEnum.Error
-                        };
-
-                        if (cellSignature == "nk")
-                        {
-                            Debug.WriteLine("Unfree NK");
-                        }
-
-                        OnMessage(args);
+                        _logger.Error(
+                            string.Format(
+                                "Hard error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",
+                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),
+                            ex);
                     }
                     else
                     {
+                        _logger.Warn(
+                            string.Format(
+                                "Soft error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",
+                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),
+                            ex);
                         //This record is marked 'Free' so its not as important of an error
                         RegistryHive._softParsingErrors += 1;
                     }
@@ -365,7 +349,7 @@ namespace Registry.Other
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
             // a list of our known signatures, so we can only show when these are found vs data cells
-            
+
             var records = new List<IRecordBase>();
 
             var offsetList = new List<int>();
@@ -375,7 +359,7 @@ namespace Registry.Other
             var sig = string.Empty;
             byte[] raw = null;
 
-
+            _logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
             try
             {
                 var matchResult = _recordPattern.Match(valString);
@@ -418,6 +402,7 @@ namespace Registry.Other
                     //finaly go back 3 to get to the start of the record
                     var actualStart = (i/3) - 3;
 
+
                     var size = BitConverter.ToUInt32(remainingData, actualStart);
 
                     if (size < 3 || remainingData.Length - actualStart < size)
@@ -430,8 +415,8 @@ namespace Registry.Other
 
                     Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
 
-
                     sig = Encoding.ASCII.GetString(raw, 4, 2);
+
 
                     switch (sig)
                     {
@@ -444,6 +429,8 @@ namespace Registry.Other
                             var nk = new NKCellRecord(raw, relativeoffset + actualStart);
                             if (nk.LastWriteTimestamp.Year > 1700)
                             {
+                                _logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
+                                    relativeoffset + actualStart + 0x1000);
                                 records.Add(nk);
                             }
 
@@ -454,24 +441,32 @@ namespace Registry.Other
                                 //cant have a record shorter than this, even when no name is present
                                 continue;
                             }
-                            var vk = new VKCellRecord(raw, relativeoffset + actualStart, _version);
+                            var vk = new VKCellRecord(raw, relativeoffset + actualStart, _minorVersion);
+                            _logger.Debug("Found vk record in slack at absolute offset 0x{0:X}",
+                                relativeoffset + actualStart + 0x1000);
                             records.Add(vk);
 
                             break;
                         case "ri":
                             var ri = new RIListRecord(raw, relativeoffset + actualStart);
+                            _logger.Debug("Found ri record in slack at absolute offset 0x{0:X}",
+                                relativeoffset + actualStart + 0x1000);
                             records.Add(ri);
 
                             break;
 
                         case "sk":
                             var sk = new SKCellRecord(raw, relativeoffset + actualStart);
+                            _logger.Debug("Found sk record in slack at absolute offset 0x{0:X}",
+                                relativeoffset + actualStart + 0x1000);
                             records.Add(sk);
 
                             break;
 
                         case "lf":
                             var lf = new LxListRecord(raw, relativeoffset + actualStart);
+                            _logger.Debug("Found lf record in slack at absolute offset 0x{0:X}",
+                                relativeoffset + actualStart + 0x1000);
                             records.Add(lf);
 
                             break;
@@ -505,25 +500,10 @@ namespace Registry.Other
                     // this is a corrupted/unusable record
                     //TODO do we add a placeholder here? probably not since its free
 
-                    if (RegistryHive.Verbosity == RegistryHive.VerbosityEnum.Full)
-                    {
-                        var args = new MessageEventArgs
-                        {
-                            Detail =
-                                string.Format(
-                                    "{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
-                                    sig,
-                                    relativeoffset + (i/3) - 3, ex.Message, raw.Length),
-                            Exception = ex,
-                            Message =
-                                string.Format(
-                                    "{0}: At relativeoffset 0x{1:X8}, an error happened: {2}. LENGTH: 0x{3:x}",
-                                    sig,
-                                    relativeoffset + (i/3) - 3, ex.Message, raw.Length),
-                            MsgType = MessageEventArgs.MsgTypeEnum.Error
-                        };
-                        OnMessage(args);
-                    }
+                    _logger.Warn(
+                        string.Format(
+                            "When recovering from slack, cell signature {0}, at absolute offset 0x{1:X8}, an error happened! Length: 0x{2:x}",
+                            sig, relativeoffset + (i/3) - 3 + 0x1000, raw.Length), ex);
 
                     RegistryHive._softParsingErrors += 1;
                 }
