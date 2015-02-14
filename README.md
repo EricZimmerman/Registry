@@ -14,6 +14,23 @@ For discussion and design decisions, see http://binaryforay.blogspot.com/.
 5. Performance
 6. Ability to compare results with other registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
 
+## General usage  ##
+The main Registry class has an LoggingConfiguration propery, NlogConfig. This should be set to a valid NLog config after instantiating a Registry object in order for the class to actually log something. This let you use any of the targets Nlog supports vs anything I could come up with plus the code is a lot cleaner.
+
+If you look at ExampleApp source you can see an example of how to implement both a ColoredConsole and File target.
+
+If you use -v 1 or -v 2 with ExampleApp you will get a large volume of information as the parser does its work. Of course higher levels of verbosity slow things down, but if you run into a problem, its a nice thing to have.
+
+Registry will honor whatever LogLevels exist in your Nlog config.
+
+Once that is set, its as easy as creating a RegistryHive object, deciding on whether or not to recover deleted keys, and calling ParseHive:
+
+```csharp
+var hive = new RegistryHive(pathToSomeFile);
+hive.RecoverDeleted = true;
+hive.ParseHive();
+```
+
 **Example application output**
 
 NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
