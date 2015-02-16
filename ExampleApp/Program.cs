@@ -53,7 +53,7 @@ namespace ExampleApp
             }
 
             var callsite = "${callsite:className=false}";
-            if (loglevel > LogLevel.Trace)
+            if (loglevel < LogLevel.Trace)
             {
                 //if trace use expanded callstack
                 callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";

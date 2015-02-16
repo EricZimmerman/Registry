@@ -71,10 +71,10 @@ namespace Registry.Cells
             Size = BitConverter.ToInt32(rawBytes, 0);
 
 
-            if (AbsoluteOffset == 0x156B0)
-            {
-                Debug.Write(1);
-            }
+//            if (AbsoluteOffset == 0x156B0)
+//            {
+//                Debug.Write(1);
+//            }
 
             Check.That(Signature).IsEqualTo("vk");
 
