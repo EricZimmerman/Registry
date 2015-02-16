@@ -201,7 +201,6 @@ namespace ExampleApp
                     //};
                     
                     fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
-                                       
 
                     fName1Test.ParseHive();
 
