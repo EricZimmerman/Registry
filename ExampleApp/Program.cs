@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using CommandLine;
-using Registry;
-using Registry.Cells;
+using NLog;
 using NLog.Config;
 using NLog.Targets;
-using NLog.Targets.Wrappers;
-using NLog;
-using System.Reflection;
+using Registry;
+using Registry.Cells;
 
 // namespaces...
 
@@ -34,46 +33,9 @@ namespace ExampleApp
 
         // private methods...
 
-            private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)
+        private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)
         {
             var config = new LoggingConfiguration();
-
-            // Step 2. Create targets and add them to the configuration 
-            var consoleTarget = new ColoredConsoleTarget();
-
-            
-
-            //var consoleWrapper = new AsyncTargetWrapper();
-            //consoleWrapper.WrappedTarget = consoleTarget;
-            //consoleWrapper.QueueLimit = 5000;
-            //consoleWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
-
-       //     config.AddTarget("console", consoleWrapper);
-            config.AddTarget("console", consoleTarget);
-
-            var fileTarget = new FileTarget();
-
-            //var fileWrapper = new AsyncTargetWrapper();
-            //fileWrapper.WrappedTarget = fileTarget;
-            //fileWrapper.QueueLimit = 5000;
-            //fileWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
-
-            //config.AddTarget("file", fileWrapper);
-            config.AddTarget("file", fileTarget);
-
-            //if trace use expanded callstack
-
-            var callsite = "${callsite:className=false}";
-            if (level > 1)
-            {
-                callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";
-            }
-
-            consoleTarget.Layout =@"${longdate} ${logger} " + callsite + " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
-
-            fileTarget.FileName = string.Format("{0}/{1}_log.txt",logFilePath,Guid.NewGuid().ToString());// "${basedir}/file.txt";
-
-            fileTarget.Layout = @"${longdate} ${logger} " + callsite + " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
 
             var loglevel = LogLevel.Info;
 
@@ -82,7 +44,7 @@ namespace ExampleApp
                 case 1:
                     loglevel = LogLevel.Debug;
                     break;
-                    
+
                 case 2:
                     loglevel = LogLevel.Trace;
                     break;
@@ -90,14 +52,59 @@ namespace ExampleApp
                     break;
             }
 
+            var callsite = "${callsite:className=false}";
+            if (loglevel > LogLevel.Trace)
+            {
+                //if trace use expanded callstack
+                callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";
+            }
+
+            // Step 2. Create targets and add them to the configuration 
+            var consoleTarget = new ColoredConsoleTarget();
+
+            //var consoleWrapper = new AsyncTargetWrapper();
+            //consoleWrapper.WrappedTarget = consoleTarget;
+            //consoleWrapper.QueueLimit = 5000;
+            //consoleWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+
+            //     config.AddTarget("console", consoleWrapper);
+            config.AddTarget("console", consoleTarget);
+
+
+            if (logFilePath != null)
+            {
+                if (Directory.Exists(logFilePath))
+                {
+                    var fileTarget = new FileTarget();
+
+                    //var fileWrapper = new AsyncTargetWrapper();
+                    //fileWrapper.WrappedTarget = fileTarget;
+                    //fileWrapper.QueueLimit = 5000;
+                    //fileWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+
+                    //config.AddTarget("file", fileWrapper);
+                    config.AddTarget("file", fileTarget);
+
+                    fileTarget.FileName = string.Format("{0}/{1}_log.txt", logFilePath, Guid.NewGuid());
+                        // "${basedir}/file.txt";
+
+                    fileTarget.Layout = @"${longdate} ${logger} " + callsite +
+                                        " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
+                    //var rule2 = new LoggingRule("*", loglevel, fileWrapper);
+                    var rule2 = new LoggingRule("*", loglevel, fileTarget);
+                    config.LoggingRules.Add(rule2);
+                }
+            }
+
+            consoleTarget.Layout = @"${longdate} ${logger} " + callsite +
+                                   " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
             // Step 4. Define rules
-         //   var rule1 = new LoggingRule("*", loglevel, consoleWrapper);
+            //   var rule1 = new LoggingRule("*", loglevel, consoleWrapper);
             var rule1 = new LoggingRule("*", loglevel, consoleTarget);
             config.LoggingRules.Add(rule1);
 
-            //var rule2 = new LoggingRule("*", loglevel, fileWrapper);
-            var rule2 = new LoggingRule("*", loglevel, fileTarget);
-            config.LoggingRules.Add(rule2);
 
             return config;
         }
@@ -165,12 +172,12 @@ namespace ExampleApp
             {
                 verboseLevel = 0;
             }
-            if (verboseLevel >2)
+            if (verboseLevel > 2)
             {
                 verboseLevel = 2;
             }
 
-            var config = GetNlogConfig(verboseLevel,Path.GetDirectoryName (Assembly.GetExecutingAssembly().Location));
+            var config = GetNlogConfig(verboseLevel, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
             LogManager.Configuration = config;
 
             var logger = LogManager.GetCurrentClassLogger();
@@ -199,7 +206,7 @@ namespace ExampleApp
                     //    Console.WriteLine("************* !!!!!!!!!!!!" + ee.Detail);
 
                     //};
-                    
+
                     fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
 
                     fName1Test.ParseHive();
@@ -231,7 +238,10 @@ namespace ExampleApp
                     sb.AppendLine("Results:");
                     sb.AppendLine();
 
-                    sb.AppendLine(string.Format("Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}", fName1Test.HBinRecordCount, fName1Test.HBinRecordTotalSize, fName1Test.Header.Length));
+                    sb.AppendLine(
+                        string.Format(
+                            "Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}",
+                            fName1Test.HBinRecordCount, fName1Test.HBinRecordTotalSize, fName1Test.Header.Length));
                     sb.AppendLine(
                         string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                             fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
@@ -252,10 +262,9 @@ namespace ExampleApp
                         sb.AppendLine();
                         sb.AppendLine("Free record info");
                         sb.AppendLine(string.Format(
-                        "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-                        freeCells.Count(), nkFree, vkFree, skFree, lkFree));
+                            "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+                            freeCells.Count(), nkFree, vkFree, skFree, lkFree));
                         sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
-
                     }
 
                     sb.AppendLine();
@@ -299,7 +308,7 @@ namespace ExampleApp
                         {
                             myName = "_EricZ_all.txt";
                         }
-                        
+
                         var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
 
                         logger.Info("Exporting hive data to '{0}'", outfile);
