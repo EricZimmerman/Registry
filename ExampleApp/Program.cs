@@ -19,18 +19,6 @@ namespace ExampleApp
     // internal classes...
     internal class Program
     {
-        //private static void DumpConsoleMessage(string msg)
-        //{
-        //    if (msg.Length > 0)
-        //    {
-        //        Console.WriteLine("{0}: {1}", DateTimeOffset.Now, msg);
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine();
-        //    }
-        //}
-
         // private methods...
 
         private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)

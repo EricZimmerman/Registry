@@ -63,6 +63,14 @@ namespace Registry
 
             HivePath = Filename;
 
+            if (!HasValidHeader(fileName))
+            {
+                _logger.Error("'{0}' is not a Registry hive (bad signature)",fileName);
+
+                throw new Exception(string.Format("'{0}' is not a Registry hive (bad signature)", fileName));
+            }
+
+
             _logger.Debug("Set HivePath to {0}", Filename);
 
             CellRecords = new Dictionary<long, ICellTemplate>();
@@ -83,6 +91,21 @@ namespace Registry
 
             DeletedRegistryKeys = new List<RegistryKey>();
             UnassociatedRegistryValues = new List<KeyValue>();
+        }
+
+        public static bool HasValidHeader(string filename)
+        {
+            var fileStream = new FileStream(filename, FileMode.Open);
+            var binaryReader = new BinaryReader(fileStream);
+
+            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            var sig = Encoding.ASCII.GetString(binaryReader.ReadBytes(4));
+
+            binaryReader.Close();
+            fileStream.Close();
+
+            return sig.Equals("regf");
         }
 
         public static LoggingConfiguration NlogConfig
