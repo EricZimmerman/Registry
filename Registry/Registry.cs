@@ -127,18 +127,18 @@ namespace Registry
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
-        public List<KeyValue> UnassociatedRegistryValues { get; }
+        public List<KeyValue> UnassociatedRegistryValues { get;  private set;}
 
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get; }
+        public Dictionary<long, ICellTemplate> CellRecords { get;  private set;}
 
         /// <summary>
         ///     List of all data nodes, both in use and free, as found in the hive
         /// </summary>
         //  public Dictionary<long, DataNode> DataRecords { get; private set; }
-        public string Filename { get; }
+        public string Filename { get;  private set;}
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -155,7 +155,7 @@ namespace Registry
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get; }
+        public Dictionary<long, IListTemplate> ListRecords { get;  private set;}
 
         public RegistryKey Root { get; private set; }
 

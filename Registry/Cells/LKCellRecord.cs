@@ -153,14 +153,14 @@ namespace Registry.Cells
         ///         slack slace in the data node when they hold classnames
         ///     </remarks>
         /// </summary>
-        public uint ClassCellIndex { get; }
+        public uint ClassCellIndex { get;  private set;}
 
         /// <summary>
         ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
-        public ushort ClassLength { get; }
+        public ushort ClassLength { get;  private set;}
 
-        public byte Debug { get; }
+        public byte Debug { get;  private set;}
 
         public FlagEnum Flags
         {
@@ -180,18 +180,18 @@ namespace Registry.Cells
             }
         }
 
-        public uint MaximumClassLength { get; }
-        public ushort MaximumNameLength { get; }
-        public uint MaximumValueDataLength { get; }
-        public uint MaximumValueNameLength { get; }
+        public uint MaximumClassLength { get;  private set;}
+        public ushort MaximumNameLength { get;  private set;}
+        public uint MaximumValueDataLength { get;  private set;}
+        public uint MaximumValueNameLength { get;  private set;}
 
         /// <summary>
         ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
-        public string Name { get; }
+        public string Name { get;  private set;}
 
-        public ushort NameLength { get; }
-        public string Padding { get; }
+        public ushort NameLength { get;  private set;}
+        public string Padding { get;  private set;}
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -204,7 +204,7 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the security record for this record
         /// </summary>
-        public uint SecurityCellIndex { get; }
+        public uint SecurityCellIndex { get;  private set;}
 
         /// <summary>
         ///     When true, this key has been deleted
@@ -231,16 +231,17 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the root cell this record is linked to.
         /// </summary>
-        public uint RootCellIndex { get; }
+        public uint RootCellIndex { get;  private set;}
 
-        public uint HivePointer { get; }
-        public int UserFlags { get; }
-        public int VirtualControlFlags { get; }
-        public uint WorkVar { get; }
+        public uint HivePointer { get;  private set;}
+        public int UserFlags { get;  private set;}
+        public int VirtualControlFlags { get;  private set;}
+        public uint WorkVar { get;  private set;}
         // public properties...
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         public bool IsFree
@@ -249,12 +250,13 @@ namespace Registry.Cells
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  private set;}
+        public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
         public int Size

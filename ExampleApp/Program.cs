@@ -181,14 +181,16 @@ namespace ExampleApp
                 logger.Info("Processing '{0}'", testFile);
                 Console.Title = string.Format("Processing '{0}'", testFile);
 
-                var fName1Test = new RegistryHive(testFile);
-                RegistryHive.NlogConfig = config;
 
                 var sw = new Stopwatch();
-                sw.Start();
-
                 try
                 {
+                    var fName1Test = new RegistryHive(testFile);
+
+                    RegistryHive.NlogConfig = config;
+
+               
+                    sw.Start();
                     //fName1Test.Message += (ss, ee) => {
                     //    //    DumpConsoleMessage(ee.Detail);
                     //    Console.WriteLine("************* !!!!!!!!!!!!" + ee.Detail);

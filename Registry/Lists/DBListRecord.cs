@@ -47,32 +47,37 @@ namespace Registry.Lists
         public bool IsFree
         {
             get { return _size > 0; }
+            set { }
         }
 
-        public bool IsReferenced { get; internal set; }
+        public bool IsReferenced { get;  set; }
 
         public int NumberOfEntries
         {
             get { return BitConverter.ToUInt16(RawBytes, 0x06); }
+            set { }
         }
 
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  set; }
+        public long RelativeOffset { get; set; }
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
         public int Size
         {
             get { return Math.Abs(_size); }
+            set { }
         }
 
         // public properties...
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         // public methods...

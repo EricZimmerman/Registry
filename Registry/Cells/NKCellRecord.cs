@@ -213,7 +213,7 @@ namespace Registry.Cells
             get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
         }
 
-        public string Padding { get; }
+        public string Padding { get;  private set;}
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -339,6 +339,7 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         public bool IsFree
@@ -347,12 +348,13 @@ namespace Registry.Cells
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  private set;}
+        public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
         public int Size

@@ -61,45 +61,45 @@ namespace Registry.Other
         }
 
         // public properties...
-        public uint BootRecover { get; }
-        public uint BootType { get; }
-        public int CheckSum { get; }
-        public uint Cluster { get; }
+        public uint BootRecover { get; private set; }
+        public uint BootType { get; private set; }
+        public int CheckSum { get; private set; }
+        public uint Cluster { get; private set; }
 
         /// <summary>
         ///     Registry hive's embedded filename
         /// </summary>
-        public string FileName { get; }
+        public string FileName { get; private set; }
 
-        public uint Format { get; }
+        public uint Format { get; private set; }
 
         /// <summary>
         ///     The last write timestamp of the registry hive
         /// </summary>
-        public DateTimeOffset LastWriteTimestamp { get; }
+        public DateTimeOffset LastWriteTimestamp { get; private set; }
 
         /// <summary>
         ///     The total number of bytes used by this hive
         /// </summary>
-        public uint Length { get; }
+        public uint Length { get; private set; }
 
-        public int MajorVersion { get; }
-        public int MinorVersion { get; }
+        public int MajorVersion { get; private set; }
+        public int MinorVersion { get; private set; }
 
         /// <summary>
         ///     The offset in the first hbin record where root key is found
         /// </summary>
-        public uint RootCellOffset { get; }
+        public uint RootCellOffset { get; private set; }
 
-        public uint Sequence1 { get; }
-        public uint Sequence2 { get; }
+        public uint Sequence1 { get; private set; }
+        public uint Sequence2 { get; private set; }
 
         /// <summary>
         ///     Signature of the registry hive. Should always be "regf"
         /// </summary>
-        public string Signature { get; }
+        public string Signature { get;  private set;}
 
-        public uint Type { get; }
+        public uint Type { get;  private set;}
 
         public bool ValidateCheckSum()
         {

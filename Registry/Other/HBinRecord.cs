@@ -98,25 +98,25 @@ namespace Registry.Other
         /// <summary>
         ///     The relative offset to this record
         /// </summary>
-        public uint FileOffset { get; }
+        public uint FileOffset { get;  private set;}
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset? LastWriteTimestamp { get; }
+        public DateTimeOffset? LastWriteTimestamp { get;  private set;}
 
         /// <summary>
         ///     The offset to this record as stored by other records
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get; }
+        public long RelativeOffset { get;  private set;}
 
-        public uint Reserved { get; }
+        public uint Reserved { get;  private set;}
 
         /// <summary>
         ///     The signature of the hbin record. Should always be "hbin"
         /// </summary>
-        public string Signature { get; }
+        public string Signature { get;  private set;}
 
         /// <summary>
         ///     The size of the hive
@@ -125,9 +125,9 @@ namespace Registry.Other
         ///         negative size)
         ///     </remarks>
         /// </summary>
-        public uint Size { get; }
+        public uint Size { get;  private set;}
 
-        public uint Spare { get; }
+        public uint Spare { get;  private set;}
         public event EventHandler<MessageEventArgs> Message;
 
         protected virtual void OnMessage(MessageEventArgs e)

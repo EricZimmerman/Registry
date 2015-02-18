@@ -81,12 +81,13 @@ namespace Registry.Lists
             get { return BitConverter.ToUInt16(RawBytes, 0x06); }
         }
 
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  private set;}
+        public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
         public int Size
@@ -98,6 +99,7 @@ namespace Registry.Lists
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         // public methods...

@@ -115,7 +115,7 @@ namespace Registry.Other
         }
 
         public string Padding { get; private set; }
-        public byte[] RawBytes { get; }
+        public byte[] RawBytes { get;  private set;}
 
         public byte Revision
         {

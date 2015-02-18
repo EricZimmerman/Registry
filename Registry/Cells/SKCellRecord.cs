@@ -102,25 +102,29 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         public bool IsFree
         {
             get { return _size > 0; }
+            set { }
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  private set;}
+        public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
         public int Size
         {
             get { return Math.Abs(_size); }
+           private set { }
         }
 
         // public methods...

@@ -89,8 +89,8 @@ namespace Registry.Other
             get { return BitConverter.ToUInt16(RawBytes, 0x2); }
         }
 
-        public ACLTypeEnum ACLType { get; }
-        public byte[] RawBytes { get; }
+        public ACLTypeEnum ACLType { get;  private set;}
+        public byte[] RawBytes { get;  private set;}
 
         public byte Sbz1
         {

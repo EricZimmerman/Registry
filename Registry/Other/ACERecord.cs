@@ -115,7 +115,7 @@ namespace Registry.Other
             get { return (MasksEnum) BitConverter.ToUInt32(RawBytes, 4); }
         }
 
-        public byte[] RawBytes { get; }
+        public byte[] RawBytes { get;  private set;}
 
         public string SID
         {

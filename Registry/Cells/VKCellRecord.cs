@@ -377,13 +377,13 @@ namespace Registry.Cells
 //            }
         }
 
-        public string Padding { get; }
+        public string Padding { get;  private set;}
 
         /// <summary>
         ///     A list of offsets to data records.
         ///     <remarks>This is used to mark each Data record's IsReferenced property to true</remarks>
         /// </summary>
-        public List<ulong> DataOffets { get; }
+        public List<ulong> DataOffets { get;  private set;}
 
         // public properties...
         public uint DataLength
@@ -649,6 +649,7 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         public bool IsFree
@@ -657,15 +658,16 @@ namespace Registry.Cells
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get; }
-        public long RelativeOffset { get; }
+        public byte[] RawBytes { get;  private set;}
+        public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            set { }
         }
 
-        public int Size { get; }
+        public int Size { get;  private set;}
         // public methods...
         public override string ToString()
         {

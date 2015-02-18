@@ -42,7 +42,7 @@ namespace Registry.Other
             get { return _size > 0; }
         }
 
-        public byte[] RawBytes { get; }
+        public byte[] RawBytes { get; private set; }
 
         /// <summary>
         ///     Set to true when a record is referenced by another referenced record.
@@ -57,7 +57,7 @@ namespace Registry.Other
         ///     The offset as stored in other records to a given record
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get; }
+        public long RelativeOffset { get; private set; }
 
         public int Size
         {
@@ -71,11 +71,13 @@ namespace Registry.Other
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
+            set { }
         }
 
         public string Signature
         {
             get { return string.Empty; }
+            set { }
         }
 
         // public methods...

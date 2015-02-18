@@ -78,7 +78,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The underlying VKRecord for this Key. This allows access to all info about the VK Record
         /// </summary>
-        public VKCellRecord VKRecord { get; }
+        public VKCellRecord VKRecord { get; private set; }
 
         // public methods...
         public override string ToString()

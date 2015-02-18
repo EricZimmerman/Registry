@@ -92,17 +92,17 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The underlying NKRecord for this Key. This allows access to all info about the NK Record
         /// </summary>
-        public NKCellRecord NKRecord { get; }
+        public NKCellRecord NKRecord { get;  private set;}
 
         /// <summary>
         ///     A list of child keys that exist under this key
         /// </summary>
-        public List<RegistryKey> SubKeys { get; }
+        public List<RegistryKey> SubKeys { get;  private set;}
 
         /// <summary>
         ///     A list of values that exists under this key
         /// </summary>
-        public List<KeyValue> Values { get; }
+        public List<KeyValue> Values { get;  private set;}
 
         // public methods...
         public override string ToString()
