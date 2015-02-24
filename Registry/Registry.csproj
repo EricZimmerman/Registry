@@ -69,12 +69,12 @@
     <Compile Include="Lists\LxListRecord.cs" />
     <Compile Include="Lists\RIListRecord.cs" />
     <Compile Include="Other\IRecordBase.cs" />
-    <Compile Include="Registry.cs" />
+    <Compile Include="RegistryHive.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Other\RegistryHeader.cs" />
     <Compile Include="Other\SKSecurityDescriptor.cs" />
     <Compile Include="Other\xACLRecord.cs" />
-    <Compile Include="RegistryOnDemand.cs" />
+    <Compile Include="RegistryHiveOnDemand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

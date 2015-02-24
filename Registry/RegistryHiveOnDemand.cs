@@ -12,13 +12,13 @@ using Registry.Other;
 
 namespace Registry
 {
-	public class RegistryOnDemand
+	public class RegistryHiveOnDemand
 	{
 		private static LoggingConfiguration _nlogConfig;
 		private readonly byte[] _fileBytes;
 		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-		public RegistryOnDemand(string fileName)
+		public RegistryHiveOnDemand(string fileName)
 		{
 			Filename = fileName;
 
