@@ -115,7 +115,6 @@ namespace Registry
 		{
 			var keys = new List<RegistryKey>();
 
-			//this needs to be a function so it can be reused for every call
 			_logger.Debug("Looking for list record at relative offset 0x{0:X}", subkeyListsStableCellIndex);
 
 			var rawList = GetRawRecord(subkeyListsStableCellIndex);
@@ -217,7 +216,6 @@ namespace Registry
 
 			var offsets = new List<uint>();
 
-			//this needs to be a function so it can be reused for every call
 			if (valueListCellIndex > 0)
 			{
 				_logger.Debug("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
