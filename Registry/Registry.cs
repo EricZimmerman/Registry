@@ -620,9 +620,9 @@ namespace Registry
             }
             _logger.Debug("Hive is a {0} hive", HiveType);
 
-            var version = float.Parse(string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion));
+            var version = string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
 
-            _logger.Debug("Hive version is {0:N} hive", version);
+            _logger.Debug("Hive version is {0}", version);
 
             _softParsingErrors = 0;
             _hardParsingErrors = 0;

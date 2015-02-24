@@ -170,7 +170,52 @@ namespace ExampleApp
 
             var logger = LogManager.GetCurrentClassLogger();
 
-            foreach (var testFile in testFiles)
+// testing RegistryOnDemand
+//	        var sw1 = new Stopwatch();
+//			sw1.Start();
+//
+//	        var regod = new RegistryOnDemand(@"d:\temp\test\usr.dat");
+//
+//	        var key = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion");
+//
+//			var key1 = regod.GetKey(@"Local Settings\Software\Mic1rosoft\Windows\CurrentVersion");
+//
+//			var key2 = regod.GetKey(@"Loc2al Settings\Software\Microsoft\Windows\CurrentVersion");
+//
+//			var key21 = regod.GetKey(@"Local Settings\MuiCache\23\52C64B7E");
+//			var key22 = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\0\1");
+//			var key23 = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\49\Shell\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
+//			var key24 = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
+//
+//			var key3 = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\0\0\0");
+//
+//			sw1.Stop();
+//
+//			Console.WriteLine("usr hive took {0:N} seconds", sw1.Elapsed.TotalSeconds);
+//
+//			sw1 = new Stopwatch();
+//			sw1.Start();
+//
+//			regod = new RegistryOnDemand(@"d:\temp\test\SOFTWARE");
+//
+//			 key = regod.GetKey(@"JGsoft\RegexMagic");
+//
+//			 key1 = regod.GetKey(@"Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\8DAA9B47292A48B48A05BD32ECAD2113\08F92637EFD9A12409B87CF1DB42E3A5");
+//
+//			 key2 = regod.GetKey(@"Microsoft\Windows\CurrentVersion\SideBySide\Winners\amd64_microsoft-windows-directui.resources_31bf3856ad364e35_da-dk_30a54050978701ff");
+//
+//			 key21 = regod.GetKey(@"Microsoft\Windows\CurrentVersion\SideBySide\Winners\amd64_microsoft-windows-dire1ctui.resources_31bf3856ad364e35_da-dk_30a54050978701ff");
+//			 key22 = regod.GetKey(@"Microsoft\Windows\CurrentVersion\WINEVT\Publishers\{e46eead8-0c54-4489-9898-8fa79d059e0e}\ChannelReferences");
+//			 key23 = regod.GetKey(@"Wow6432Node\Microsoft\VisualStudio\10.0\ProgId\Record");
+//			 key24 = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
+//
+//			 key3 = regod.GetKey(@"Wow6432Node\Microsoft\VisualStudio\10.0\ProgId\Microsoft.WebPublisher.Utils\CLSID");
+//
+//			Console.WriteLine("SOFTWARE hive took {0:N} seconds", sw1.Elapsed.TotalSeconds);
+//
+//			sw1.Stop();
+
+			foreach (var testFile in testFiles)
             {
                 if (File.Exists(testFile) == false)
                 {

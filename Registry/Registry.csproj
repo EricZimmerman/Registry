@@ -74,6 +74,7 @@
     <Compile Include="Other\RegistryHeader.cs" />
     <Compile Include="Other\SKSecurityDescriptor.cs" />
     <Compile Include="Other\xACLRecord.cs" />
+    <Compile Include="RegistryOnDemand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
