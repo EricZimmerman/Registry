@@ -121,8 +121,7 @@ namespace Registry
 			var rawList = GetRawRecord(subkeyListsStableCellIndex);
 
 			var l = GetListFromRawBytes(rawList, subkeyListsStableCellIndex);
-
-
+			
 			switch (l.Signature)
 			{
 				case "lf":
@@ -134,8 +133,7 @@ namespace Registry
 						_logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset);
 						var rawCell = GetRawRecord(offset.Key);
 						var nk = new NKCellRecord(rawCell, offset.Key);
-
-
+						
 						_logger.Debug("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset,
 							nk.Name);
 
@@ -167,8 +165,7 @@ namespace Registry
 								_logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
 								var rawCell = GetRawRecord(offset1);
 								var nk = new NKCellRecord(rawCell, offset1);
-
-
+								
 								var tempKey = new RegistryKey(nk, parent);
 
 								keys.Add(tempKey);
@@ -190,14 +187,12 @@ namespace Registry
 							}
 						}
 					}
-
-
+					
 					break;
 
 				case "li":
 					var liRecord = l as LIListRecord;
-					liRecord.IsReferenced = true;
-
+					
 					foreach (var offset in liRecord.Offsets)
 					{
 						_logger.Debug("In li, looking for nk record at relative offset 0x{0:X}", offset);
@@ -207,14 +202,12 @@ namespace Registry
 						var tempKey = new RegistryKey(nk, parent);
 						keys.Add(tempKey);
 					}
-
-
+					
 					break;
 				default:
 					throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
 			}
-
-
+			
 			return keys;
 		}
 
@@ -258,8 +251,7 @@ namespace Registry
 				var value = new KeyValue(vk);
 				values.Add(value);
 			}
-
-
+			
 			return values;
 		}
 
@@ -272,16 +264,11 @@ namespace Registry
 				case "lf":
 				case "lh":
 					return new LxListRecord(rawBytes, relativeOffset);
-
 				case "ri":
-
 					return new RIListRecord(rawBytes, relativeOffset);
 				case "li":
-
 					return new LIListRecord(rawBytes, relativeOffset);
-
 				default:
-
 					throw new Exception(string.Format("Unknown list signature: {0}", sig));
 			}
 		}
@@ -309,55 +296,7 @@ namespace Registry
 
 			return ReadBytesFromHive(absOffset, size);
 		}
-
-		private RegistryKey GetKey(string keyPath, RegistryKey startKey)
-		{
-			//1. split up path
-			//2. start at root
-			//Local Settings\Software\Microsoft\Windows\Shell\BagMRU\0\0\0
-
-			RegistryKey returnKey = null;
-
-			if (keyPath == "")
-			{
-				startKey.Values.AddRange(GetKeyValues(startKey.NKRecord.ValueListCellIndex, startKey.NKRecord.ValueListCount));
-				return startKey;
-			}
-
-
-			var keyNames = keyPath.Split(new[] {'\\'}, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (var name in keyNames)
-			{
-			}
-
-
-			var keyName = string.Empty;
-
-			if (keyNames.Length > 0)
-			{
-				keyName = keyNames.First();
-			}
-			else
-			{
-				keyName = keyPath;
-			}
-
-			var nextPath = string.Join(@"\", keyNames.Skip(1));
-
-			startKey.SubKeys.AddRange(GetSubkeys(startKey.NKRecord.SubkeyListsStableCellIndex, startKey));
-
-			var sk = startKey.SubKeys.Single(r => r.KeyName == keyName);
-
-			if (sk != null)
-			{
-				returnKey = GetKey(nextPath, sk);
-			}
-
-
-			return returnKey;
-		}
-
+		
 		public RegistryKey GetKey(string keyPath)
 		{
 			var rawRoot = GetRawRecord(Header.RootCellOffset);
@@ -367,13 +306,11 @@ namespace Registry
 			var rootKey = new RegistryKey(rootNk, null);
 
 			var keyNames = keyPath.Split(new[] {'\\'}, StringSplitOptions.RemoveEmptyEntries);
-			var keyName = keyNames[0];
 
 			rootKey.SubKeys.AddRange(GetSubkeys(rootKey.NKRecord.SubkeyListsStableCellIndex, rootKey));
 
 			var finalKey = rootKey;
-
-
+			
 			for (var i = 0; i < keyNames.Length; i++)
 			{
 				finalKey = finalKey.SubKeys.SingleOrDefault(r => r.KeyName == keyNames[i]);
