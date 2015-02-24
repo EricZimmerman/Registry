@@ -35,6 +35,14 @@ There is also a RegistryOnDemand class that forgoes up front processing and only
 
 RegistryOnDemand handled several key lookups against a 129MB SOFTWARE hive in less than 2 seconds. The same hive would take approximately 25 seconds to load in Registry.
 
+```csharp
+var hive = new RegistryHiveOnDemand(pathToSomeFile);
+//returns RegistryKey object
+var key = hive.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion");
+//returns null when path not found
+var keyBad = hive.GetKey(@"Local Settings\Software\NoSuchKey");
+```
+
 **Example application output**
 
 NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
