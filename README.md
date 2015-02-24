@@ -15,7 +15,7 @@ For discussion and design decisions, see http://binaryforay.blogspot.com/.
 6. Ability to compare results with other registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
 
 ## General usage  ##
-The main Registry class has an LoggingConfiguration propery, NlogConfig. This should be set to a valid NLog config after instantiating a Registry object in order for the class to actually log something. This let you use any of the targets Nlog supports vs anything I could come up with plus the code is a lot cleaner.
+The main Registry class has a LoggingConfiguration propery, NlogConfig. This should be set to a valid NLog config after instantiating a Registry object in order for the class to actually log something. This let you use any of the targets Nlog supports vs anything I could come up with plus the code is a lot cleaner.
 
 If you look at ExampleApp source you can see an example of how to implement both a ColoredConsole and File target.
 
@@ -30,6 +30,10 @@ var hive = new RegistryHive(pathToSomeFile);
 hive.RecoverDeleted = true;
 hive.ParseHive();
 ```
+
+There is also a RegistryOnDemand class that forgoes up front processing and only loads things as they are needed via FindKey method. This class can process hives significantly faster than Registry class as it does not handle deleted records and only gets the keys/values for the path specified.
+
+RegistryOnDemand handled several key lookups against a 129MB SOFTWARE hive in less than 2 seconds. The same hive would take approximately 25 seconds to load in Registry.
 
 **Example application output**
 
