@@ -81,7 +81,7 @@ namespace Registry.Cells
 //                Debug.Write(1);
 //            }
 
-            Check.That(Signature).IsEqualTo("vk");
+           Check.That(Signature).IsEqualTo("vk");
 
             DataOffets = new List<ulong>();
 
@@ -369,22 +369,13 @@ namespace Registry.Cells
                 Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
 
-            if (!IsFree)
-            {
-                //When records ARE free, different rules apply, so we process thsoe all at once later
-                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-            }
-//            else
+            //This assert is expensive
+//            if (!IsFree)
 //            {
-//                //sometimes we get a huge chunk of rawBytes here, so truncate it appropriately
-//                if (rawBytes.Length > actualPaddingOffset)
-//                {
-//                    var tempBytes = new byte[actualPaddingOffset];
-//
-//                    Array.Copy(rawBytes, 0, tempBytes, 0, (long) actualPaddingOffset);
-//                    RawBytes = tempBytes;
-//                }
+//                //When records ARE free, different rules apply, so we process thsoe all at once later
+//                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
 //            }
+
         }
 
         public string Padding { get;  private set;}

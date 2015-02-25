@@ -747,8 +747,8 @@ namespace Registry
             //here we are looking for the flag
             var rootNode =
                 CellRecords.Values.OfType<NKCellRecord>()
-                    .SingleOrDefault(
-                        (f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
+                    .SingleOrDefault((f => (f.Flags & NKCellRecord.FlagEnum.HiveEntryRootKey) == NKCellRecord.FlagEnum.HiveEntryRootKey));
+                    //.SingleOrDefault((f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
 
             if (rootNode == null)
             {

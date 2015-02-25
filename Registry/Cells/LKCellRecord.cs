@@ -119,7 +119,8 @@ namespace Registry.Cells
             NameLength = BitConverter.ToUInt16(rawBytes, 0x4c);
             ClassLength = BitConverter.ToUInt16(rawBytes, 0x4e);
 
-            if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+            //  if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+            if ((Flags & FlagEnum.CompressedName) == FlagEnum.CompressedName)
             {
                 Name = Encoding.GetEncoding(1252).GetString(rawBytes, 0x50, NameLength);
             }

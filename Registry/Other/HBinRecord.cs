@@ -190,26 +190,29 @@ namespace Registry.Other
 
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
 
-                var foundMatch = false;
-                try
+                if (_logger.IsDebugEnabled)
                 {
-                    foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
-                }
-                catch (ArgumentException)
-                {
-                    // Syntax error in the regular expression
-                }
+                    var foundMatch = false;
+                    try
+                    {
+                        foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Syntax error in the regular expression
+                    }
 
-                //only process records with 2 letter signatures. this avoids crazy output for data cells
-                if (foundMatch)
-                {
-                    _logger.Debug("Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                        cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
-                }
-                else
-                {
-                    _logger.Debug("Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
-                        offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                    //only process records with 2 letter signatures. this avoids crazy output for data cells
+                    if (foundMatch)
+                    {
+                        _logger.Debug("Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                            cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                    }
+                    else
+                    {
+                        _logger.Debug("Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
+                            offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                    }  
                 }
 
                 ICellTemplate cellRecord = null;

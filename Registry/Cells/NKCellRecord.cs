@@ -167,7 +167,8 @@ namespace Registry.Cells
             get
             {
                 string _name;
-                if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+                //if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+                if ((Flags & FlagEnum.CompressedName) == FlagEnum.CompressedName)
                 {
                     if (IsFree)
                     {
