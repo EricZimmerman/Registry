@@ -284,20 +284,27 @@ namespace Registry.Other
 
             sb.AppendLine(s);
 
-            if (recursive)
+            if (!recursive)
             {
-                foreach (var registryKey in key.SubKeys)
-                {
-                    sb.AppendLine(GetRegFormatData(registryKey, hiveType, true).TrimEnd());
-                }
+                return sb.ToString();
+            }
+            foreach (var registryKey in key.SubKeys)
+            {
+                sb.AppendLine(GetRegFormatData(registryKey, hiveType, true).TrimEnd());
             }
 
-            
-
             return sb.ToString();
-
         }
 
+        /// <summary>
+        /// Exports a Registry key to .reg format
+        /// </summary>
+        /// <remarks>Do not use RegistryHiveOnDemand when exporting recursively or you will only get the key and its subkeys exported</remarks>
+        /// <param name="filename"></param>
+        /// <param name="key"></param>
+        /// <param name="hiveType"></param>
+        /// <param name="recursive"></param>
+        /// <returns></returns>
         public static bool ExportToReg(string filename, RegistryKey key, RegistryHive.HiveTypeEnum hiveType, bool recursive)
         {
             if (key == null)
