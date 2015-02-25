@@ -173,7 +173,7 @@ namespace Registry.Cells
                     {
                         if (RawBytes.Length >= 0x50 + NameLength)
                         {
-                            _name = Encoding.ASCII.GetString(RawBytes, 0x50, NameLength);
+                            _name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                         }
                         else
                         {
@@ -182,7 +182,7 @@ namespace Registry.Cells
                     }
                     else
                     {
-                        _name = Encoding.ASCII.GetString(RawBytes, 0x50, NameLength);
+                        _name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                     }
                 }
                 else
@@ -353,7 +353,7 @@ namespace Registry.Cells
 
         public string Signature
         {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            get { return Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2); }
             set { }
         }
 
@@ -417,10 +417,12 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Value Count: 0x{0:X}", ValueListCount));
             sb.AppendLine(string.Format("Value List Cell Index: 0x{0:X}", ValueListCellIndex));
 
-            sb.AppendLine();
-            sb.AppendLine(string.Format("Padding: {0}", Padding));
-
-            sb.AppendLine();
+            if (Padding.Length > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine(string.Format("Padding: {0}", Padding));
+            }
+            
 
             return sb.ToString();
         }

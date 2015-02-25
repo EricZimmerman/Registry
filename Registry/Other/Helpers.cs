@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
+using Registry.Abstractions;
 
 // namespaces...
 
@@ -270,6 +274,55 @@ namespace Registry.Other
         }
 
         // public methods...
+
+
+        private static string GetRegFormatData(RegistryKey key, RegistryHive.HiveTypeEnum hiveType, bool recursive)
+        {
+            var sb = new StringBuilder();
+
+            var s = key.GetRegFormat(hiveType);
+
+            sb.AppendLine(s);
+
+            if (recursive)
+            {
+                foreach (var registryKey in key.SubKeys)
+                {
+                    sb.AppendLine(GetRegFormatData(registryKey, hiveType, true).TrimEnd());
+                }
+            }
+
+            
+
+            return sb.ToString();
+
+        }
+
+        public static bool ExportToReg(string filename, RegistryKey key, RegistryHive.HiveTypeEnum hiveType, bool recursive)
+        {
+            if (key == null)
+            {
+                throw new NullReferenceException("Key cannot be null");
+            }
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Windows Registry Editor Version 5.00");
+            
+            var s= GetRegFormatData(key, hiveType, recursive);
+            
+            sb.AppendLine(s);
+            
+            using (var f = new StreamWriter(new FileStream(filename,FileMode.Create),Encoding.Unicode))
+            {
+                f.WriteLine(sb.ToString());
+                f.Flush();
+            }
+
+            return true;
+        }
+
+
         /// <summary>
         ///     Converts a SID as stored in the registry to a human readable version.
         ///     <remarks>Use GetSIDTypeFromSIDString to get an Enum from this string with a description of what the SID is used for</remarks>

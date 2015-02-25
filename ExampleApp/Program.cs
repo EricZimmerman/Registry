@@ -11,6 +11,7 @@ using NLog.Config;
 using NLog.Targets;
 using Registry;
 using Registry.Cells;
+using Registry.Other;
 
 // namespaces...
 
@@ -174,11 +175,16 @@ namespace ExampleApp
 //	        var sw1 = new Stopwatch();
 //			sw1.Start();
 //
-//	        var regod = new RegistryOnDemand(@"d:\temp\test\usr.dat");
+//	        var regod = new RegistryHive(@"D:\temp\re\other\NTUSER3.Dat");
+//            regod.ParseHive();
 //
-//	        var key = regod.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion");
+//	        var key = regod.FindKey(@"AppEvents\EventLabels");
 //
-//			var key1 = regod.GetKey(@"Local Settings\Software\Mic1rosoft\Windows\CurrentVersion");
+//            Helpers.ExportToReg(@"C:\temp\foo.reg", regod.Root, regod.HiveType, true);
+//
+//            Debug.Write(1);
+
+			//var key1 = regod.GetKey(@"Local Settings\Software\Mic1rosoft\Windows\CurrentVersion");
 //
 //			var key2 = regod.GetKey(@"Loc2al Settings\Software\Microsoft\Windows\CurrentVersion");
 //

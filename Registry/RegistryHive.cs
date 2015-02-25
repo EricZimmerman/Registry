@@ -28,7 +28,8 @@ namespace Registry
             [Description("SECURITY")] Security = 3,
             [Description("SOFTWARE")] Software = 4,
             [Description("SYSTEM")] System = 5,
-            [Description("USRCLASS")] UsrClass = 6
+            [Description("USRCLASS")] UsrClass = 6,
+            [Description("COMPONENTS")] Components = 7
         }
 
         internal static int _hardParsingErrors;
@@ -69,7 +70,6 @@ namespace Registry
 
                 throw new Exception(string.Format("'{0}' is not a Registry hive (bad signature)", fileName));
             }
-
 
             _logger.Debug("Set HivePath to {0}", Filename);
 
@@ -614,6 +614,9 @@ namespace Registry
                     HiveType = HiveTypeEnum.UsrClass;
                     break;
 
+                case "components":
+                    HiveType = HiveTypeEnum.Components;
+                    break;
                 default:
                     HiveType = HiveTypeEnum.Other;
                     break;

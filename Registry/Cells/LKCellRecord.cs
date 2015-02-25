@@ -121,7 +121,7 @@ namespace Registry.Cells
 
             if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
             {
-                Name = Encoding.ASCII.GetString(rawBytes, 0x50, NameLength);
+                Name = Encoding.GetEncoding(1252).GetString(rawBytes, 0x50, NameLength);
             }
             else
             {

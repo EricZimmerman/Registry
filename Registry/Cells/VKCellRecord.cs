@@ -53,6 +53,8 @@ namespace Registry.Cells
             [Description("Unknown data type")] RegUnknown = 999
         }
 
+        private const uint DWORD_SIGN_MASK = 0x80000000;
+        
         private const uint DEVPROP_MASK_TYPE = 0x00000FFF;
         private readonly byte[] _datablockRaw;
         private readonly uint _dataLengthInternal;
@@ -68,6 +70,9 @@ namespace Registry.Cells
 
             RawBytes = rawBytes;
 
+//            if (ValueName == "SystemDefaultLocaleName")
+//                Debug.Write(1);
+
             Size = BitConverter.ToInt32(rawBytes, 0);
 
 
@@ -82,8 +87,13 @@ namespace Registry.Cells
 
             _dataLengthInternal = DataLength;
 
+           
+
+        
             //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
-            var dataIsResident = Convert.ToString(_dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
+           // var dataIsResident = Convert.ToString(_dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
+
+            var dataIsResident = (_dataLengthInternal & DWORD_SIGN_MASK) == DWORD_SIGN_MASK;
 
             //this is used later to pull the data from the raw bytes. By setting this here we do not need a bunch of if/then stuff later
             _internalDataOffset = 4;
@@ -463,9 +473,25 @@ namespace Registry.Cells
                             }
                             else
                             {
-                                val = Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset,
-                                    (int) _dataLengthInternal)
-                                    .Replace("\0", "");
+                                var tempVal = Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset,
+                                    (int) _dataLengthInternal);
+
+                                var nullIndex = tempVal.IndexOf('\0');
+
+                                if (nullIndex > -1)
+                                {
+                                    val = tempVal.Substring(0, nullIndex);
+                                }
+                                else
+                                {
+                                    val = tempVal;
+                                }
+                                
+
+//                                val = Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset,
+//                                    (int) _dataLengthInternal);
+
+
                             }
 
                             //
@@ -583,7 +609,7 @@ namespace Registry.Cells
                             //make sure we have enough data
                             if (RawBytes.Length >= NameLength + 0x18)
                             {
-                                _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                                _valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                             }
                             else
                             {
@@ -592,7 +618,7 @@ namespace Registry.Cells
                         }
                         else
                         {
-                            _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                            _valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                         }
                     }
                     else
@@ -635,7 +661,7 @@ namespace Registry.Cells
                             }
                             else
                             {
-                                _valName = Encoding.ASCII.GetString(RawBytes, 0x18, NameLength);
+                                _valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                             }
                         }
                     }
@@ -756,12 +782,11 @@ namespace Registry.Cells
 
             sb.AppendLine();
 
-
-            sb.AppendLine(string.Format("Padding: {0}", Padding));
-
-            sb.AppendLine();
-
-
+            if (Padding.Length > 0)
+            {
+                sb.AppendLine(string.Format("Padding: {0}", Padding));
+            }
+           
             return sb.ToString();
         }
     }

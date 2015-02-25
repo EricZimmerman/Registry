@@ -84,8 +84,10 @@ namespace Registry
 				case "usrclass.dat":
 					HiveType = RegistryHive.HiveTypeEnum.UsrClass;
 					break;
-
-				default:
+                case "components":
+                    HiveType = RegistryHive.HiveTypeEnum.Components;
+                    break;
+                default:
 					HiveType = RegistryHive.HiveTypeEnum.Other;
 					break;
 			}

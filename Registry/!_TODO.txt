@@ -1,1 +1,5 @@
-﻿
+﻿- add deferred mode that gets things on demand
+- add ability to export things at following levels as binary
+	- key
+	- value
+- reg export
