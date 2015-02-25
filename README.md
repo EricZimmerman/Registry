@@ -1,18 +1,18 @@
 # Registry #
 
 
-Full featured, offline registry parser in C#. 
+Full featured, offline Registry parser in C#. 
 
 For discussion and design decisions, see http://binaryforay.blogspot.com/.
 
 ## The goals of this project are:  ##
 
-1. full parsing of all known registry structures
-2. Make registry value slack space accessible
+1. full parsing of all known Registry structures
+2. Make Registry value slack space accessible
 3. Deleted key/value support
 4. Easy access to underlying data structures and their raw data as byte arrays
 5. Performance
-6. Ability to compare results with other registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
+6. Ability to compare results with other Registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
 
 ## General usage  ##
 The main Registry class has a LoggingConfiguration propery, NlogConfig. This should be set to a valid NLog config after instantiating a Registry object in order for the class to actually log something. This let you use any of the targets Nlog supports vs anything I could come up with plus the code is a lot cleaner.
