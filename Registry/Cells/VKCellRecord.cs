@@ -334,11 +334,6 @@ namespace Registry.Cells
             var maxSlackSize = Math.Ceiling((double) (_dataLengthInternal + 4)/8)*8 - _dataLengthInternal -
                                _internalDataOffset;
 
-            //ValueDataSlack =
-            //    datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
-            //    .Take((int)(Math.Abs(maxSlackSize)))
-            //    .ToArray();
-
             ValueDataSlack = new byte[0];
 
             if (_datablockRaw.Length > _dataLengthInternal + _internalDataOffset)
@@ -350,10 +345,6 @@ namespace Registry.Cells
             }
 
 
-            //datablockRaw.Skip((int)(dataLengthInternal + internalDataOffset))
-            //.Take((int)(Math.Abs(maxSlackSize)))
-            //.ToArray();
-
             var paddingOffset = 0x18 + NameLength;
 
             var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
@@ -362,23 +353,26 @@ namespace Registry.Cells
 
             var paddingLength = actualPaddingOffset - paddingOffset;
 
-            Padding = string.Empty;
+            Padding = new byte[paddingLength];
 
             if (paddingLength > 0)
             {
-                Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+                if (paddingOffset + paddingLength <= rawBytes.Length)
+                {
+                    Array.Copy(rawBytes,paddingOffset,Padding,0,paddingLength);
+                    //Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+                }
             }
 
-            //This assert is expensive
-//            if (!IsFree)
-//            {
-//                //When records ARE free, different rules apply, so we process thsoe all at once later
-//                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-//            }
+            //            if (!IsFree)
+            //            {
+            //                //When records ARE free, different rules apply, so we process thsoe all at once later
+            //                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
+            //            }
 
         }
 
-        public string Padding { get;  private set;}
+        public byte[] Padding { get;  private set;}
 
         /// <summary>
         ///     A list of offsets to data records.
@@ -633,7 +627,6 @@ namespace Registry.Cells
 
                             var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
 
-
                             var foundMatch = false;
                             try
                             {
@@ -775,7 +768,7 @@ namespace Registry.Cells
 
             if (Padding.Length > 0)
             {
-                sb.AppendLine(string.Format("Padding: {0}", Padding));
+                sb.AppendLine(string.Format("Padding: {0}", BitConverter.ToString(Padding)));
             }
            
             return sb.ToString();

@@ -134,14 +134,11 @@ namespace Registry.Cells
 
             if (paddingLength > 0)
             {
-                Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
+                Padding = new byte[paddingLength];
+                Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
+                //Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
-            else
-            {
-                Padding = string.Empty;
-            }
-
-
+            
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
             Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
         }
@@ -192,7 +189,7 @@ namespace Registry.Cells
         public string Name { get;  private set;}
 
         public ushort NameLength { get;  private set;}
-        public string Padding { get;  private set;}
+        public byte[] Padding { get;  private set;}
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -321,7 +318,7 @@ namespace Registry.Cells
 
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Padding: {0}", Padding));
+            sb.AppendLine(string.Format("Padding: {0}", BitConverter.ToString(Padding)));
 
             return sb.ToString();
         }

@@ -760,8 +760,6 @@ namespace Registry
 
             rootNode.IsReferenced = true;
 
-
-
             _logger.Info("Found root node! Getting subkeys...");
 
             Root = new RegistryKey(rootNode, null);
@@ -773,8 +771,6 @@ namespace Registry
             Debug.WriteLine("Processing complete!");
 
             Root.SubKeys.AddRange(keys);
-
-
 
             _logger.Info("Hive processing complete!");
 

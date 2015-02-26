@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -303,9 +304,18 @@ namespace Registry
 
 			var rootNk = new NKCellRecord(rawRoot, Header.RootCellOffset);
 
+		    var newPath = keyPath;
+
+            // when getting child keys, the name may start with the root key name. if so, strip it
+            if (newPath.StartsWith(rootNk.Name))
+		    {
+		        var segs = keyPath.Split('\\');
+                newPath = string.Join("\\", segs.Skip(1));
+		    }
+
 			var rootKey = new RegistryKey(rootNk, null);
 
-			var keyNames = keyPath.Split(new[] {'\\'}, StringSplitOptions.RemoveEmptyEntries);
+			var keyNames = newPath.Split(new[] {'\\'}, StringSplitOptions.RemoveEmptyEntries);
 
 			rootKey.SubKeys.AddRange(GetSubkeys(rootKey.NKRecord.SubkeyListsStableCellIndex, rootKey));
 

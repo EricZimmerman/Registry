@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
@@ -351,64 +352,42 @@ namespace Registry.Other
 
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
-            // a list of our known signatures, so we can only show when these are found vs data cells
-
             var records = new List<IRecordBase>();
 
-            var offsetList = new List<int>();
-
-            var valString = BitConverter.ToString(remainingData);
+            var offsetList2 = new List<int>();
 
             var sig = string.Empty;
             byte[] raw = null;
 
             _logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
-            try
+
+            for (int i = 0; i < remainingData.Length; i++)
             {
-                var matchResult = _recordPattern.Match(valString);
-                while (matchResult.Success)
+                if (remainingData[i] == 0x6b) //6b == k
                 {
-                    offsetList.Add(matchResult.Index);
-                    matchResult = matchResult.NextMatch();
+                    if (remainingData[i - 1] == 0x6e || remainingData[i - 1] == 0x76 || remainingData[i - 1] == 0x73) //6e = n, 73 = s, 76 = v
+                    {
+                        //if we are here we have a good signature, nk, sk, or vk
+                        //check what is before that to see if its 0x00 or 0xFF
+                        if (remainingData[i - 2] == 0x00 || remainingData[i - 2] == 0xFF)
+                        {
+                            //winner! since we initially hit on ZZ, substract 5 to get to the beginning of the record, XX XX XX XX YY ZZ
+                            offsetList2.Add(i - 5); 
+                        }
+                    }
                 }
             }
-            catch (ArgumentException)
-            {
-                // Syntax error in the regular expression
-            }
 
-//            if (offsetList.Count == 0)
-//            {
-//                //its a data record
-//
-//                //var dr1 = new DataNode(remainingData, relativeoffset);
-//
-//              //  records.Add(dr1);
-//            }
-//            else
-//            {
-//                //is this a strange case where there are records at the end of a data block?
-//                var actualStart = (offsetList.First()/3) - 3;
-//                if (actualStart > 0)
-//                {
-//                 //   var dr = new DataNode(remainingData, relativeoffset);
-//                 //   records.Add(dr);
-//                }
-//            }
-
-            //resultList now has offset of every record signature we are interested in
-            foreach (var i in offsetList)
+            //offsetList2 now has offset of every record signature we are interested in
+            foreach (var i in offsetList2)
             {
                 try
                 {
-                    //we found one, but since we converted it to a string, divide by 3 to get to the proper offset
-                    //finaly go back 3 to get to the start of the record
-                    var actualStart = (i/3) - 3;
-
+                    var actualStart = i;
 
                     var size = BitConverter.ToUInt32(remainingData, actualStart);
 
-                    if (size < 3 || remainingData.Length - actualStart < size)
+                    if (size <= 3 || remainingData.Length - actualStart < size)
                     {
                         //if its empty or the size is beyond the data that is left, bail
                         continue;
@@ -419,7 +398,6 @@ namespace Registry.Other
                     Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
 
                     sig = Encoding.ASCII.GetString(raw, 4, 2);
-
 
                     switch (sig)
                     {
@@ -450,53 +428,8 @@ namespace Registry.Other
                             records.Add(vk);
 
                             break;
-                        case "ri":
-                            var ri = new RIListRecord(raw, relativeoffset + actualStart);
-                            _logger.Debug("Found ri record in slack at absolute offset 0x{0:X}",
-                                relativeoffset + actualStart + 0x1000);
-                            records.Add(ri);
-
-                            break;
-
-                        case "sk":
-                            var sk = new SKCellRecord(raw, relativeoffset + actualStart);
-                            _logger.Debug("Found sk record in slack at absolute offset 0x{0:X}",
-                                relativeoffset + actualStart + 0x1000);
-                            records.Add(sk);
-
-                            break;
-
-                        case "lf":
-                            var lf = new LxListRecord(raw, relativeoffset + actualStart);
-                            _logger.Debug("Found lf record in slack at absolute offset 0x{0:X}",
-                                relativeoffset + actualStart + 0x1000);
-                            records.Add(lf);
-
-                            break;
-
-                        default:
-                            //we know about these signatures, so remove them. if we see others, tell someone so support can be added
-                            var goodSigs2 = _goodSigs;
-                            goodSigs2.Remove("nk");
-                            goodSigs2.Remove("vk");
-                            goodSigs2.Remove("sk");
-                            goodSigs2.Remove("li");
-                            goodSigs2.Remove("ri");
-
-                            if (goodSigs2.Contains(sig))
-                            {
-                                throw new Exception(
-                                    "Found a good signature when expecting a data node! please send this hive to saericzimmerman@gmail.com so support can be added");
-                            }
-
-                            //var dr = new DataNode(raw, relativeoffset + actualStart);
-
-//                            records.Add(dr);
-
-                            break;
                     }
 
-                    // System.Diagnostics.Debug.WriteLine("Found rel offset at 0x{0:X}", relativeoffset + actualStart);
                 }
                 catch (Exception ex)
                 {
@@ -505,8 +438,8 @@ namespace Registry.Other
 
                     _logger.Warn(
                         string.Format(
-                            "When recovering from slack, cell signature {0}, at absolute offset 0x{1:X8}, an error happened! Length: 0x{2:x}",
-                            sig, relativeoffset + (i/3) - 3 + 0x1000, raw.Length), ex);
+                            "When recovering from slack, cell signature '{0}', at absolute offset 0x{1:X8}, an error happened! raw Length: 0x{2:x}",
+                            sig, relativeoffset + i + 0x1000, raw.Length), ex);
 
                     RegistryHive._softParsingErrors += 1;
                 }
