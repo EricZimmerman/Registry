@@ -37,7 +37,6 @@ namespace Registry
         internal static byte[] FileBytes;
         public static long TotalBytesRead;
         private static LoggingConfiguration _nlogConfig;
-        
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
@@ -66,7 +65,7 @@ namespace Registry
 
             if (!HasValidHeader(fileName))
             {
-                _logger.Error("'{0}' is not a Registry hive (bad signature)",fileName);
+                _logger.Error("'{0}' is not a Registry hive (bad signature)", fileName);
 
                 throw new Exception(string.Format("'{0}' is not a Registry hive (bad signature)", fileName));
             }
@@ -93,21 +92,6 @@ namespace Registry
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
-        public static bool HasValidHeader(string filename)
-        {
-            var fileStream = new FileStream(filename, FileMode.Open);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            var sig = Encoding.ASCII.GetString(binaryReader.ReadBytes(4));
-
-            binaryReader.Close();
-            fileStream.Close();
-
-            return sig.Equals("regf");
-        }
-
         public static LoggingConfiguration NlogConfig
         {
             get { return _nlogConfig; }
@@ -127,18 +111,18 @@ namespace Registry
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
-        public List<KeyValue> UnassociatedRegistryValues { get;  private set;}
+        public List<KeyValue> UnassociatedRegistryValues { get; }
 
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get;  private set;}
+        public Dictionary<long, ICellTemplate> CellRecords { get; }
 
         /// <summary>
         ///     List of all data nodes, both in use and free, as found in the hive
         /// </summary>
         //  public Dictionary<long, DataNode> DataRecords { get; private set; }
-        public string Filename { get;  private set;}
+        public string Filename { get; }
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -155,7 +139,7 @@ namespace Registry
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get;  private set;}
+        public Dictionary<long, IListTemplate> ListRecords { get; }
 
         public RegistryKey Root { get; private set; }
 
@@ -167,16 +151,20 @@ namespace Registry
             get { return _softParsingErrors; }
         }
 
-        //public event EventHandler<MessageEventArgs> Message;
+        public static bool HasValidHeader(string filename)
+        {
+            var fileStream = new FileStream(filename, FileMode.Open);
+            var binaryReader = new BinaryReader(fileStream);
 
-        //protected virtual void OnMessage(MessageEventArgs e)
-        //{
-        //    var handler = Message;
-        //    if (handler != null)
-        //    {
-        //        handler(this, e);
-        //    }
-        //}
+            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            var sig = Encoding.ASCII.GetString(binaryReader.ReadBytes(4));
+
+            binaryReader.Close();
+            fileStream.Close();
+
+            return sig.Equals("regf");
+        }
 
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
@@ -205,7 +193,6 @@ namespace Registry
                 {
                     valueCount += 1;
 
-
                     sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VKRecord.IsFree ? "U" : "A",
                         val.VKRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VKRecord.DataType,
                         BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
@@ -232,7 +219,7 @@ namespace Registry
         {
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
 
-            KeyPathKeyMap.Add(key.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""), key);
+            KeyPathKeyMap.Add(key.KeyPath, key);
 
             _logger.Debug("Getting subkeys for {0}", key.KeyPath);
 
@@ -275,7 +262,6 @@ namespace Registry
             {
                 _logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
                     key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
-                
             }
 
             // look for values in this key 
@@ -305,15 +291,9 @@ namespace Registry
                         dbr.IsReferenced = true;
                         dbListProcessed = true;
                     }
-//                    else
-//                    {
-//                        GetDataNodeFromOffset((long) dataOffet).IsReferenced = true;
-//                    }
                 }
-
-
+                
                 var value = new KeyValue(vk);
-
 
                 key.Values.Add(value);
             }
@@ -413,7 +393,6 @@ namespace Registry
                         }
                     }
 
-
                     break;
 
                 case "li":
@@ -435,7 +414,6 @@ namespace Registry
 
                         keys.Add(tempKey);
                     }
-
 
                     break;
                 default:
@@ -463,19 +441,11 @@ namespace Registry
         /// <returns></returns>
         protected internal static byte[] ReadBytesFromHive(long offset, int length)
         {
-//            if (offset == 0x70e3020 + 0x1000)
-//            {
-//                Debug.Write(1);
-//            }
-
             var absLen = Math.Abs(length);
             var retArray = new byte[absLen];
             Array.Copy(FileBytes, offset, retArray, 0, absLen);
             return retArray;
         }
-
-        // public methods...
-
 
         public void ExportDataToCommonFormat(string outfile, bool deletedOnly)
         {
@@ -540,7 +510,6 @@ namespace Registry
                     }
                 }
 
-
                 sw.WriteLine("total_keys|{0}", KeyCount);
                 sw.WriteLine("total_values|{0}", ValueCount);
                 sw.WriteLine("total_deleted_keys|{0}", KeyCountDeleted);
@@ -548,12 +517,21 @@ namespace Registry
             }
         }
 
-        public RegistryKey FindKey(string keypath)
+        public RegistryKey FindKey(string keyPath)
         {
-            if (KeyPathKeyMap.ContainsKey(keypath))
+            if (KeyPathKeyMap.ContainsKey(keyPath))
             {
-                return KeyPathKeyMap[keypath];
+                return KeyPathKeyMap[keyPath];
             }
+
+            //handle case where someone doesnt pass in ROOT keyname
+            var newPath = string.Format("{0}\\{1}", Root.KeyName, keyPath);
+
+            if (KeyPathKeyMap.ContainsKey(newPath))
+            {
+                return KeyPathKeyMap[newPath];
+            }
+
             return null;
         }
 
@@ -664,7 +642,6 @@ namespace Registry
                         //TODO need to try to recover records from the bad chunk
                     }
 
-
                     break;
                 }
 
@@ -675,15 +652,11 @@ namespace Registry
                     offsetInHive, hbinSize,
                     (double) offsetInHive/hivelen);
 
-
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
-
 
                 try
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted);
-
-                    //h.Message += (ss, ee) => { OnMessage(ee); };
 
                     _logger.Debug("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
 
@@ -717,13 +690,6 @@ namespace Registry
                                 ListRecords.Add(record.AbsoluteOffset - 4096, (IListTemplate) record);
                                 break;
 
-                            case "":
-                                //  DataRecords.Add(record.AbsoluteOffset - 4096, (DataNode) record);
-                                break;
-                            default:
-
-                                Debug.Write(1);
-                                break;
                         }
                     }
 
@@ -733,7 +699,6 @@ namespace Registry
                 catch (Exception ex)
                 {
                     _logger.Error(string.Format("Error processing hbin at absolute offset 0x{0:X}.", offsetInHive), ex);
-
                 }
 
                 offsetInHive += hbinSize;
@@ -747,8 +712,9 @@ namespace Registry
             //here we are looking for the flag
             var rootNode =
                 CellRecords.Values.OfType<NKCellRecord>()
-                    .SingleOrDefault((f => (f.Flags & NKCellRecord.FlagEnum.HiveEntryRootKey) == NKCellRecord.FlagEnum.HiveEntryRootKey));
-                    //.SingleOrDefault((f => f.Flags.ToString().Contains(NKCellRecord.FlagEnum.HiveEntryRootKey.ToString())));
+                    .SingleOrDefault(
+                        (f =>
+                            (f.Flags & NKCellRecord.FlagEnum.HiveEntryRootKey) == NKCellRecord.FlagEnum.HiveEntryRootKey));
 
             if (rootNode == null)
             {
@@ -797,7 +763,6 @@ namespace Registry
                     _logger.Warn(
                         "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
                         HiveLength(), TotalBytesRead);
-
                 }
             }
 
@@ -805,7 +770,6 @@ namespace Registry
             {
                 BuildDeletedRegistryKeys();
             }
-
 
             return true;
         }
@@ -861,7 +825,6 @@ namespace Registry
                             sizeNum = regKey.NKRecord.ValueListCount*4 + 4;
                         }
 
-
                         try
                         {
                             var rawData = ReadBytesFromHive(regKey.NKRecord.ValueListCellIndex + 4096,
@@ -878,7 +841,6 @@ namespace Registry
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
                         }
-
 
                         if (offsetList != null)
                         {
@@ -978,7 +940,6 @@ namespace Registry
                     {
                         //deletedRegistryKey is a child of RegistryKey with relative offset ParentCellIndex
 
-
                         //add the key as as subkey of its parent
                         var parent = _deletedRegistryKeys[deletedRegistryKey.Value.NKRecord.ParentCellIndex];
 
@@ -1049,16 +1010,10 @@ namespace Registry
                         RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset,
                             deletedRegistryKey.Value);
 
-                        if (
-                            KeyPathKeyMap.ContainsKey(
-                                deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "")) ==
-                            false)
+                        if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath) == false)
                         {
-                            KeyPathKeyMap.Add(
-                                deletedRegistryKey.Value.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), ""),
-                                deletedRegistryKey.Value);
+                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath, deletedRegistryKey.Value);
                         }
-
 
                         _logger.Debug(
                             "Associated deleted key at absolute offset 0x{0:X} to active parent key at absolute offset 0x{1:X}",
@@ -1076,7 +1031,6 @@ namespace Registry
                 if (associatedVKRecordOffsets.Contains(keyValuePair.Key) == false)
                 {
                     var vk = keyValuePair.Value as VKCellRecord;
-
                     var val = new KeyValue(vk);
 
                     UnassociatedRegistryValues.Add(val);
@@ -1094,11 +1048,9 @@ namespace Registry
 
                 RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
 
-                var keyNormalized = sk.KeyPath.Replace(string.Format("{0}\\", Root.KeyName), "");
-
-                if (KeyPathKeyMap.ContainsKey(keyNormalized) == false)
+                if (KeyPathKeyMap.ContainsKey(sk.KeyPath) == false)
                 {
-                    KeyPathKeyMap.Add(keyNormalized, sk);
+                    KeyPathKeyMap.Add(sk.KeyPath, sk);
                 }
 
                 UpdateChildPaths(sk);
@@ -1153,15 +1105,8 @@ namespace Registry
 
                 var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offset + 8, 4), 0);
 
-                //if (hbinSize == 0)
-                //{
-                //    // Go to end if we find a 0 size block (padding?)
-                //    offset = HiveLength();
-                //}
-
                 offset += hbinSize;
             }
-
 
             return hiveMetadata;
         }

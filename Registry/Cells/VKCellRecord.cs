@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
+using NLog;
 using Registry.Lists;
 using Registry.Other;
 
@@ -70,29 +71,15 @@ namespace Registry.Cells
 
             RawBytes = rawBytes;
 
-//            if (ValueName == "SystemDefaultLocaleName")
-//                Debug.Write(1);
-
             Size = BitConverter.ToInt32(rawBytes, 0);
-
-
-//            if (AbsoluteOffset == 0x156B0)
-//            {
-//                Debug.Write(1);
-//            }
-
-           Check.That(Signature).IsEqualTo("vk");
+            
+            Check.That(Signature).IsEqualTo("vk");
 
             DataOffets = new List<ulong>();
 
             _dataLengthInternal = DataLength;
-
-           
-
         
             //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
-           // var dataIsResident = Convert.ToString(_dataLengthInternal, 2).PadLeft(32, '0').StartsWith("1");
-
             var dataIsResident = (_dataLengthInternal & DWORD_SIGN_MASK) == DWORD_SIGN_MASK;
 
             //this is used later to pull the data from the raw bytes. By setting this here we do not need a bunch of if/then stuff later
@@ -114,7 +101,6 @@ namespace Registry.Cells
                 _internalDataOffset = 0;
             }
 
-
             //force to a known datatype 
             var dataTypeInternal = DataTypeRaw;
 
@@ -124,8 +110,6 @@ namespace Registry.Cells
             }
 
             DataType = (DataTypeEnum) dataTypeInternal;
-
-            //  Unknown = BitConverter.ToUInt16(rawBytes, 0x16);
 
             var dataBlockSize = 0;
 
@@ -148,7 +132,6 @@ namespace Registry.Cells
                 _datablockRaw = new byte[_dataLengthInternal];
 
                 //make a copy for processing below
-                //Array.Copy(rawBytes, 0xc, datablockRaw, 0, 4); org
                 Array.Copy(rawBytes, 0xc, _datablockRaw, 0, _dataLengthInternal);
 
                 //set our data length to what is available since its resident and unknown. it can be used for anything
@@ -181,7 +164,6 @@ namespace Registry.Cells
                     datablockSizeRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
                 }
 
-
                 //add this offset so we can mark the data cells as referenced later
                 DataOffets.Add(OffsetToData);
 
@@ -197,7 +179,6 @@ namespace Registry.Cells
                     //safety net to avoid crazy large reads that just fail
                     //find out the next highest multiple of 8 based on DataLength for a best guess, with 32 extra bytes to spare
                     dataBlockSize = (int) (Math.Ceiling(((double) DataLength/8))*8) + 32;
-                    // dataBlockSize = (int) (DataLength * 2);
                 }
 
                 //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
@@ -212,9 +193,6 @@ namespace Registry.Cells
                 {
                     dataBlockSize += 4;
                 }
-
-
-                //  Debug.WriteLine("Datablock size for vk at rel offset 0x{0:x} (IsResident: {1}): 0x{2:X}", relativeOffset, dataIsResident, dataBlockSize);
 
                 //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
                 if (IsFree)
@@ -234,13 +212,11 @@ namespace Registry.Cells
                     _datablockRaw = RegistryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
                 }
 
-
                 //datablockRaw now has our value AND slack space!
                 //value is dataLengthInternal long. rest is slack
 
                 //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
                 if (_dataLengthInternal > 16344 && minorVersion > 3)
-                    // RegistryHive.Header.MajorVersion == 1 && RegistryHive.Header.MinorVersion > 3)
                 {
                     // this is the BIG DATA case. here, we have to get the data pointed to by OffsetToData and process it to get to our (possibly fragmented) DataType data
 
@@ -291,15 +267,12 @@ namespace Registry.Cells
                 //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
             }
 
-
             //Testing trap
             //if (DataTypeRaw == 1 && AbsoluteOffset == 0x00000000000fd410)
             //{
             //    Debug.Write("VK testing trap hit");
             //}
 
-
-            //ValueDataRaw = datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
             ValueDataRaw = new byte[_dataLengthInternal];
 
             if (_dataLengthInternal + _internalDataOffset > _datablockRaw.Length)
@@ -322,9 +295,6 @@ namespace Registry.Cells
             {
                 Array.Copy(_datablockRaw, _internalDataOffset, ValueDataRaw, 0, _dataLengthInternal);
             }
-
-
-            //datablockRaw.Skip(internalDataOffset).Take((int)Math.Abs(dataLengthInternal)).ToArray();
 
             //we can determine max slack size since all data cells are a multiple of 8 bytes long
             //we know how long our data should be from the vk record (dataLengthInternal).
@@ -360,7 +330,6 @@ namespace Registry.Cells
                 if (paddingOffset + paddingLength <= rawBytes.Length)
                 {
                     Array.Copy(rawBytes,paddingOffset,Padding,0,paddingLength);
-                    //Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
                 }
             }
 

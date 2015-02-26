@@ -49,12 +49,6 @@ namespace Registry.Cells
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
 
-            //if (relativeOffset == 0x0023B860)
-            //    System.Diagnostics.Debug.Write("nk trap");
-
-//            if (AbsoluteOffset == 127722792)
-//                System.Diagnostics.Debug.Write("nk AbsoluteOffset trap");
-
             ValueOffsets = new List<ulong>();
 
             _size = BitConverter.ToInt32(rawBytes, 0);
@@ -85,7 +79,6 @@ namespace Registry.Cells
 //            }
         }
 
-        // public properties...
 
         /// <summary>
         ///     The relative offset to a data node containing the classname
@@ -167,7 +160,7 @@ namespace Registry.Cells
             get
             {
                 string _name;
-                //if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
+
                 if ((Flags & FlagEnum.CompressedName) == FlagEnum.CompressedName)
                 {
                     if (IsFree)
@@ -423,7 +416,6 @@ namespace Registry.Cells
                 sb.AppendLine();
                 sb.AppendLine(string.Format("Padding: {0}", BitConverter.ToString(Padding)));
             }
-            
 
             return sb.ToString();
         }
