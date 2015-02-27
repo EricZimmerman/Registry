@@ -20,7 +20,6 @@ namespace Registry.Abstractions
         public KeyValue(VKCellRecord vk)
         {
             VKRecord = vk;
-
             InternalGUID = Guid.NewGuid().ToString();
         }
 

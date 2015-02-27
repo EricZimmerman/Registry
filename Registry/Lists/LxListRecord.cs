@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -26,9 +27,6 @@ namespace Registry.Lists
 
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-
-
-            Check.That(Signature).IsOneOfThese("lh", "lf");
         }
 
         /// <summary>
@@ -39,7 +37,7 @@ namespace Registry.Lists
         {
             get
             {
-                var _offsets = new Dictionary<uint, string>();
+                var offsets = new Dictionary<uint, string>();
 
                 var index = 0x8;
                 var counter = 0;
@@ -69,11 +67,11 @@ namespace Registry.Lists
 
                     index += 4;
 
-                    _offsets.Add(os, hash);
+                    offsets.Add(os, hash);
 
                     counter += 1;
                 }
-                return _offsets;
+                return offsets;
             }
         }
 
@@ -146,7 +144,6 @@ namespace Registry.Lists
                 sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
                 sb.AppendLine();
             }
-
 
             return sb.ToString();
         }

@@ -7,6 +7,7 @@ using NFluent;
 using NLog;
 using Registry.Cells;
 using Registry.Lists;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -15,22 +16,6 @@ namespace Registry.Other
     // public classes...
     public class HBinRecord
     {
-        // this is static because its a lot faster than when its not!
-        private static readonly Regex _recordPattern = new Regex("(00|FF)-(6E|73|76)-6B", RegexOptions.Compiled);
-
-        private readonly List<string> _goodSigs = new List<string>
-        {
-            "lf",
-            "lh",
-            "li",
-            "ri",
-            "db",
-            "lk",
-            "nk",
-            "sk",
-            "vk"
-        };
-
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly bool _recoverDeleted;
         private readonly int _minorVersion;
@@ -52,12 +37,9 @@ namespace Registry.Other
 
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
-            // Debug.WriteLine("hbin abs 0x{0:x8}",AbsoluteOffset);
+            var sig = BitConverter.ToInt32(rawBytes, 0);
 
-            //if (AbsoluteOffset == 0x533000)
-            //   Debug.WriteLine("");
-
-            Check.That(Signature).IsEqualTo("hbin");
+            Check.That(sig).IsEqualTo(HbinSignature);
 
             _logger.Debug("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
@@ -144,29 +126,13 @@ namespace Registry.Other
         {
             var records = new List<IRecordBase>();
 
-
             //additional cell data starts 32 bytes (0x20) in
             var offsetInHbin = 0x20;
 
             RegistryHive.TotalBytesRead += 0x20;
 
-//            if (AbsoluteOffset == 0x6000)
-//            Debug.Write(1);
-
-
             while (offsetInHbin < Size)
             {
-//                Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
-//                Debug.WriteLine("abs off is 0x{0:X8}", offsetInHbin + RelativeOffset + 0x1000);
-                //if (offsetInHbin == 0x00005B08)
-                //    Debug.WriteLine("offsetInHbin is 0x{0:X8}", offsetInHbin);
-
-                //                if (offsetInHbin + RelativeOffset == 0x70e3020)
-                //                {
-                //                    Debug.Write(1);
-                //                }
-
-
                 var recordSize = BitConverter.ToUInt32(_rawBytes, offsetInHbin);
 
                 var readSize = (int) recordSize;
@@ -185,11 +151,10 @@ namespace Registry.Other
 
                 Array.Copy(_rawBytes, offsetInHbin, rawRecord, 0, readSize);
 
-                //var rawRecord = rawBytes.Skip(offsetInHbin).Take(readSize).ToArray();
-
                 RegistryHive.TotalBytesRead += readSize;
 
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
+                var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
 
                 if (_logger.IsDebugEnabled)
                 {
@@ -222,47 +187,47 @@ namespace Registry.Other
 
                 try
                 {
-                    switch (cellSignature)
+                    switch (cellSignature2)
                     {
-                        case "lf":
-                        case "lh":
+                        case LfSignature:
+                        case LhSignature:
                             listRecord = new LxListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "li":
+                        case LiSignature:
                             listRecord = new LIListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "ri":
+                        case RiSignature:
                             listRecord = new RIListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "db":
+                        case DbSignature:
                             listRecord = new DBListRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "lk":
+                        case LkSignature:
                             cellRecord = new LKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "nk":
+                        case NkSignature:
                             if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
                             {
                                 cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
 
                             break;
-                        case "sk":
+                        case SkSignature:
                             cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                             break;
 
-                        case "vk":
+                        case VkSignature:
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
                                 cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset, _minorVersion);
@@ -345,7 +310,6 @@ namespace Registry.Other
                 offsetInHbin += readSize;
             }
 
-
             _rawBytes = null;
             return records;
         }
@@ -356,7 +320,7 @@ namespace Registry.Other
 
             var offsetList2 = new List<int>();
 
-            var sig = string.Empty;
+           // var sig = string.Empty;
             byte[] raw = null;
 
             _logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
@@ -365,9 +329,9 @@ namespace Registry.Other
             {
                 if (remainingData[i] == 0x6b) //6b == k
                 {
-                    if (remainingData[i - 1] == 0x6e || remainingData[i - 1] == 0x76 || remainingData[i - 1] == 0x73) //6e = n, 73 = s, 76 = v
+                    if (remainingData[i - 1] == 0x6e || remainingData[i - 1] == 0x76) //6e = n, 76 = v
                     {
-                        //if we are here we have a good signature, nk, sk, or vk
+                        //if we are here we have a good signature, nk or vk
                         //check what is before that to see if its 0x00 or 0xFF
                         if (remainingData[i - 2] == 0x00 || remainingData[i - 2] == 0xFF)
                         {
@@ -397,11 +361,11 @@ namespace Registry.Other
 
                     Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
 
-                    sig = Encoding.ASCII.GetString(raw, 4, 2);
+                    var sig2 = BitConverter.ToInt16(raw, 4);
 
-                    switch (sig)
+                    switch (sig2)
                     {
-                        case "nk":
+                        case NkSignature:
                             if (raw.Length <= 0x30)
                             {
                                 continue;
@@ -416,7 +380,7 @@ namespace Registry.Other
                             }
 
                             break;
-                        case "vk":
+                        case VkSignature:
                             if (raw.Length < 0x18)
                             {
                                 //cant have a record shorter than this, even when no name is present
@@ -434,12 +398,10 @@ namespace Registry.Other
                 catch (Exception ex)
                 {
                     // this is a corrupted/unusable record
-                    //TODO do we add a placeholder here? probably not since its free
-
                     _logger.Warn(
                         string.Format(
-                            "When recovering from slack, cell signature '{0}', at absolute offset 0x{1:X8}, an error happened! raw Length: 0x{2:x}",
-                            sig, relativeoffset + i + 0x1000, raw.Length), ex);
+                            "When recovering from slack at absolute offset 0x{0:X8}, an error happened! raw Length: 0x{1:x}",
+                            relativeoffset + i + 0x1000, raw.Length), ex);
 
                     RegistryHive._softParsingErrors += 1;
                 }

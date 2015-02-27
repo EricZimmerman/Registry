@@ -10,6 +10,7 @@ using NFluent;
 using NLog;
 using Registry.Lists;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -72,8 +73,6 @@ namespace Registry.Cells
             RawBytes = rawBytes;
 
             Size = BitConverter.ToInt32(rawBytes, 0);
-            
-            Check.That(Signature).IsEqualTo("vk");
 
             DataOffets = new List<ulong>();
 
@@ -95,9 +94,6 @@ namespace Registry.Cells
                 //A data size of 1 uses the last byte (on a little-endian system)
                 //A data size of 0 represents that the value is not set (or NULL)
 
-                //if (dataLengthInternal == 1)
-                //    Debug.Write("dataLengthInternal == 1");
-
                 _internalDataOffset = 0;
             }
 
@@ -115,14 +111,6 @@ namespace Registry.Cells
 
             if (dataIsResident)
             {
-                //test validation for making sure we are taking the "right" side of the 4 bytes (which is really the left side)
-                //if (dataLengthInternal < 4 && dataLengthInternal != 0 && rawBytes[0xc] != 0x00)
-                //{
-                //    var testing = new byte[4];
-                //    Array.Copy(rawBytes, 0xc, testing, 0, 4);
-                //    Debug.WriteLine("Testing resident data. Type: {2}, data type raw: 0x{3:X}, Data len: {0}, bytes: {1}", dataLengthInternal, BitConverter.ToString(testing, 0),DataType, DataTypeRaw);
-                //}
-
                 if (DataType == DataTypeEnum.RegDwordBigEndian)
                 {
                     //this is a special case where the data length shows up as 2, but a dword needs 4 bytes, so adjust
@@ -143,7 +131,6 @@ namespace Registry.Cells
             else
             {
                 //We have to go look at the OffsetToData to see what we have so we can do the right thing
-
                 //The first operations are always the same. Go get the length of the data cell, then see how big it is.
 
                 var datablockSizeRaw = new byte[0];
@@ -267,12 +254,6 @@ namespace Registry.Cells
                 //Now that we are here the data we need to convert to our Values resides in datablockRaw and is ready for more processing according to DataType
             }
 
-            //Testing trap
-            //if (DataTypeRaw == 1 && AbsoluteOffset == 0x00000000000fd410)
-            //{
-            //    Debug.Write("VK testing trap hit");
-            //}
-
             ValueDataRaw = new byte[_dataLengthInternal];
 
             if (_dataLengthInternal + _internalDataOffset > _datablockRaw.Length)
@@ -332,13 +313,6 @@ namespace Registry.Cells
                     Array.Copy(rawBytes,paddingOffset,Padding,0,paddingLength);
                 }
             }
-
-            //            if (!IsFree)
-            //            {
-            //                //When records ARE free, different rules apply, so we process thsoe all at once later
-            //                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-            //            }
-
         }
 
         public byte[] Padding { get;  private set;}
@@ -440,17 +414,7 @@ namespace Registry.Cells
                                 {
                                     val = tempVal;
                                 }
-                                
-
-//                                val = Encoding.Unicode.GetString(_datablockRaw, _internalDataOffset,
-//                                    (int) _dataLengthInternal);
-
-
                             }
-
-                            //
-                            //ValueData =
-                            //Encoding.Unicode.GetString(datablockRaw, internalDataOffset, (int)dataLengthInternal).Replace("\0", " ").Trim();
 
                             break;
 
@@ -592,7 +556,6 @@ namespace Registry.Cells
                         else
                         {
                             // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
-
 
                             var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
 

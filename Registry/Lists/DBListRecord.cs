@@ -2,6 +2,7 @@
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -10,6 +11,8 @@ namespace Registry.Lists
     // internal classes...
     internal class DBListRecord : IListTemplate, IRecordBase
     {
+      
+
         // private fields...
         private readonly int _size;
         // public constructors...
@@ -30,8 +33,9 @@ namespace Registry.Lists
                 return;
             }
 
+            var sig = BitConverter.ToInt16(rawBytes, 4);
 
-            Check.That(Signature).IsEqualTo("db");
+            Check.That(sig).IsEqualTo(DbSignature);
         }
 
         /// <summary>

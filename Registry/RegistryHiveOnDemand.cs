@@ -10,6 +10,7 @@ using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 namespace Registry
 {
@@ -99,10 +100,10 @@ namespace Registry
 			_logger.Debug("Hive version is {0}", version);
 		}
 
-		public RegistryHive.HiveTypeEnum HiveType { get; }
+		public RegistryHive.HiveTypeEnum HiveType { get; private set; }
 		public string HivePath { get; private set; }
-		public string Filename { get; }
-		public RegistryHeader Header { get; }
+		public string Filename { get; private set; }
+		public RegistryHeader Header { get; private set; }
 
 		public static LoggingConfiguration NlogConfig
 		{
@@ -123,11 +124,13 @@ namespace Registry
 			var rawList = GetRawRecord(subkeyListsStableCellIndex);
 
 			var l = GetListFromRawBytes(rawList, subkeyListsStableCellIndex);
-			
-			switch (l.Signature)
+
+            var sig = BitConverter.ToInt16(l.RawBytes, 4);
+
+            switch (sig)
 			{
-				case "lf":
-				case "lh":
+				case LfSignature:
+				case LhSignature:
 					var lxRecord = l as LxListRecord;
 
 					foreach (var offset in lxRecord.Offsets)
@@ -145,7 +148,7 @@ namespace Registry
 					}
 					break;
 
-				case "ri":
+				case RiSignature:
 					var riRecord = l as RIListRecord;
 
 
@@ -192,7 +195,7 @@ namespace Registry
 					
 					break;
 
-				case "li":
+				case LiSignature:
 					var liRecord = l as LIListRecord;
 					
 					foreach (var offset in liRecord.Offsets)
@@ -258,16 +261,16 @@ namespace Registry
 
 		private IListTemplate GetListFromRawBytes(byte[] rawBytes, long relativeOffset)
 		{
-			var sig = Encoding.ASCII.GetString(rawBytes, 4, 2);
+            var sig = BitConverter.ToInt16(rawBytes, 4);
 
-			switch (sig)
+            switch (sig)
 			{
-				case "lf":
-				case "lh":
+				case LfSignature:
+				case LhSignature:
 					return new LxListRecord(rawBytes, relativeOffset);
-				case "ri":
+				case RiSignature:
 					return new RIListRecord(rawBytes, relativeOffset);
-				case "li":
+				case LiSignature:
 					return new LIListRecord(rawBytes, relativeOffset);
 				default:
 					throw new Exception(string.Format("Unknown list signature: {0}", sig));

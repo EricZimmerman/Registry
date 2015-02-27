@@ -53,8 +53,6 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            Check.That(Signature).IsEqualTo("lk");
-
             //TODO FINISH THIS LIKE NK
 
             //RootCellIndex
@@ -80,7 +78,6 @@ namespace Registry.Cells
             {
                 HivePointer = num;
             }
-
 
             SecurityCellIndex = BitConverter.ToUInt32(rawBytes, 0x30);
 

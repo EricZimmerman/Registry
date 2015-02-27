@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -25,15 +26,6 @@ namespace Registry.Lists
 
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-
-
-//            if (IsFree)
-//            {
-//                return;
-//            }
-
-
-            Check.That(Signature).IsEqualTo("ri");
         }
 
         /// <summary>
@@ -43,7 +35,7 @@ namespace Registry.Lists
         {
             get
             {
-                var _offsets = new List<uint>();
+                var offsets = new List<uint>();
 
                 var index = 0x8;
                 var counter = 0;
@@ -59,11 +51,11 @@ namespace Registry.Lists
                     var os = BitConverter.ToUInt32(RawBytes, index);
                     index += 4;
 
-                    _offsets.Add(os);
+                    offsets.Add(os);
 
                     counter += 1;
                 }
-                return _offsets;
+                return offsets;
             }
         }
 

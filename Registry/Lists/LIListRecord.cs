@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -12,6 +13,7 @@ namespace Registry.Lists
     internal class LIListRecord : IListTemplate, IRecordBase
     {
         // private fields...
+
 
         private readonly int _size;
         // public constructors...
@@ -31,8 +33,6 @@ namespace Registry.Lists
             {
                 return;
             }
-
-            Check.That(Signature).IsEqualTo("li");
         }
 
         /// <summary>

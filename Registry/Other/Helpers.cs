@@ -13,6 +13,19 @@ namespace Registry.Other
     // public classes...
     public static class Helpers
     {
+        public const short SkSignature = 0x6b73;
+        public const short VkSignature = 0x6b76;
+        public const short NkSignature = 0x6b6e;
+        public const short DbSignature = 0x6264;
+        public const short LiSignature = 0x696c;
+        public const short LkSignature = 0x6b6c;
+        public const short LhSignature = 0x686c;
+        public const short LfSignature = 0x666c;
+        public const short RiSignature = 0x6972;
+
+        public const int HbinSignature = 0x6E696268;
+        public const int RegfSignature = 0x66676572;
+
         // public enums...
         //http://msdn.microsoft.com/en-us/library/cc980032.aspx
         public enum SidTypeEnum

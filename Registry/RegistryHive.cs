@@ -12,6 +12,7 @@ using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -75,9 +76,6 @@ namespace Registry
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
 
-            //_hBinRecordCount = new Dictionary<long, HBinRecord>();
-
-
             var fileStream = new FileStream(Filename, FileMode.Open);
             var binaryReader = new BinaryReader(fileStream);
 
@@ -118,10 +116,6 @@ namespace Registry
         /// </summary>
         public Dictionary<long, ICellTemplate> CellRecords { get; }
 
-        /// <summary>
-        ///     List of all data nodes, both in use and free, as found in the hive
-        /// </summary>
-        //  public Dictionary<long, DataNode> DataRecords { get; private set; }
         public string Filename { get; }
 
         /// <summary>
@@ -158,12 +152,12 @@ namespace Registry
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            var sig = Encoding.ASCII.GetString(binaryReader.ReadBytes(4));
+            var sig = BitConverter.ToInt32(binaryReader.ReadBytes(4), 0);
 
             binaryReader.Close();
             fileStream.Close();
 
-            return sig.Equals("regf");
+            return sig.Equals(RegfSignature);
         }
 
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
@@ -312,10 +306,12 @@ namespace Registry
             _logger.Debug("Looking for list record at relative offset 0x{0:X}", key.NKRecord.SubkeyListsStableCellIndex);
             var l = ListRecords[key.NKRecord.SubkeyListsStableCellIndex];
 
-            switch (l.Signature)
+         var sig = BitConverter.ToInt16(l.RawBytes, 4);
+
+            switch (sig)
             {
-                case "lf":
-                case "lh":
+                case LfSignature:
+                case LhSignature:
                     var lxRecord = l as LxListRecord;
                     lxRecord.IsReferenced = true;
 
@@ -339,7 +335,7 @@ namespace Registry
                     }
                     break;
 
-                case "ri":
+                case RiSignature:
                     var riRecord = l as RIListRecord;
                     riRecord.IsReferenced = true;
 
@@ -395,7 +391,7 @@ namespace Registry
 
                     break;
 
-                case "li":
+                case LiSignature:
                     var liRecord = l as LIListRecord;
                     liRecord.IsReferenced = true;
 
@@ -476,7 +472,6 @@ namespace Registry
                             val.VKRecord.AbsoluteOffset, Root.KeyPath, val.ValueName, (int) val.VKRecord.DataType,
                             BitConverter.ToString(val.VKRecord.ValueDataRaw).Replace("-", " "));
                     }
-
 
                     DumpKeyCommonFormat(Root, sw, ref KeyCount, ref ValueCount);
                 }
@@ -591,7 +586,6 @@ namespace Registry
                 case "usrclass.dat":
                     HiveType = HiveTypeEnum.UsrClass;
                     break;
-
                 case "components":
                     HiveType = HiveTypeEnum.Components;
                     break;
@@ -611,9 +605,7 @@ namespace Registry
             ////Look at first hbin, get its size, then read that many bytes to create hbin record
             long offsetInHive = 4096;
 
-            const uint hbinHeader = 0x6e696268;
-
-            var hivelen = Header.Length + 0x1000; // HiveLength();
+            var hivelen = Header.Length + 0x1000; 
 
             //keep reading the file until we reach the end
             while (offsetInHive < hivelen)
@@ -628,14 +620,13 @@ namespace Registry
                     continue;
                 }
 
-                var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive, 4), 0);
+                var hbinSig = BitConverter.ToInt32(ReadBytesFromHive(offsetInHive, 4), 0);
 
-                if (hbinSig != hbinHeader)
+                if (hbinSig != HbinSignature)
                 {
                     _logger.Error("hbin header incorrect at absolute offset 0x{0:X}!!! Percent done: {1:P}",
                         offsetInHive,
                         (double) offsetInHive/hivelen);
-
 
                     if (RecoverDeleted) //TODO ? always or only if recoverdeleted
                     {
@@ -645,7 +636,7 @@ namespace Registry
                     break;
                 }
 
-                Check.That(hbinSig).IsEqualTo(hbinHeader);
+                Check.That(hbinSig).IsEqualTo(HbinSignature);
 
                 _logger.Debug(
                     "Processing hbin at absolute offset 0x{0:X} with size 0x{1:X} Percent done: {2:P}",
@@ -667,6 +658,7 @@ namespace Registry
 
                     foreach (var record in records)
                     {
+                        //TODO change this to compare against constants?
                         switch (record.Signature)
                         {
                             case "nk":
@@ -706,8 +698,6 @@ namespace Registry
 
             _logger.Info("Initial processing complete. Building tree...");
 
-            Debug.WriteLine("Initial processing complete. Building tree...");
-
             //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
             //here we are looking for the flag
             var rootNode =
@@ -733,8 +723,6 @@ namespace Registry
 
 
             var keys = GetSubKeysAndValues(Root);
-
-            Debug.WriteLine("Processing complete!");
 
             Root.SubKeys.AddRange(keys);
 
@@ -1063,9 +1051,6 @@ namespace Registry
         /// <returns></returns>
         public HiveMetadata Verify()
         {
-            const int regfHeader = 0x66676572;
-            const int hbinHeader = 0x6e696268;
-
             if (Filename == null)
             {
                 throw new ArgumentNullException("Filename cannot be null");
@@ -1085,7 +1070,7 @@ namespace Registry
 
             var fileHeaderSig = BitConverter.ToUInt32(ReadBytesFromHive(0, 4), 0);
 
-            if (fileHeaderSig != regfHeader)
+            if (fileHeaderSig != RegfSignature)
             {
                 return hiveMetadata;
             }
@@ -1098,7 +1083,7 @@ namespace Registry
             {
                 var hbinSig = BitConverter.ToUInt32(ReadBytesFromHive(offset, 4), 0);
 
-                if (hbinSig == hbinHeader)
+                if (hbinSig == HbinSignature)
                 {
                     hiveMetadata.NumberofHBins += 1;
                 }

@@ -44,8 +44,7 @@ namespace Registry.Other
                 .Replace("\0", string.Empty)
                 .Replace("\\??\\", string.Empty);
 
-
-            CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc); //TODO 4.27 The “regf” Checksum 
+            CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc); 
 
             var index = 0;
             var xsum = 0;
@@ -145,7 +144,6 @@ namespace Registry.Other
             sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CheckSum));
             sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CalculatedChecksum));
             sb.AppendLine(string.Format("CheckSums match: {0}", CalculatedChecksum == CheckSum));
-
 
             sb.AppendLine();
             sb.AppendLine(string.Format("BootType: 0x{0:X}", BootType));

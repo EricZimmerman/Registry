@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -25,9 +26,6 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            Check.That(Signature).IsEqualTo("sk");
-
-
             //this has to be a multiple of 8, so check for it
             var paddingOffset = 0x18 + DescriptorLength;
             var paddingLength = rawBytes.Length - paddingOffset;
@@ -40,7 +38,7 @@ namespace Registry.Cells
             }
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-            Check.That(0x18 + (int) DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
+         //   Check.That(0x18 + (int) DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
         }
 
         // public properties...

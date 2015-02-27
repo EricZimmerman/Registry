@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NFluent;
 using Registry.Other;
+using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -53,8 +54,6 @@ namespace Registry.Cells
 
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-            Check.That(Signature).IsEqualTo("nk");
-
             var paddingOffset = 0x50 + NameLength;
 
             var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
@@ -69,14 +68,6 @@ namespace Registry.Cells
             {
                 Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
             }
-
-            //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-
-//            if (!IsFree)
-//            {
-//                //When records ARE free, different rules apply, so we process thsoe all at once later
-//                Check.That(actualPaddingOffset).IsEqualTo(rawBytes.Length);
-//            }
         }
 
 

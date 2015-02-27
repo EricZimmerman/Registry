@@ -27,10 +27,6 @@ namespace Registry.Other
             RawBytes = rawBytes;
 
             ACLType = aclTypetype;
-
-            var rev = (int) AclRevision;
-
-            Check.That(rev.ToString()).IsOneOfThese("1", "2", "4");
         }
 
         // public properties...

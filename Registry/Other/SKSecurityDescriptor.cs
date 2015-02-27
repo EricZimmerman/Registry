@@ -89,7 +89,6 @@ namespace Registry.Other
                 return Helpers.ConvertHexStringToSidString(rawGroup);
             }
         }
-
         public Helpers.SidTypeEnum GroupSIDType
         {
             get { return Helpers.GetSIDTypeFromSIDString(GroupSID); }
@@ -171,7 +170,6 @@ namespace Registry.Other
                 sb.AppendLine(string.Format("Sacl Offset: 0x{0:X}", SaclOffset));
                 sb.AppendLine(string.Format("SACL: {0}", SACL));
             }
-
 
             return sb.ToString();
         }
