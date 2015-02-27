@@ -72,7 +72,7 @@ namespace Registry.Cells
 
             RawBytes = rawBytes;
 
-            Size = BitConverter.ToInt32(rawBytes, 0);
+          
 
             DataOffets = new List<ulong>();
 
@@ -295,12 +295,11 @@ namespace Registry.Cells
                     (int) (Math.Abs(maxSlackSize)));
             }
 
-
             var paddingOffset = 0x18 + NameLength;
 
-            var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
+            var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
 
-            var actualPaddingOffset = paddingBlock*8;
+            var actualPaddingOffset = paddingBlock * 8;
 
             var paddingLength = actualPaddingOffset - paddingOffset;
 
@@ -310,12 +309,12 @@ namespace Registry.Cells
             {
                 if (paddingOffset + paddingLength <= rawBytes.Length)
                 {
-                    Array.Copy(rawBytes,paddingOffset,Padding,0,paddingLength);
+                    Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
                 }
             }
         }
 
-        public byte[] Padding { get;  private set;}
+        public byte[] Padding { get; private set; }
 
         /// <summary>
         ///     A list of offsets to data records.
@@ -596,7 +595,7 @@ namespace Registry.Cells
 
         public bool IsFree
         {
-            get { return Size > 0; }
+            get { return BitConverter.ToInt32(RawBytes, 0) > 0; }
         }
 
         public bool IsReferenced { get; internal set; }
@@ -609,7 +608,9 @@ namespace Registry.Cells
             set { }
         }
 
-        public int Size { get;  private set;}
+        public int Size { get { return BitConverter.ToInt32(RawBytes, 0); }
+            private set { } 
+        }
         // public methods...
         public override string ToString()
         {

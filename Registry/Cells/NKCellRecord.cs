@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using NFluent;
 using Registry.Other;
@@ -35,7 +36,7 @@ namespace Registry.Cells
         }
 
         // private fields...
-        private readonly int _size;
+      //  private readonly int _size;
         // protected internal constructors...
 
         // public fields...
@@ -52,13 +53,11 @@ namespace Registry.Cells
 
             ValueOffsets = new List<ulong>();
 
-            _size = BitConverter.ToInt32(rawBytes, 0);
-
             var paddingOffset = 0x50 + NameLength;
 
-            var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
+            var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
 
-            var actualPaddingOffset = paddingBlock*8;
+            var actualPaddingOffset = paddingBlock * 8;
 
             var paddingLength = actualPaddingOffset - paddingOffset;
 
@@ -198,7 +197,7 @@ namespace Registry.Cells
             get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
         }
 
-        public byte[] Padding { get;  private set;}
+        public byte[] Padding { get; private set; }
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -329,7 +328,7 @@ namespace Registry.Cells
 
         public bool IsFree
         {
-            get { return _size > 0; }
+            get { return BitConverter.ToInt32(RawBytes, 0) > 0; }
         }
 
         public bool IsReferenced { get; internal set; }
@@ -344,7 +343,7 @@ namespace Registry.Cells
 
         public int Size
         {
-            get { return Math.Abs(_size); }
+            get { return Math.Abs(BitConverter.ToInt32(RawBytes, 0)); }
         }
 
         // public methods...
@@ -352,7 +351,7 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(Size)));
             sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
