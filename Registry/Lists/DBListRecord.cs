@@ -27,15 +27,6 @@ namespace Registry.Lists
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
 
-
-            if (IsFree)
-            {
-                return;
-            }
-
-            var sig = BitConverter.ToInt16(rawBytes, 4);
-
-            Check.That(sig).IsEqualTo(DbSignature);
         }
 
         /// <summary>
