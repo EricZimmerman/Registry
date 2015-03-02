@@ -271,26 +271,6 @@ namespace ExampleApp
 
                     logger.Info(sb.ToString());
 
-
-                    var paddlen = 0;
-                    foreach (var cellTemplate in fName1Test.CellRecords)
-                    {
-                        var nk = cellTemplate.Value as NKCellRecord;
-
-                        if (nk != null)
-                        {
-                            paddlen += nk.Padding.Length;
-                        }
-
-                        var vk = cellTemplate.Value as VKCellRecord;
-
-                        if (vk != null)
-                        {
-                            paddlen += vk.Padding.Length;
-                        }
-                    }
-
-
                     if (result.Value.ExportHiveData)
                     {
                         Console.WriteLine();

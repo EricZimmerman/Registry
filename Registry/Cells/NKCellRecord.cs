@@ -52,23 +52,7 @@ namespace Registry.Cells
             RawBytes = rawBytes;
 
             ValueOffsets = new List<ulong>();
-
-            var paddingOffset = 0x50 + NameLength;
-
-            var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
-
-            var actualPaddingOffset = paddingBlock * 8;
-
-            var paddingLength = actualPaddingOffset - paddingOffset;
-
-            Padding = new byte[paddingLength];
-
-            if (paddingLength > 0 & !IsFree)
-            {
-                Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
-            }
         }
-
 
         /// <summary>
         ///     The relative offset to a data node containing the classname
@@ -197,7 +181,37 @@ namespace Registry.Cells
             get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
         }
 
-        public byte[] Padding { get; private set; }
+        public byte[] Padding
+        {
+            get
+            {
+                if (IsFree)
+                {
+                    return new byte[0];
+                }
+                
+                var paddingOffset = 0x50 + NameLength;
+
+                var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
+
+                var actualPaddingOffset = paddingBlock * 8;
+
+                var paddingLength = actualPaddingOffset - paddingOffset;
+
+                var padding = new byte[paddingLength];
+
+                if (paddingLength > 0)
+                {
+                    if (paddingOffset + paddingLength <= RawBytes.Length)
+                    {
+                        Array.Copy(RawBytes, paddingOffset, padding, 0, paddingLength);
+                    }
+                }
+
+                return padding;
+            }
+            private set { }
+        }
 
         /// <summary>
         ///     The relative offset to the parent key for this record

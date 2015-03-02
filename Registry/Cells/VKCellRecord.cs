@@ -72,8 +72,6 @@ namespace Registry.Cells
 
             RawBytes = rawBytes;
 
-          
-
             DataOffets = new List<ulong>();
 
             _dataLengthInternal = DataLength;
@@ -295,26 +293,33 @@ namespace Registry.Cells
                     (int) (Math.Abs(maxSlackSize)));
             }
 
-            var paddingOffset = 0x18 + NameLength;
-
-            var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
-
-            var actualPaddingOffset = paddingBlock * 8;
-
-            var paddingLength = actualPaddingOffset - paddingOffset;
-
-            Padding = new byte[paddingLength];
-
-            if (paddingLength > 0)
-            {
-                if (paddingOffset + paddingLength <= rawBytes.Length)
-                {
-                    Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
-                }
-            }
         }
 
-        public byte[] Padding { get; private set; }
+        public byte[] Padding {
+            get
+            {
+                var paddingOffset = 0x18 + NameLength;
+
+                var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
+
+                var actualPaddingOffset = paddingBlock * 8;
+
+                var paddingLength = actualPaddingOffset - paddingOffset;
+
+                var padding = new byte[paddingLength];
+
+                if (paddingLength > 0)
+                {
+                    if (paddingOffset + paddingLength <= RawBytes.Length)
+                    {
+                        Array.Copy(RawBytes, paddingOffset, padding, 0, paddingLength);
+                    }
+                }
+
+                return padding;
+            }
+            private set { }
+        }
 
         /// <summary>
         ///     A list of offsets to data records.
@@ -452,7 +457,6 @@ namespace Registry.Cells
 
                             break;
 
-
                         case DataTypeEnum.RegUnknown:
                             val = _datablockRaw;
 
@@ -468,8 +472,6 @@ namespace Registry.Cells
                             break;
 
                         default:
-
-
                             DataType = DataTypeEnum.RegUnknown;
                             val = _datablockRaw;
 
