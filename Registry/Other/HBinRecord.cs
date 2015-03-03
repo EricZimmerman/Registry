@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
@@ -20,14 +21,19 @@ namespace Registry.Other
         private readonly bool _recoverDeleted;
         private readonly int _minorVersion;
         private byte[] _rawBytes;
+
+        private RegistryHive _registryHive;
+
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="HBinRecord" /> class.
         ///     <remarks>Represents a Hive Bin Record</remarks>
         /// </summary>
-        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, int minorVersion, bool recoverDeleted)
+        protected internal HBinRecord(byte[] rawBytes, long relativeOffset, int minorVersion, bool recoverDeleted, RegistryHive reg)
         {
             RelativeOffset = relativeOffset;
+
+            _registryHive = reg;
 
             _recoverDeleted = recoverDeleted;
 
@@ -147,9 +153,7 @@ namespace Registry.Other
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
                 readSize = Math.Abs(readSize);
 
-                var rawRecord = new byte[readSize];
-
-                Array.Copy(_rawBytes, offsetInHbin, rawRecord, 0, readSize);
+                var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();//  new byte[readSize];
 
                 RegistryHive.TotalBytesRead += readSize;
 
@@ -218,7 +222,7 @@ namespace Registry.Other
                         case NkSignature:
                             if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
                             {
-                                cellRecord = new NKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                                cellRecord = new NKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset, _registryHive);
                             }
 
                             break;
@@ -230,7 +234,7 @@ namespace Registry.Other
                         case VkSignature:
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
-                                cellRecord = new VKCellRecord(rawRecord, offsetInHbin + RelativeOffset, _minorVersion);
+                                cellRecord = new VKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset, _minorVersion, _registryHive);
                             }
 
                             break;
@@ -357,9 +361,9 @@ namespace Registry.Other
                         continue;
                     }
 
-                    raw = new byte[Math.Abs((int) size)];
+                  //  raw = new byte[Math.Abs((int) size)];
 
-                    Array.Copy(remainingData, actualStart, raw, 0, Math.Abs((int) size));
+                    raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs((int)size)).ToArray();//  new byte[readSize];
 
                     var sig2 = BitConverter.ToInt16(raw, 4);
 
@@ -371,7 +375,7 @@ namespace Registry.Other
                                 continue;
                             }
 
-                            var nk = new NKCellRecord(raw, relativeoffset + actualStart);
+                            var nk = new NKCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                             if (nk.LastWriteTimestamp.Year > 1700)
                             {
                                 _logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
@@ -386,7 +390,7 @@ namespace Registry.Other
                                 //cant have a record shorter than this, even when no name is present
                                 continue;
                             }
-                            var vk = new VKCellRecord(raw, relativeoffset + actualStart, _minorVersion);
+                            var vk = new VKCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion, _registryHive);
                             _logger.Debug("Found vk record in slack at absolute offset 0x{0:X}",
                                 relativeoffset + actualStart + 0x1000);
                             records.Add(vk);

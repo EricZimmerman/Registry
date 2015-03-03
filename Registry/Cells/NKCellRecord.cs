@@ -36,8 +36,12 @@ namespace Registry.Cells
         }
 
         // private fields...
-      //  private readonly int _size;
+        //  private readonly int _size;
         // protected internal constructors...
+
+
+        private int _rawBytesLength;
+        private IRegistry _registryHive;
 
         // public fields...
         public List<ulong> ValueOffsets;
@@ -46,12 +50,13 @@ namespace Registry.Cells
         ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
         ///     <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal NKCellRecord(byte[] rawBytes, long relativeOffset)
+        protected internal NKCellRecord(int recordSize, long relativeOffset, IRegistry registryHive)
         {
             RelativeOffset = relativeOffset;
-            RawBytes = rawBytes;
+            _registryHive = registryHive;
+            _rawBytesLength = recordSize;
 
-            ValueOffsets = new List<ulong>();
+                        ValueOffsets = new List<ulong>();
         }
 
         /// <summary>
@@ -198,17 +203,15 @@ namespace Registry.Cells
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
 
-                var padding = new byte[paddingLength];
-
                 if (paddingLength > 0)
                 {
                     if (paddingOffset + paddingLength <= RawBytes.Length)
                     {
-                        Array.Copy(RawBytes, paddingOffset, padding, 0, paddingLength);
+                     return  new ArraySegment<byte>(RawBytes,paddingOffset,paddingLength).ToArray();
                     }
                 }
 
-                return padding;
+                return new byte[0];
             }
             private set { }
         }
@@ -346,7 +349,17 @@ namespace Registry.Cells
         }
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get;  private set;}
+        public byte[] RawBytes
+        {
+            get
+            {
+                var raw = _registryHive.ReadBytesFromHive(AbsoluteOffset, _rawBytesLength);
+
+                return raw;
+
+            }
+            private set { }
+        }
         public long RelativeOffset { get;  private set;}
 
         public string Signature

@@ -1,18 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5C40BE24-A89D-4973-B668-2D6E945CB047}</ProjectGuid>
+    <ProjectGuid>{0E97C9AC-C1FD-482F-A0DC-548F8402562A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Registry</RootNamespace>
-    <AssemblyName>Registry</AssemblyName>
+    <RootNamespace>Registry.Test</RootNamespace>
+    <AssemblyName>Registry.Test</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,17 +29,17 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NFluent">
+    <Reference Include="NFluent, Version=1.3.1.0, Culture=neutral, PublicKeyToken=18828b37b84b1437, processorArchitecture=MSIL">
       <HintPath>..\packages\NFluent.1.3.1.0\lib\net40\NFluent.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="NLog">
-      <HintPath>..\packages\NLog.3.2.0.0\lib\net45\NLog.dll</HintPath>
+    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -50,39 +48,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstractions\KeyValue.cs" />
-    <Compile Include="Abstractions\RegistryKey.cs" />
-    <Compile Include="Cells\LKCellRecord.cs" />
-    <Compile Include="IRegistry.cs" />
-    <Compile Include="MessageEventArgs.cs" />
-    <Compile Include="Other\ACERecord.cs" />
-    <Compile Include="Cells\NKCellRecord.cs" />
-    <Compile Include="Cells\SKCellRecord.cs" />
-    <Compile Include="Cells\VKCellRecord.cs" />
-    <Compile Include="Other\DataNode.cs" />
-    <Compile Include="Other\HBinRecord.cs" />
-    <Compile Include="Other\Helpers.cs" />
-    <Compile Include="Other\HiveMetadata.cs" />
-    <Compile Include="Cells\ICellTemplate.cs" />
-    <Compile Include="Lists\DBListRecord.cs" />
-    <Compile Include="Lists\IListTemplate.cs" />
-    <Compile Include="Lists\LIListRecord.cs" />
-    <Compile Include="Lists\LxListRecord.cs" />
-    <Compile Include="Lists\RIListRecord.cs" />
-    <Compile Include="Other\IRecordBase.cs" />
-    <Compile Include="RegistryBase.cs" />
-    <Compile Include="RegistryHive.cs" />
+    <Compile Include="TestClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Other\RegistryHeader.cs" />
-    <Compile Include="Other\SKSecurityDescriptor.cs" />
-    <Compile Include="Other\xACLRecord.cs" />
-    <Compile Include="RegistryHiveOnDemand.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Registry\Registry.csproj">
+      <Project>{5c40be24-a89d-4973-b668-2d6e945cb047}</Project>
+      <Name>Registry</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="!_TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

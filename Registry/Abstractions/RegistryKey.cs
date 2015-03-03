@@ -105,7 +105,7 @@ namespace Registry.Abstractions
         /// </summary>
         public List<KeyValue> Values { get; private set; }
 
-        public string GetRegFormat(RegistryHive.HiveTypeEnum hiveType)
+        public string GetRegFormat(HiveTypeEnum hiveType)
         {
             var sb = new StringBuilder();
 
@@ -113,25 +113,25 @@ namespace Registry.Abstractions
 
             switch (hiveType)
             {
-                case RegistryHive.HiveTypeEnum.NtUser:
+                case HiveTypeEnum.NtUser:
                     keyBase = "HKEY_CURRENT_USER";
                     break;
-                case RegistryHive.HiveTypeEnum.Sam:
+                case HiveTypeEnum.Sam:
                     keyBase = "HKEY_CURRENT_USER\\SAM";
                     break;
-                case RegistryHive.HiveTypeEnum.Security:
+                case HiveTypeEnum.Security:
                     keyBase = "HKEY_CURRENT_USER\\SECURITY";
                     break;
-                case RegistryHive.HiveTypeEnum.Software:
+                case HiveTypeEnum.Software:
                     keyBase = "HKEY_CURRENT_USER\\SOFTWARE";
                     break;
-                case RegistryHive.HiveTypeEnum.System:
+                case HiveTypeEnum.System:
                     keyBase = "HKEY_CURRENT_USER\\SYSTEM";
                     break;
-                case RegistryHive.HiveTypeEnum.UsrClass:
+                case HiveTypeEnum.UsrClass:
                     keyBase = "HKEY_CLASSES_ROOT";
                     break;
-                case RegistryHive.HiveTypeEnum.Components:
+                case HiveTypeEnum.Components:
                     keyBase = "HKEY_CURRENT_USER\\COMPONENTS";
                     break;
 

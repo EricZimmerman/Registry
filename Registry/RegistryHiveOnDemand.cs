@@ -14,106 +14,18 @@ using static Registry.Other.Helpers;
 
 namespace Registry
 {
-	public class RegistryHiveOnDemand
+	public class RegistryHiveOnDemand :RegistryBase
 	{
-		private static LoggingConfiguration _nlogConfig;
-		private readonly byte[] _fileBytes;
 		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-		public RegistryHiveOnDemand(string fileName)
+	 
+
+		public RegistryHiveOnDemand(string hivePath) :base(hivePath)
 		{
-			Filename = fileName;
+            
 
-			if (Filename == null)
-			{
-				throw new ArgumentNullException("Filename cannot be null");
-			}
+        }
 
-			if (!File.Exists(Filename))
-			{
-				throw new FileNotFoundException();
-			}
-
-			HivePath = Filename;
-
-			if (!RegistryHive.HasValidHeader(fileName))
-			{
-				_logger.Error("'{0}' is not a Registry hive (bad signature)", fileName);
-
-				throw new Exception(string.Format("'{0}' is not a Registry hive (bad signature)", fileName));
-			}
-
-			var fileStream = new FileStream(Filename, FileMode.Open);
-			var binaryReader = new BinaryReader(fileStream);
-
-			binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-			RegistryHive.FileBytes = binaryReader.ReadBytes((int) binaryReader.BaseStream.Length);
-			_fileBytes = RegistryHive.FileBytes;
-
-			binaryReader.Close();
-			fileStream.Close();
-			
-			_logger.Debug("Set HivePath to {0}", Filename);
-
-			var header = ReadBytesFromHive(0, 4096);
-
-			_logger.Debug("Getting header");
-
-			Header = new RegistryHeader(header);
-
-			_logger.Debug("Got header. Embedded file name {0}", Header.FileName);
-
-			var fnameBase = Path.GetFileName(Header.FileName).ToLower();
-
-			switch (fnameBase)
-			{
-				case "ntuser.dat":
-					HiveType = RegistryHive.HiveTypeEnum.NtUser;
-					break;
-				case "sam":
-					HiveType = RegistryHive.HiveTypeEnum.Sam;
-					break;
-				case "security":
-					HiveType = RegistryHive.HiveTypeEnum.Security;
-					break;
-				case "software":
-					HiveType = RegistryHive.HiveTypeEnum.Software;
-					break;
-				case "system":
-					HiveType = RegistryHive.HiveTypeEnum.System;
-					break;
-				case "usrclass.dat":
-					HiveType = RegistryHive.HiveTypeEnum.UsrClass;
-					break;
-                case "components":
-                    HiveType = RegistryHive.HiveTypeEnum.Components;
-                    break;
-                default:
-					HiveType = RegistryHive.HiveTypeEnum.Other;
-					break;
-			}
-			_logger.Debug("Hive is a {0} hive", HiveType);
-
-			var version = string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
-
-			_logger.Debug("Hive version is {0}", version);
-		}
-
-		public RegistryHive.HiveTypeEnum HiveType { get; private set; }
-		public string HivePath { get; private set; }
-		public string Filename { get; private set; }
-		public RegistryHeader Header { get; private set; }
-
-		public static LoggingConfiguration NlogConfig
-		{
-			get { return _nlogConfig; }
-			set
-			{
-				_nlogConfig = value;
-				LogManager.Configuration = _nlogConfig;
-			}
-		}
 
 		private List<RegistryKey> GetSubkeys(uint subkeyListsStableCellIndex, RegistryKey parent)
 		{
@@ -137,7 +49,7 @@ namespace Registry
 					{
 						_logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset);
 						var rawCell = GetRawRecord(offset.Key);
-						var nk = new NKCellRecord(rawCell, offset.Key);
+						var nk = new NKCellRecord(rawCell.Length, offset.Key, this);
 						
 						_logger.Debug("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset,
 							nk.Name);
@@ -169,7 +81,7 @@ namespace Registry
 							{
 								_logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
 								var rawCell = GetRawRecord(offset1);
-								var nk = new NKCellRecord(rawCell, offset1);
+								var nk = new NKCellRecord(rawCell.Length, offset1, this);
 								
 								var tempKey = new RegistryKey(nk, parent);
 
@@ -184,7 +96,7 @@ namespace Registry
 							{
 								_logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset3);
 								var rawCell = GetRawRecord(offset3.Key);
-								var nk = new NKCellRecord(rawCell, offset3.Key);
+								var nk = new NKCellRecord(rawCell.Length, offset3.Key, this);
 
 								var tempKey = new RegistryKey(nk, parent);
 
@@ -202,7 +114,7 @@ namespace Registry
 					{
 						_logger.Debug("In li, looking for nk record at relative offset 0x{0:X}", offset);
 						var rawCell = GetRawRecord(offset);
-						var nk = new NKCellRecord(rawCell, offset);
+						var nk = new NKCellRecord(rawCell.Length, offset, this);
 
 						var tempKey = new RegistryKey(nk, parent);
 						keys.Add(tempKey);
@@ -249,7 +161,7 @@ namespace Registry
 				_logger.Debug("Looking for vk record at relative offset 0x{0:X}", valueOffset);
 
 				var rawVK = GetRawRecord(valueOffset);
-				var vk = new VKCellRecord(rawVK, valueOffset, Header.MinorVersion);
+				var vk = new VKCellRecord(rawVK.Length, valueOffset, Header.MinorVersion, this);
 
 				_logger.Debug("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
 				var value = new KeyValue(vk);
@@ -305,7 +217,7 @@ namespace Registry
 		{
 			var rawRoot = GetRawRecord(Header.RootCellOffset);
 
-			var rootNk = new NKCellRecord(rawRoot, Header.RootCellOffset);
+			var rootNk = new NKCellRecord(rawRoot.Length, Header.RootCellOffset, this);
 
 		    var newPath = keyPath;
 
@@ -344,12 +256,6 @@ namespace Registry
 			return finalKey;
 		}
 
-		private byte[] ReadBytesFromHive(long absoluteOffset, int length)
-		{
-			var absLen = Math.Abs(length);
-			var retArray = new byte[absLen];
-			Array.Copy(_fileBytes, absoluteOffset, retArray, 0, absLen);
-			return retArray;
-		}
+		
 	}
 }

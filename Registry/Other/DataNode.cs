@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 // namespaces...
@@ -29,11 +30,7 @@ namespace Registry.Other
         {
             get
             {
-                var data = new byte[RawBytes.Length - 4];
-
-                Array.Copy(RawBytes, 4, data, 0, RawBytes.Length - 4);
-
-                return data;
+                return new ArraySegment<byte>(RawBytes, 4, RawBytes.Length - 4).ToArray();
             }
         }
 

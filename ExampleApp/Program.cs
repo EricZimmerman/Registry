@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -171,7 +172,7 @@ namespace ExampleApp
 
             var logger = LogManager.GetCurrentClassLogger();
 
-			foreach (var testFile in testFiles)
+            foreach (var testFile in testFiles)
             {
                 if (File.Exists(testFile) == false)
                 {
@@ -192,6 +193,8 @@ namespace ExampleApp
                     sw.Start();
 
                     fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
+
+                    fName1Test.FlushRecordListsAfterParse = !result.Value.DontFlushLists;
 
                     fName1Test.ParseHive();
 
@@ -226,6 +229,12 @@ namespace ExampleApp
                         string.Format(
                             "Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}",
                             fName1Test.HBinRecordCount, fName1Test.HBinRecordTotalSize, fName1Test.Header.Length));
+
+                    if (fName1Test.FlushRecordListsAfterParse == false)
+                    {
+                        
+                    
+
                     sb.AppendLine(
                         string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
                             fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
@@ -251,6 +260,18 @@ namespace ExampleApp
                         sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
                     }
 
+                        sb.AppendLine();
+                        sb.AppendLine(
+                            string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
+                                fName1Test.CellRecords.Count ==
+                                freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
+                        sb.AppendLine(
+                            string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
+                                fName1Test.ListRecords.Count ==
+                                freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+
+                    }
+
                     sb.AppendLine();
                     sb.AppendLine(string.Format(
                         "There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
@@ -259,22 +280,13 @@ namespace ExampleApp
                         "There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
                         fName1Test.SoftParsingErrors));
 
-                    sb.AppendLine();
-                    sb.AppendLine(
-                        string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
-                            fName1Test.CellRecords.Count ==
-                            freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
-                    sb.AppendLine(
-                        string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
-                            fName1Test.ListRecords.Count ==
-                            freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+                
 
                     logger.Info(sb.ToString());
 
                     if (result.Value.ExportHiveData)
                     {
                         Console.WriteLine();
-
 
                         var baseDir = Path.GetDirectoryName(testFile);
                         var baseFname = Path.GetFileName(testFile);
@@ -303,7 +315,6 @@ namespace ExampleApp
                 {
                     Console.WriteLine("There was an error: {0}", ex.Message);
                 }
-
 
                 logger.Info("Processing took {0:N4} seconds\r\n", sw.Elapsed.TotalSeconds);
 

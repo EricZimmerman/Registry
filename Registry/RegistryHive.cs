@@ -19,89 +19,44 @@ using static Registry.Other.Helpers;
 namespace Registry
 {
     // public classes...
-    public class RegistryHive
+    public class RegistryHive :RegistryBase
     {
-        public enum HiveTypeEnum
-        {
-            [Description("Other")] Other = 0,
-            [Description("NTUSER")] NtUser = 1,
-            [Description("SAM")] Sam = 2,
-            [Description("SECURITY")] Security = 3,
-            [Description("SOFTWARE")] Software = 4,
-            [Description("SYSTEM")] System = 5,
-            [Description("USRCLASS")] UsrClass = 6,
-            [Description("COMPONENTS")] Components = 7
-        }
+      
 
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
-        internal static byte[] FileBytes;
+        //internal static byte[] FileBytes;
         public static long TotalBytesRead;
-        private static LoggingConfiguration _nlogConfig;
+        //private static LoggingConfiguration _nlogConfig;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
-        //private MessageEventArgs _msgArgs;
+        
+
+
+
+        /// <summary>
+        /// If true, CellRecords and ListRecords will be purged to free memory
+        /// </summary>
+        public bool FlushRecordListsAfterParse = true;
+
 
         /// <summary>
         ///     Initializes a new instance of the
         ///     <see cref="Registry" />
         ///     class.
         /// </summary>
-        public RegistryHive(string fileName)
+        public RegistryHive(string hivePath) :base(hivePath)
         {
-            Filename = fileName;
-
-            if (Filename == null)
-            {
-                throw new ArgumentNullException("Filename cannot be null");
-            }
-
-            if (!File.Exists(Filename))
-            {
-                throw new FileNotFoundException();
-            }
-
-            HivePath = Filename;
-
-            if (!HasValidHeader(fileName))
-            {
-                _logger.Error("'{0}' is not a Registry hive (bad signature)", fileName);
-
-                throw new Exception(string.Format("'{0}' is not a Registry hive (bad signature)", fileName));
-            }
-
-            _logger.Debug("Set HivePath to {0}", Filename);
-
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
-
-            var fileStream = new FileStream(Filename, FileMode.Open);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            FileBytes = binaryReader.ReadBytes((int) binaryReader.BaseStream.Length);
-
-            binaryReader.Close();
-            fileStream.Close();
 
             DeletedRegistryKeys = new List<RegistryKey>();
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
-        public static LoggingConfiguration NlogConfig
-        {
-            get { return _nlogConfig; }
-            set
-            {
-                _nlogConfig = value;
-                LogManager.Configuration = _nlogConfig;
-            }
-        }
+      
 
-        public HiveTypeEnum HiveType { get; private set; }
-        public string HivePath { get; private set; }
         public bool RecoverDeleted { get; set; }
 
         /// <summary>
@@ -114,9 +69,8 @@ namespace Registry
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get; }
+        public Dictionary<long, ICellTemplate> CellRecords { get; private set; }
 
-        public string Filename { get; }
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -128,12 +82,11 @@ namespace Registry
 
         public uint HBinRecordTotalSize { get; private set; } //Dictionary<long, HBinRecord>
         public int HBinRecordCount { get; private set; } //Dictionary<long, HBinRecord>
-        public RegistryHeader Header { get; private set; }
 
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get; }
+        public Dictionary<long, IListTemplate> ListRecords { get; private set; }
 
         public RegistryKey Root { get; private set; }
 
@@ -145,20 +98,7 @@ namespace Registry
             get { return _softParsingErrors; }
         }
 
-        public static bool HasValidHeader(string filename)
-        {
-            var fileStream = new FileStream(filename, FileMode.Open);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            var sig = BitConverter.ToInt32(binaryReader.ReadBytes(4), 0);
-
-            binaryReader.Close();
-            fileStream.Close();
-
-            return sig.Equals(RegfSignature);
-        }
+     
 
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
@@ -435,13 +375,6 @@ namespace Registry
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        protected internal static byte[] ReadBytesFromHive(long offset, int length)
-        {
-            var absLen = Math.Abs(length);
-            var retArray = new byte[absLen];
-            Array.Copy(FileBytes, offset, retArray, 0, absLen);
-            return retArray;
-        }
 
         public void ExportDataToCommonFormat(string outfile, bool deletedOnly)
         {
@@ -542,62 +475,23 @@ namespace Registry
 
         public bool ParseHive()
         {
-            if (Filename == null)
+            if (HivePath == null)
             {
                 throw new ArgumentNullException("Filename cannot be null");
             }
 
-            if (!File.Exists(Filename))
+            if (!File.Exists(HivePath))
             {
                 throw new FileNotFoundException();
             }
 
-            var header = ReadBytesFromHive(0, 4096);
+         
 
             TotalBytesRead = 0;
 
             TotalBytesRead += 4096;
 
-            _logger.Debug("Getting header");
-
-            Header = new RegistryHeader(header);
-
-            _logger.Debug("Got header. Embedded file name {0}", Header.FileName);
-
-            var fnameBase = Path.GetFileName(Header.FileName).ToLower();
-
-            switch (fnameBase)
-            {
-                case "ntuser.dat":
-                    HiveType = HiveTypeEnum.NtUser;
-                    break;
-                case "sam":
-                    HiveType = HiveTypeEnum.Sam;
-                    break;
-                case "security":
-                    HiveType = HiveTypeEnum.Security;
-                    break;
-                case "software":
-                    HiveType = HiveTypeEnum.Software;
-                    break;
-                case "system":
-                    HiveType = HiveTypeEnum.System;
-                    break;
-                case "usrclass.dat":
-                    HiveType = HiveTypeEnum.UsrClass;
-                    break;
-                case "components":
-                    HiveType = HiveTypeEnum.Components;
-                    break;
-                default:
-                    HiveType = HiveTypeEnum.Other;
-                    break;
-            }
-            _logger.Debug("Hive is a {0} hive", HiveType);
-
-            var version = string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
-
-            _logger.Debug("Hive version is {0}", version);
+          
 
             _softParsingErrors = 0;
             _hardParsingErrors = 0;
@@ -647,7 +541,7 @@ namespace Registry
 
                 try
                 {
-                    var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted);
+                    var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted,this);
 
                     _logger.Debug("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
 
@@ -757,6 +651,13 @@ namespace Registry
             if (RecoverDeleted)
             {
                 BuildDeletedRegistryKeys();
+            }
+
+            if (FlushRecordListsAfterParse)
+            {
+                _logger.Info("Flushing record lists...");
+                CellRecords.Clear();
+                ListRecords.Clear();
             }
 
             return true;
@@ -1051,12 +952,12 @@ namespace Registry
         /// <returns></returns>
         public HiveMetadata Verify()
         {
-            if (Filename == null)
+            if (HivePath == null)
             {
-                throw new ArgumentNullException("Filename cannot be null");
+                throw new ArgumentNullException("HivePath cannot be null");
             }
 
-            if (!File.Exists(Filename))
+            if (!File.Exists(HivePath))
             {
                 throw new FileNotFoundException();
             }

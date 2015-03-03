@@ -24,7 +24,6 @@ internal class Options
 
     public bool ExportDeletedOnly { get; set; }
 
-
     [Option('r', DefaultValue = false, Required = false,
     HelpText = "If true, recover and process deleted Registry keys/values")]
     public bool RecoverDeleted { get; set; }
@@ -33,6 +32,8 @@ internal class Options
 HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
     public int VerboseLevel { get; set; }
 
+    [Option('y', DefaultValue = false, Required = false, HelpText = "If false, lists containing cell record and lists will be flushed at the end of parsing")]
+    public bool DontFlushLists { get; set; }
 
     public string GetUsage()
     {
@@ -43,6 +44,7 @@ HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
         usage.AppendLine("-p: Pause after processing each file");
         usage.AppendLine("-r: Recover and process deleted Registry keys/values");
         usage.AppendLine("-v: Verbosity level. 0 = Info, 1 = Debug, 2 = Trace");
+        usage.AppendLine("-y: Flush lists containing cell and list records");
         usage.AppendLine(
             "-e: If present, export a file that can be compared to other Registry parsers to same directory as hive is found in");
         usage.AppendLine("-a: Only export deleted key/values");

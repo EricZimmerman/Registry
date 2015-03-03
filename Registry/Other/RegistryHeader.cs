@@ -16,6 +16,7 @@ namespace Registry.Other
         /// </summary>
         protected internal RegistryHeader(byte[] rawBytes)
         {
+            FileName = string.Empty;
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
             Check.That(Signature).IsEqualTo("regf");

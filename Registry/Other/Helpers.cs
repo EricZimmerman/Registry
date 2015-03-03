@@ -289,7 +289,7 @@ namespace Registry.Other
         // public methods...
 
 
-        private static string GetRegFormatData(RegistryKey key, RegistryHive.HiveTypeEnum hiveType, bool recursive)
+        private static string GetRegFormatData(RegistryKey key, HiveTypeEnum hiveType, bool recursive)
         {
             var sb = new StringBuilder();
 
@@ -318,7 +318,7 @@ namespace Registry.Other
         /// <param name="hiveType"></param>
         /// <param name="recursive"></param>
         /// <returns></returns>
-        public static bool ExportToReg(string filename, RegistryKey key, RegistryHive.HiveTypeEnum hiveType, bool recursive)
+        public static bool ExportToReg(string filename, RegistryKey key, HiveTypeEnum hiveType, bool recursive)
         {
             if (key == null)
             {
