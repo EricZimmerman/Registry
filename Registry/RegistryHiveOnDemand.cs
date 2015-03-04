@@ -63,7 +63,6 @@ namespace Registry
 				case RiSignature:
 					var riRecord = l as RIListRecord;
 
-
 					foreach (var offset in riRecord.Offsets)
 					{
 						_logger.Debug("In ri, looking for list record at relative offset 0x{0:X}", offset);

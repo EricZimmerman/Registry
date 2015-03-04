@@ -117,16 +117,6 @@ namespace Registry.Other
         public uint Size { get;  private set;}
 
         public uint Spare { get;  private set;}
-        public event EventHandler<MessageEventArgs> Message;
-
-        protected virtual void OnMessage(MessageEventArgs e)
-        {
-            var handler = Message;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
-        }
 
         public List<IRecordBase> Process()
         {

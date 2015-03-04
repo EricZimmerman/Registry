@@ -111,7 +111,7 @@ namespace Registry.Cells
                     }
 
                     //add this offset so we can mark the data cells as referenced later
-                    DataOffets.Add(OffsetToData);
+                    DataOffsets.Add(OffsetToData);
 
                     // in some rare cases the bytes returned from above are all zeros, so make sure we get something but all zeros
                     if (datablockSizeRaw.Length == 4)
@@ -128,7 +128,7 @@ namespace Registry.Cells
 
                     //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
 
-                    //sanity check the length. if its crazy big, make it managable
+                    //sanity check the length. if its crazy big, make it manageable
                     if (dataBlockSize < -2147483640)
                     {
                         dataBlockSize = dataBlockSize - -2147483648;
@@ -174,7 +174,7 @@ namespace Registry.Cells
                         datablockSizeRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, 4);
                         dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
 
-                        _datablockRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, dataBlockSize);
+                        _datablockRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, Math.Abs(dataBlockSize));
 
                         //datablockRaw now contains our list of pointers to fragmented Data
 
@@ -187,7 +187,7 @@ namespace Registry.Cells
                             var os = BitConverter.ToUInt32(_datablockRaw, i * 4);
 
                             // in order to accurately mark data cells as Referenced later, add these offsets to a list
-                            DataOffets.Add(os);
+                            DataOffsets.Add(os);
 
                             var tempDataBlockSizeRaw = _registryHive.ReadBytesFromHive(4096 + os, 4);
                             var tempdataBlockSize = BitConverter.ToInt32(tempDataBlockSizeRaw, 0);
@@ -236,7 +236,7 @@ namespace Registry.Cells
 
             _rawBytesLength = recordSize;
             
-            DataOffets = new List<ulong>();
+            DataOffsets = new List<ulong>();
 
             _dataLengthInternal = DataLength;
         
@@ -299,7 +299,7 @@ namespace Registry.Cells
         ///     A list of offsets to data records.
         ///     <remarks>This is used to mark each Data record's IsReferenced property to true</remarks>
         /// </summary>
-        public List<ulong> DataOffets { get;  private set;}
+        public List<ulong> DataOffsets { get;  private set;}
 
         // public properties...
         public uint DataLength
@@ -478,39 +478,36 @@ namespace Registry.Cells
             get
             {
 
-              //  var  = new byte[_dataLengthInternal];
-
-                var dbRaw = DataBlockRaw; // store it once vs generating on every call
-
-                ArraySegment<byte> vdr = new ArraySegment<byte>(dbRaw, _internalDataOffset,
-                                   (int)_dataLengthInternal);
-
-                if (_dataLengthInternal + _internalDataOffset > dbRaw.Length)
+                if (_dataLengthInternal + _internalDataOffset > DataBlockRaw.Length)
                 {
                     //we dont have enough data to copy, so take what we can get
-                    if (dbRaw.Length > 0)
+                    if (DataBlockRaw.Length > 0)
                     {
                         try
                         {
 
-                            vdr =
-                                new ArraySegment<byte>(dbRaw, _internalDataOffset,
-                                    dbRaw.Length - _internalDataOffset);
+                          return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
+                                    DataBlockRaw.Length - _internalDataOffset).ToArray();
 
                         }
                         catch (Exception)
                         {
-                            vdr =
-                                new ArraySegment<byte>(dbRaw, 0,
-                                    dbRaw.Length);
+                            return
+                                 new ArraySegment<byte>(DataBlockRaw, 0,
+                                    DataBlockRaw.Length).ToArray();
 
 
                         }
                     }
                 }
+                else
+                {
+                    return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
+                           (int)_dataLengthInternal).ToArray();
+                }
                
 
-                return vdr.ToArray();
+                throw new Exception("Couldn't determine ValueDataRaw!");
 
             }
             set {} }

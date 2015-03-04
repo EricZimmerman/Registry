@@ -13,7 +13,7 @@ namespace Registry
 {
     public class RegistryBase :IRegistry
     {
-        private static LoggingConfiguration _nlogConfig;
+        private LoggingConfiguration _nlogConfig;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public RegistryBase()
@@ -23,7 +23,7 @@ namespace Registry
 
         public static bool HasValidHeader(string filename)
         {
-            var fileStream = new FileStream(filename, FileMode.Open);
+            var fileStream = new FileStream(filename, FileMode.Open,FileAccess.Read,FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -96,11 +96,17 @@ namespace Registry
                 case "system":
                     HiveType = HiveTypeEnum.System;
                     break;
+                case "drivers":
+                    HiveType = HiveTypeEnum.Drivers;
+                    break;
                 case "usrclass.dat":
                     HiveType = HiveTypeEnum.UsrClass;
                     break;
                 case "components":
                     HiveType = HiveTypeEnum.Components;
+                    break;
+                case "bcd":
+                    HiveType = HiveTypeEnum.Bcd;
                     break;
                 default:
                     HiveType = HiveTypeEnum.Other;
@@ -108,7 +114,7 @@ namespace Registry
             }
             _logger.Debug("Hive is a {0} hive", HiveType);
 
-            var version = String.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
+            var version = string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
 
             _logger.Debug("Hive version is {0}", version);
         }
@@ -130,14 +136,8 @@ namespace Registry
 
 
         public byte[] FileBytes { get; private set; }
-      LoggingConfiguration IRegistry.NlogConfig
+        public LoggingConfiguration NlogConfig
       {
-          get { return NlogConfig; }
-          set { NlogConfig = value; }
-      }
-
-      public static LoggingConfiguration NlogConfig
-        {
             get { return _nlogConfig; }
             set
             {

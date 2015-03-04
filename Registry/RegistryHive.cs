@@ -14,32 +14,22 @@ using Registry.Lists;
 using Registry.Other;
 using static Registry.Other.Helpers;
 
-// namespaces...
-
 namespace Registry
 {
     // public classes...
     public class RegistryHive :RegistryBase
     {
-      
-
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
-        //internal static byte[] FileBytes;
         public static long TotalBytesRead;
-        //private static LoggingConfiguration _nlogConfig;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
-        
-
-
 
         /// <summary>
         /// If true, CellRecords and ListRecords will be purged to free memory
         /// </summary>
         public bool FlushRecordListsAfterParse = true;
-
 
         /// <summary>
         ///     Initializes a new instance of the
@@ -55,8 +45,6 @@ namespace Registry
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
-      
-
         public bool RecoverDeleted { get; set; }
 
         /// <summary>
@@ -70,7 +58,6 @@ namespace Registry
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
         public Dictionary<long, ICellTemplate> CellRecords { get; private set; }
-
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -98,22 +85,18 @@ namespace Registry
             get { return _softParsingErrors; }
         }
 
-     
-
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
         {
-            if (key.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.HasActiveParent) &&
-                key.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.Deleted))
+            if (((key.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent) && ((key.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
             {
                 return;
             }
 
             foreach (var subkey in key.SubKeys)
             {
-                if (subkey.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.HasActiveParent) &&
-                    subkey.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.Deleted))
-                {
+                if (((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent) && ((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
+                    {
                     return;
                 }
 
@@ -163,7 +146,7 @@ namespace Registry
 
             if (key.NKRecord.ClassCellIndex > 0)
             {
-                _logger.Debug("Getting Class cell informtion at relative offset 0x{0:X}", key.NKRecord.ClassCellIndex);
+                _logger.Debug("Getting Class cell information at relative offset 0x{0:X}", key.NKRecord.ClassCellIndex);
                 var d = GetDataNodeFromOffset(key.NKRecord.ClassCellIndex);
                 d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NKRecord.ClassLength);
@@ -209,23 +192,22 @@ namespace Registry
                 _logger.Debug("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
 
                 vk.IsReferenced = true;
+                
+             //   var dbListProcessed = false;
 
-
-                var dbListProcessed = false;
-
-                foreach (var dataOffet in vk.DataOffets)
-                {
-                    //there is a special case when registry version > 1.4 and size > 16344
-                    //if this is true, the first offset is a db record, found with the lists
-                    if ((Header.MinorVersion > 4) && vk.DataLength > 16344 && dbListProcessed == false)
-                    {
-                        var db = ListRecords[(long) dataOffet];
-
-                        var dbr = db as DBListRecord;
-                        dbr.IsReferenced = true;
-                        dbListProcessed = true;
-                    }
-                }
+//                foreach (var dataOffset in vk.DataOffsets)
+//                {
+//                    //there is a special case when registry version >= 1.4 and size > 16344
+//                    //if this is true, the first offset is a db record, found with the lists
+//                    if ((Header.MinorVersion > 3) && vk.DataLength > 16344 && dbListProcessed == false)
+//                    {
+//                        var db = ListRecords[(long) dataOffset];
+//
+//                        var dbr = db as DBListRecord;
+//                        dbr.IsReferenced = true;
+//                        dbListProcessed = true;
+//                    }
+//                }
                 
                 var value = new KeyValue(vk);
 
@@ -370,11 +352,11 @@ namespace Registry
         }
 
         /// <summary>
-        ///     Reads 'length' bytes from the registry starting at 'offset' and returns a byte array
+        /// Exports contents of Registry to text format.
         /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <remarks>Be sure to set FlushRecordListsAfterParse to FALSE if you want deleted records included</remarks>
+        /// <param name="outfile">The outfile.</param>
+        /// <param name="deletedOnly">if set to <c>true</c> [deleted only].</param>
 
         public void ExportDataToCommonFormat(string outfile, bool deletedOnly)
         {
@@ -414,10 +396,13 @@ namespace Registry
 
                 foreach (var keyValuePair in theRest)
                 {
-                    if (keyValuePair.Value.Signature == "vk")
+                    try
+                    {
+if (keyValuePair.Value.Signature == "vk")
                     {
                         ValueCountDeleted += 1;
                         var val = keyValuePair.Value as VKCellRecord;
+
                         sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "",
                             val.ValueName, (int) val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
                     }
@@ -436,6 +421,13 @@ namespace Registry
 
                         DumpKeyCommonFormat(key, sw, ref KeyCountDeleted, ref ValueCountDeleted);
                     }
+                    }
+                    catch (Exception ex)
+                    {
+                     _logger.Warn("There was an error exporting free record at offset 0x{0:X}. Error: {1}",keyValuePair.Value.AbsoluteOffset,ex.Message);
+                    }
+
+                    
                 }
 
                 sw.WriteLine("total_keys|{0}", KeyCount);
@@ -452,7 +444,7 @@ namespace Registry
                 return KeyPathKeyMap[keyPath];
             }
 
-            //handle case where someone doesnt pass in ROOT keyname
+            //handle case where someone doesn't pass in ROOT keyname
             var newPath = string.Format("{0}\\{1}", Root.KeyName, keyPath);
 
             if (KeyPathKeyMap.ContainsKey(newPath))
@@ -475,23 +467,9 @@ namespace Registry
 
         public bool ParseHive()
         {
-            if (HivePath == null)
-            {
-                throw new ArgumentNullException("Filename cannot be null");
-            }
-
-            if (!File.Exists(HivePath))
-            {
-                throw new FileNotFoundException();
-            }
-
-         
-
             TotalBytesRead = 0;
 
             TotalBytesRead += 4096;
-
-          
 
             _softParsingErrors = 0;
             _hardParsingErrors = 0;
@@ -499,10 +477,10 @@ namespace Registry
             ////Look at first hbin, get its size, then read that many bytes to create hbin record
             long offsetInHive = 4096;
 
-            var hivelen = Header.Length + 0x1000; 
+            var hiveLength = Header.Length + 0x1000; 
 
             //keep reading the file until we reach the end
-            while (offsetInHive < hivelen)
+            while (offsetInHive < hiveLength)
             {
                 var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
 
@@ -520,12 +498,12 @@ namespace Registry
                 {
                     _logger.Error("hbin header incorrect at absolute offset 0x{0:X}!!! Percent done: {1:P}",
                         offsetInHive,
-                        (double) offsetInHive/hivelen);
+                        (double) offsetInHive/hiveLength);
 
-                    if (RecoverDeleted) //TODO ? always or only if recoverdeleted
-                    {
-                        //TODO need to try to recover records from the bad chunk
-                    }
+//                    if (RecoverDeleted) //TODO ? always or only if recoverdeleted
+//                    {
+//                        //TODO need to try to recover records from the bad chunk
+//                    }
 
                     break;
                 }
@@ -535,13 +513,15 @@ namespace Registry
                 _logger.Debug(
                     "Processing hbin at absolute offset 0x{0:X} with size 0x{1:X} Percent done: {2:P}",
                     offsetInHive, hbinSize,
-                    (double) offsetInHive/hivelen);
+                    (double) offsetInHive/hiveLength);
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
 
                 try
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted,this);
+
+                    _logger.Trace("hbin info: {0}",h.ToString());
 
                     _logger.Debug("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
 
@@ -575,7 +555,6 @@ namespace Registry
 
                                 ListRecords.Add(record.AbsoluteOffset - 4096, (IListTemplate) record);
                                 break;
-
                         }
                     }
 
@@ -602,7 +581,7 @@ namespace Registry
 
             if (rootNode == null)
             {
-                throw new Exception("Root nk record not found!");
+                throw new KeyNotFoundException("Root nk record not found!");
             }
 
             //validate what we found above via the flag method
@@ -636,16 +615,15 @@ namespace Registry
                 }
 
                 //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
-                try
-                {
-                    Check.That((long) Header.Length).IsEqualTo(TotalBytesRead - 0x1000);
-                }
-                catch (Exception)
+
+                if (Header.Length != TotalBytesRead - 0x1000)
                 {
                     _logger.Warn(
-                        "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
-                        HiveLength(), TotalBytesRead);
+                       "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
+                       HiveLength(), TotalBytesRead);
                 }
+
+
             }
 
             if (RecoverDeleted)
@@ -725,7 +703,7 @@ namespace Registry
                         }
                         catch (Exception)
                         {
-                            //sometimes the data node doesnt have enough data to even do this, or its wrong data
+                            //sometimes the data node doesn't have enough data to even do this, or its wrong data
                             _logger.Warn(
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
@@ -947,34 +925,12 @@ namespace Registry
         }
 
         /// <summary>
-        ///     Given a file, confirm it is a registry hive and that hbin headers are found every 4096 * (size of hbin) bytes.
+        ///     Given a file, confirm that hbin headers are found every 4096 * (size of hbin) bytes.
         /// </summary>
         /// <returns></returns>
         public HiveMetadata Verify()
         {
-            if (HivePath == null)
-            {
-                throw new ArgumentNullException("HivePath cannot be null");
-            }
-
-            if (!File.Exists(HivePath))
-            {
-                throw new FileNotFoundException();
-            }
-
-            if (Header == null)
-            {
-                throw new Exception("Header value is null. Call ParseHive and try again");
-            }
-
             var hiveMetadata = new HiveMetadata();
-
-            var fileHeaderSig = BitConverter.ToUInt32(ReadBytesFromHive(0, 4), 0);
-
-            if (fileHeaderSig != RegfSignature)
-            {
-                return hiveMetadata;
-            }
 
             hiveMetadata.HasValidHeader = true;
 

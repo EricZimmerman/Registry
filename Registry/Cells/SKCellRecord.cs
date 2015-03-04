@@ -88,7 +88,7 @@ namespace Registry.Cells
 
                 if (rawDescriptor.Length > 0)
                 {
-                    // i have seen cases where there is no available security descriptor because the sk record doesnt contain the right data
+                    // i have seen cases where there is no available security descriptor because the sk record doesn't contain the right data
                     return new SKSecurityDescriptor(rawDescriptor);
                 }
 
@@ -122,7 +122,7 @@ namespace Registry.Cells
         public int Size
         {
             get { return Math.Abs(_size); }
-           private set { }
+            set { }
         }
 
         // public methods...

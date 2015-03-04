@@ -188,7 +188,7 @@ namespace ExampleApp
                 {
                     var fName1Test = new RegistryHive(testFile);
 
-                    RegistryHive.NlogConfig = config;
+                    fName1Test.NlogConfig = config;
               
                     sw.Start();
 
