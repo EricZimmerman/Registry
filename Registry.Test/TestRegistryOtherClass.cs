@@ -313,6 +313,8 @@ namespace Registry.Test
 
             var key = r.FindKey(@"SAM\Domains\Account");
 
+            Check.That(key).IsNotNull();
+
             var sk = r.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
 
             Check.That(sk).IsNotNull();

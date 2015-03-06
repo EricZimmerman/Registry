@@ -37,6 +37,17 @@ namespace Registry.Test
          }
 
         [Test]
+        public void GetKeyShouldNotBeNullWithShortPathMixedSpelling()
+        {
+            var hivePath = Path.Combine(_basePath, "SAM");
+            var r = new RegistryHiveOnDemand(hivePath);
+
+            var key = r.GetKey(@"SAM\DomAins\AccoUnt");
+
+            Check.That(key).IsNotNull();
+        }
+
+        [Test]
         public void GetKeyShouldBeNullWithNonExistentPath()
         {
             var hivePath = Path.Combine(_basePath, "SAM");

@@ -222,6 +222,19 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldFindKeyWithMixedCaseName()
+        {
+            var hivePath = Path.Combine(_basePath, "UsrClass FTP.dat");
+            var r = new RegistryHive(hivePath);
+            r.ParseHive();
+
+            var key = r.FindKey(@"S-1-5-21-2417227394-2575385136-2411922467-1105_CLAsses\ActivAtableClasses\CLsID");
+
+            Check.That(key).IsNotNull();
+
+        }
+
+        [Test]
         public void ShouldReturnNullWhenKeyPathNotFound()
         {
             var hivePath = Path.Combine(_basePath, "sam");

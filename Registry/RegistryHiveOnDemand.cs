@@ -237,7 +237,7 @@ namespace Registry
 			
 			for (var i = 0; i < keyNames.Length; i++)
 			{
-				finalKey = finalKey.SubKeys.SingleOrDefault(r => r.KeyName == keyNames[i]);
+				finalKey = finalKey.SubKeys.SingleOrDefault(r => r.KeyName.ToLowerInvariant() == keyNames[i].ToLowerInvariant());
 
 				if (finalKey == null)
 				{

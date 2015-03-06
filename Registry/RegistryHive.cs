@@ -136,7 +136,7 @@ namespace Registry
         {
             RelativeOffsetKeyMap.Add(key.NKRecord.RelativeOffset, key);
 
-            KeyPathKeyMap.Add(key.KeyPath, key);
+            KeyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);
 
             _logger.Debug("Getting subkeys for {0}", key.KeyPath);
 
@@ -439,13 +439,15 @@ if (keyValuePair.Value.Signature == "vk")
 
         public RegistryKey FindKey(string keyPath)
         {
+            keyPath = keyPath.ToLowerInvariant();
+
             if (KeyPathKeyMap.ContainsKey(keyPath))
             {
                 return KeyPathKeyMap[keyPath];
             }
 
             //handle case where someone doesn't pass in ROOT keyname
-            var newPath = string.Format("{0}\\{1}", Root.KeyName, keyPath);
+            var newPath = string.Format("{0}\\{1}", Root.KeyName, keyPath).ToLowerInvariant();
 
             if (KeyPathKeyMap.ContainsKey(newPath))
             {
@@ -877,9 +879,9 @@ if (keyValuePair.Value.Signature == "vk")
                         RelativeOffsetKeyMap.Add(deletedRegistryKey.Value.NKRecord.RelativeOffset,
                             deletedRegistryKey.Value);
 
-                        if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath) == false)
+                        if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath.ToLowerInvariant()) == false)
                         {
-                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath, deletedRegistryKey.Value);
+                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.ToLowerInvariant(), deletedRegistryKey.Value);
                         }
 
                         _logger.Debug(
@@ -915,9 +917,9 @@ if (keyValuePair.Value.Signature == "vk")
 
                 RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
 
-                if (KeyPathKeyMap.ContainsKey(sk.KeyPath) == false)
+                if (KeyPathKeyMap.ContainsKey(sk.KeyPath.ToLowerInvariant()) == false)
                 {
-                    KeyPathKeyMap.Add(sk.KeyPath, sk);
+                    KeyPathKeyMap.Add(sk.KeyPath.ToLowerInvariant(), sk);
                 }
 
                 UpdateChildPaths(sk);
