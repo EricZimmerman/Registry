@@ -51,14 +51,6 @@ namespace Registry.Test
         }
 
         [Test]
-        public void InValidHiveShouldReturnFalse()
-        {
-            var hivePath = Path.Combine(_basePath, "NOTAHIVE");
-
-            Check.That(RegistryBase.HasValidHeader(hivePath)).IsFalse();
-        }
-
-        [Test]
         public void InvalidRegistryHiveShouldThrowException()
         {
             var hivePath = Path.Combine(_basePath, "NOTAHIVE");
@@ -160,14 +152,6 @@ namespace Registry.Test
             var r = new RegistryBase(hivePath);
 
             Check.That(HiveTypeEnum.Drivers).IsEqualTo(r.HiveType);
-        }
-
-        [Test]
-        public void ValidHiveShouldHaveValidHeader()
-        {
-            var hivePath = Path.Combine(_basePath, "SECURITY");
-
-            Check.That(RegistryBase.HasValidHeader(hivePath)).IsTrue();
         }
     }
 }

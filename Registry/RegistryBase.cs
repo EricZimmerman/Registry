@@ -21,21 +21,6 @@ namespace Registry
             throw new NotSupportedException("Call the other constructor and pass in the path to the Registry hive!");
         }
 
-        public static bool HasValidHeader(string filename)
-        {
-            var fileStream = new FileStream(filename, FileMode.Open,FileAccess.Read,FileShare.Read);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            var sig = BitConverter.ToInt32(binaryReader.ReadBytes(4), 0);
-
-            binaryReader.Close();
-            fileStream.Close();
-
-            return sig.Equals(RegfSignature);
-        }
-
         public RegistryBase(string hivePath)
         {
             if (hivePath == null)
@@ -50,16 +35,7 @@ namespace Registry
 
             HivePath = hivePath;
 
-            if (!HasValidSignature(hivePath))
-            {
-                _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
-
-                throw new Exception(String.Format("'{0}' is not a Registry hive (bad signature)", hivePath));
-            }
-
-            _logger.Debug("Set HivePath to {0}", hivePath);
-
-            var fileStream = new FileStream(hivePath, FileMode.Open);
+            var fileStream = new FileStream(hivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -68,6 +44,15 @@ namespace Registry
 
             binaryReader.Close();
             fileStream.Close();
+
+            if (!HasValidSignature(hivePath))
+            {
+                _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
+
+                throw new Exception(String.Format("'{0}' is not a Registry hive (bad signature)", hivePath));
+            }
+
+            _logger.Debug("Set HivePath to {0}", hivePath);
 
             var header = ReadBytesFromHive(0, 4096);
 
@@ -119,21 +104,12 @@ namespace Registry
             _logger.Debug("Hive version is {0}", version);
         }
 
-        public static bool HasValidSignature(string filename)
+        public bool HasValidSignature(string filename)
         {
-            var fileStream = new FileStream(filename, FileMode.Open);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            var sig = BitConverter.ToInt32(binaryReader.ReadBytes(4), 0);
-
-            binaryReader.Close();
-            fileStream.Close();
-
+           var sig = BitConverter.ToInt32(FileBytes, 0);
+            
             return sig.Equals(RegfSignature);
         }
-
 
         public byte[] FileBytes { get; private set; }
         public LoggingConfiguration NlogConfig
