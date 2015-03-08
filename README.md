@@ -43,6 +43,8 @@ var key = hive.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion
 var keyBad = hive.GetKey(@"Local Settings\Software\NoSuchKey");
 ```
 
+Since this is on demand, only the values and subkeys are populated for the retrieved key. If you want to get details on subkeys, be sure to call GetKey on the subkey's key path.
+
 **Example application output**
 
 NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
