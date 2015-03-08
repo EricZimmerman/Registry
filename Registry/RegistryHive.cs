@@ -45,6 +45,15 @@ namespace Registry
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
+        public RegistryHive(byte[] rawBytes) : base(rawBytes)
+        {
+            CellRecords = new Dictionary<long, ICellTemplate>();
+            ListRecords = new Dictionary<long, IListTemplate>();
+
+            DeletedRegistryKeys = new List<RegistryKey>();
+            UnassociatedRegistryValues = new List<KeyValue>();
+        }
+
         public bool RecoverDeleted { get; set; }
 
         /// <summary>

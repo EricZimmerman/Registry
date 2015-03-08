@@ -26,8 +26,13 @@ namespace Registry
 
         }
 
+        public RegistryHiveOnDemand(byte[] rawBytes) : base(rawBytes)
+        {
+           
+        }
 
-		private List<RegistryKey> GetSubkeys(uint subkeyListsStableCellIndex, RegistryKey parent)
+
+        private List<RegistryKey> GetSubkeys(uint subkeyListsStableCellIndex, RegistryKey parent)
 		{
 			var keys = new List<RegistryKey>();
 

@@ -21,40 +21,25 @@ namespace Registry
             throw new NotSupportedException("Call the other constructor and pass in the path to the Registry hive!");
         }
 
-        public RegistryBase(string hivePath)
+        public RegistryBase(byte[] rawBytes)
         {
-            if (hivePath == null)
+            FileBytes = rawBytes;
+            HivePath = "None";
+
+
+            if (!HasValidSignature())
             {
-                throw new ArgumentNullException("hivePath cannot be null");
+                _logger.Error("Data in byte array is not a Registry hive (bad signature)");
+
+                throw new Exception("Data in byte array is not a Registry hive (bad signature)");
             }
 
-            if (!File.Exists(hivePath))
-            {
-                throw new FileNotFoundException();
-            }
-
-            HivePath = hivePath;
-
-            var fileStream = new FileStream(hivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var binaryReader = new BinaryReader(fileStream);
-
-            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            FileBytes = binaryReader.ReadBytes((int)binaryReader.BaseStream.Length);
-
-            binaryReader.Close();
-            fileStream.Close();
-
-            if (!HasValidSignature(hivePath))
-            {
-                _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
-
-                throw new Exception(String.Format("'{0}' is not a Registry hive (bad signature)", hivePath));
-            }
-
-            _logger.Debug("Set HivePath to {0}", hivePath);
-
-            var header = ReadBytesFromHive(0, 4096);
+            Initialize();
+        }
+        
+        private void Initialize()
+        {
+         var header = ReadBytesFromHive(0, 4096);
 
             _logger.Debug("Getting header");
 
@@ -62,9 +47,9 @@ namespace Registry
 
             _logger.Debug("Got header. Embedded file name {0}", Header.FileName);
 
-            var fnameBase = Path.GetFileName(Header.FileName).ToLower();
+            var fNameBase = Path.GetFileName(Header.FileName).ToLower();
 
-            switch (fnameBase)
+            switch (fNameBase)
             {
                 case "ntuser.dat":
                     HiveType = HiveTypeEnum.NtUser;
@@ -104,7 +89,43 @@ namespace Registry
             _logger.Debug("Hive version is {0}", version);
         }
 
-        public bool HasValidSignature(string filename)
+        public RegistryBase(string hivePath)
+        {
+            if (hivePath == null)
+            {
+                throw new ArgumentNullException("hivePath cannot be null");
+            }
+
+            if (!File.Exists(hivePath))
+            {
+                throw new FileNotFoundException();
+            }
+
+            var fileStream = new FileStream(hivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var binaryReader = new BinaryReader(fileStream);
+
+            binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            FileBytes = binaryReader.ReadBytes((int)binaryReader.BaseStream.Length);
+
+            binaryReader.Close();
+            fileStream.Close();
+
+            if (!HasValidSignature())
+            {
+                _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
+
+                throw new Exception(String.Format("'{0}' is not a Registry hive (bad signature)", hivePath));
+            }
+
+            HivePath = hivePath;
+
+            _logger.Debug("Set HivePath to {0}", hivePath);
+
+            Initialize();
+        }
+
+        public bool HasValidSignature()
         {
            var sig = BitConverter.ToInt32(FileBytes, 0);
             

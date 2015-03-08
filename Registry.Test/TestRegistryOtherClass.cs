@@ -14,39 +14,55 @@ namespace Registry.Test
     [TestFixture]
     class TestRegistryOtherClass
     {
-        private readonly string _basePath = @"C:\ProjectWorkingFolder\Registry2\Registry\Registry.Test\TestFiles";
+        private const string BasePath = @"C:\ProjectWorkingFolder\Registry2\Registry\Registry.Test\TestFiles";
+        private string _samHive = Path.Combine(BasePath, "SAM");
 
+    //    private RegistryHive DriversHive;
+        private RegistryHiveOnDemand SamHiveOD;
+        private RegistryHive SamHive;
+
+        [TestFixtureSetUp]
+        public void Init()
+        {
+   //         DriversHive = new RegistryHive(_driversHive);
+            SamHiveOD = new RegistryHiveOnDemand(_samHive);
+            SamHive = new RegistryHive(_samHive);
+            SamHive.FlushRecordListsAfterParse = false;
+            SamHive.ParseHive();
+        }
+ 
         [Test]
         public void VerifyHeaderInfo()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
-            var r = new RegistryHiveOnDemand(hivePath);
+           
             
-            Check.That(r.Header).IsNotNull();
-            Check.That(r.Header.FileName).IsNotNull();
-            Check.That(r.Header.FileName).IsNotEmpty();
-            Check.That(r.Header.Length).IsGreaterThan(0);
-            Check.That(r.Header.MajorVersion).IsGreaterThan(0);
-            Check.That(r.Header.MinorVersion).IsGreaterThan(0);
-            Check.That(r.Header.RootCellOffset).IsGreaterThan(0);
-            Check.That(r.Header.CalculatedChecksum).Equals(r.Header.CheckSum);
-            Check.That(r.Header.ValidateCheckSum()).Equals(true);
-            Check.That(r.Header.ToString()).IsNotEmpty();
+            Check.That(SamHive.Header).IsNotNull();
+            Check.That(SamHive.Header.FileName).IsNotNull();
+            Check.That(SamHive.Header.FileName).IsNotEmpty();
+            Check.That(SamHive.Header.Length).IsGreaterThan(0);
+            Check.That(SamHive.Header.MajorVersion).IsGreaterThan(0);
+            Check.That(SamHive.Header.MinorVersion).IsGreaterThan(0);
+            Check.That(SamHive.Header.RootCellOffset).IsGreaterThan(0);
+            Check.That(SamHive.Header.CalculatedChecksum).Equals(SamHive.Header.CheckSum);
+            Check.That(SamHive.Header.ValidateCheckSum()).Equals(true);
+            Check.That(SamHive.Header.ToString()).IsNotEmpty();
         }
 
         [Test]
         public void ExportToRegFormatSingleKey()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
+            var hivePath = Path.Combine(BasePath, "SAM");
             var r = new RegistryHiveOnDemand(hivePath);
 
-            var key = r.GetKey(@"SAM\Domains\Account");
+            var key = SamHiveOD.GetKey(@"SAM\Domains\Account");
 
         var exported =    Helpers.ExportToReg(@"C:\temp\exportSamTest.reg", key, HiveTypeEnum.Sam, false);
 
             Check.That(exported).IsTrue();
 
-             hivePath = Path.Combine(_basePath, "NTUSER1.DAT");
+           
+
+             hivePath = Path.Combine(BasePath, "NTUSER1.DAT");
              r = new RegistryHiveOnDemand(hivePath);
 
              key = r.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Console");
@@ -55,7 +71,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "SECURITY");
+            hivePath = Path.Combine(BasePath, "SECURITY");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Policy\Accounts\S-1-5-9");
@@ -64,7 +80,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "SOFTWARE");
+            hivePath = Path.Combine(BasePath, "SOFTWARE");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"CMI-CreateHive{199DAFC2-6F16-4946-BF90-5A3FC3A60902}\Clients\Contacts\Address Book\Capabilities\FileAssociations");
@@ -73,7 +89,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "SYSTEM");
+            hivePath = Path.Combine(BasePath, "SYSTEM");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Enum\ACPI\PNP0C02\1");
@@ -82,7 +98,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "UsrClass FTP.dat");
+            hivePath = Path.Combine(BasePath, "UsrClass FTP.dat");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\.3g2");
@@ -91,7 +107,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "Components");
+            hivePath = Path.Combine(BasePath, "Components");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\CanonicalData\Catalogs\006884cbcced145efb8ebba5123eb394381e812474197d7a3d5410a6c8cf69ac");
@@ -100,7 +116,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            hivePath = Path.Combine(_basePath, "SAM_DUPENAME");
+            hivePath = Path.Combine(BasePath, "SAM_DUPENAME");
             r = new RegistryHiveOnDemand(hivePath);
 
             key = r.GetKey(@"SAM\SAM\Domains\Account\Aliases\000003E9");
@@ -114,23 +130,20 @@ namespace Registry.Test
         [Test]
         public void ExportToRegFormatRecursive()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
-            var r = new RegistryHiveOnDemand(hivePath);
+            var key = SamHiveOD.GetKey(@"SAM\Domains\Account");
 
-            var key = r.GetKey(@"SAM\Domains\Account");
+         var exported =   Helpers.ExportToReg(@"C:\temp\exportTest.reg", key, HiveTypeEnum.Sam, true);
 
-            Helpers.ExportToReg(@"C:\temp\exportTest.reg", key, HiveTypeEnum.Sam, true);
+            Check.That(exported).IsTrue();
+
         }
 
         [Test]
         public void ExerciseNKStuff()
         {
-            var hivePath = Path.Combine(_basePath, "sam");
-            var r = new RegistryHive(hivePath);
-            r.ParseHive();
 
             var key =
-                r.FindKey(0x418);
+                SamHive.FindKey(0x418);
 
             Check.That(key).IsNotNull();
 
@@ -143,12 +156,9 @@ namespace Registry.Test
         [Test]
         public void ExerciseVKStuff()
         {
-            var hivePath = Path.Combine(_basePath, "sam");
-            var r = new RegistryHive(hivePath);
-            r.ParseHive();
 
             var key =
-                r.FindKey(0x418);
+                SamHive.FindKey(0x418);
 
             Check.That(key).IsNotNull();
 
@@ -169,7 +179,7 @@ namespace Registry.Test
 
             //This key has slack
             key =
-                r.FindKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Users\000001F4");
+               SamHive.FindKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Users\000001F4");
 
             Check.That(key).IsNotNull();
 
@@ -183,8 +193,8 @@ namespace Registry.Test
             Check.That(val.ValueSlackRaw.Length).IsGreaterThan(0);
             Check.That(val.ToString()).IsNotEmpty();
 
-            hivePath = Path.Combine(_basePath, "UsrClassDeletedBags.dat");
-             r = new RegistryHive(hivePath);
+         var    hivePath = Path.Combine(BasePath, "UsrClassDeletedBags.dat");
+            var r = new RegistryHive(hivePath);
             r.ParseHive();
 
              key =
@@ -210,7 +220,7 @@ namespace Registry.Test
                 Check.That(keyValue.ValueData).IsNotEmpty();
             }
 
-            hivePath = Path.Combine(_basePath, "SAM_hasBigEndianDWord");
+            hivePath = Path.Combine(BasePath, "SAM_hasBigEndianDWord");
             r = new RegistryHive(hivePath);
             r.ParseHive();
 
@@ -230,7 +240,7 @@ namespace Registry.Test
         [Test]
         public void CheckUnableToDetermineNameOnRecoveredKey()
         {
-            var hivePath = Path.Combine(_basePath, "SOFTWARE_BIG");
+            var hivePath = Path.Combine(BasePath, "SOFTWARE_BIG");
             var r = new RegistryHive(hivePath);
             r.RecoverDeleted = true;
             r.ParseHive();
@@ -248,10 +258,9 @@ namespace Registry.Test
         [Test]
         public void GetEnumFromDescriptionAndViceVersa()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
-            var r = new RegistryHiveOnDemand(hivePath);
+          
 
-            var desc = Helpers.GetDescriptionFromEnumValue(r.HiveType);
+            var desc = Helpers.GetDescriptionFromEnumValue(SamHiveOD.HiveType);
 
             var en = Helpers.GetEnumValueFromDescription<HiveTypeEnum>(desc);
 
@@ -273,9 +282,6 @@ namespace Registry.Test
         [Test]
         public void TestGetSIDTypeFromSIDString()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
-            var r = new RegistryHiveOnDemand(hivePath);
-
             var sid = "S-1-5-5-111111";
 
             var desc = Helpers.GetSIDTypeFromSIDString(sid);
@@ -295,9 +301,6 @@ namespace Registry.Test
         {
             Check.ThatCode(() =>
             {
-
-                var hivePath = Path.Combine(_basePath, "SAM");
-                var r = new RegistryHiveOnDemand(hivePath);
                 Helpers.ExportToReg(@"C:\temp\exportTest.reg", null, HiveTypeEnum.Sam, true);
 
             }).Throws<NullReferenceException>();
@@ -306,16 +309,13 @@ namespace Registry.Test
         [Test]
         public void VerifySKInfo()
         {
-            var hivePath = Path.Combine(_basePath, "SAM");
-            var r = new RegistryHive(hivePath);
-            r.FlushRecordListsAfterParse = false;
-            r.ParseHive();
+         
 
-            var key = r.FindKey(@"SAM\Domains\Account");
+            var key = SamHive.FindKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
 
-            var sk = r.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
+            var sk = SamHive.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
 
             Check.That(sk).IsNotNull();
             Check.That(sk.ToString()).IsNotEmpty();
