@@ -17,21 +17,17 @@ namespace Registry
 	public class RegistryHiveOnDemand :RegistryBase
 	{
 		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
 	 
 
 		public RegistryHiveOnDemand(string hivePath) :base(hivePath)
 		{
             
-
         }
 
         public RegistryHiveOnDemand(byte[] rawBytes) : base(rawBytes)
         {
            
         }
-
-
         private List<RegistryKey> GetSubkeys(uint subkeyListsStableCellIndex, RegistryKey parent)
 		{
 			var keys = new List<RegistryKey>();
@@ -111,7 +107,9 @@ namespace Registry
 					
 					break;
 
-				case LiSignature:
+                //this is a safety net, but li's are typically only seen in RI lists. as such, don't use it in metrics
+             
+                case LiSignature:
 					var liRecord = l as LIListRecord;
 					
 					foreach (var offset in liRecord.Offsets)
@@ -127,9 +125,9 @@ namespace Registry
 					break;
 				default:
 					throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
-			}
-			
-			return keys;
+            }
+
+            return keys;
 		}
 
 		private List<KeyValue> GetKeyValues(uint valueListCellIndex, uint valueListCount)
@@ -155,12 +153,12 @@ namespace Registry
 			}
 
 			if (offsets.Count != valueListCount)
-			{
-				_logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
-					valueListCount, offsets.Count);
-			}
+            { //ncrunch: no coverage
+                _logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", //ncrunch: no coverage
+                    valueListCount, offsets.Count);
+            } //ncrunch: no coverage
 
-			foreach (var valueOffset in offsets)
+            foreach (var valueOffset in offsets)
 			{
 				_logger.Debug("Looking for vk record at relative offset 0x{0:X}", valueOffset);
 
@@ -189,8 +187,8 @@ namespace Registry
 				case LiSignature:
 					return new LIListRecord(rawBytes, relativeOffset);
 				default:
-					throw new Exception(string.Format("Unknown list signature: {0}", sig));
-			}
+					throw new Exception(string.Format("Unknown list signature: {0}", sig)); //ncrunch: no coverage
+            }
 		}
 
 		private DataNode GetDataNodeFromOffset(long relativeOffset)
@@ -223,10 +221,10 @@ namespace Registry
 
 			var rootNk = new NKCellRecord(rawRoot.Length, Header.RootCellOffset, this);
 
-		    var newPath = keyPath;
+		    var newPath = keyPath.ToLowerInvariant();
 
             // when getting child keys, the name may start with the root key name. if so, strip it
-            if (newPath.StartsWith(rootNk.Name))
+            if (newPath.StartsWith(rootNk.Name.ToLowerInvariant()))
 		    {
 		        var segs = keyPath.Split('\\');
                 newPath = string.Join("\\", segs.Skip(1));
@@ -257,7 +255,17 @@ namespace Registry
 
 			finalKey.Values.AddRange(GetKeyValues(finalKey.NKRecord.ValueListCellIndex, finalKey.NKRecord.ValueListCount));
 
-			return finalKey;
+            if (finalKey.NKRecord.ClassCellIndex > 0)
+            {
+                _logger.Debug("Getting Class cell information at relative offset 0x{0:X}", finalKey.NKRecord.ClassCellIndex);
+                var d = GetDataNodeFromOffset(finalKey.NKRecord.ClassCellIndex);
+                d.IsReferenced = true;
+                var clsName = Encoding.Unicode.GetString(d.Data, 0, finalKey.NKRecord.ClassLength);
+                finalKey.ClassName = clsName;
+                _logger.Debug("Class name found {0}", clsName);
+            }
+
+            return finalKey;
 		}
 
 		

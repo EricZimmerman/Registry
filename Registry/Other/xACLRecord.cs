@@ -46,8 +46,8 @@ namespace Registry.Other
                 for (var i = 0; i < AceCount; i++)
                 {
                     if (index > RawBytes.Length)
-                    {
-                        break;
+                    {                   //ncrunch: no coverage
+                        break;          //ncrunch: no coverage
                     }
                     var aceSize = RawBytes[index + 2];
                     var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
@@ -106,6 +106,8 @@ namespace Registry.Other
             sb.AppendLine(string.Format("ACL Revision: 0x{0:X}", AclRevision));
             sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclSize));
             sb.AppendLine(string.Format("ACL Type: {0}", ACLType));
+            sb.AppendLine(string.Format("Sbz1: 0x{0:X}", Sbz1));
+            sb.AppendLine(string.Format("Sbz2: 0x{0:X}", Sbz2));
 
             sb.AppendLine(string.Format("ACE Records Count: {0}", AceCount));
 

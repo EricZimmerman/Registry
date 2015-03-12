@@ -91,8 +91,8 @@ namespace Registry.Cells
                     // i have seen cases where there is no available security descriptor because the sk record doesn't contain the right data
                     return new SKSecurityDescriptor(rawDescriptor);
                 }
-
-                return null;
+              
+                return null;//ncrunch: no coverage
             }
         }
 
@@ -100,13 +100,11 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         public bool IsFree
         {
             get { return _size > 0; }
-            set { }
         }
 
         public bool IsReferenced { get; internal set; }
@@ -116,13 +114,11 @@ namespace Registry.Cells
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-            set { }
         }
 
         public int Size
         {
             get { return Math.Abs(_size); }
-            set { }
         }
 
         // public methods...

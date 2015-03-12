@@ -10,7 +10,7 @@ using static Registry.Other.Helpers;
 namespace Registry.Lists
 {
     // internal classes...
-    internal class RIListRecord : IListTemplate, IRecordBase
+    public class RIListRecord : IListTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;
@@ -43,9 +43,9 @@ namespace Registry.Lists
                 while (counter < NumberOfEntries)
                 {
                     if (index >= RawBytes.Length)
-                    {
+                    {                               //ncrunch: no coverage
                         // i have seen cases where there isnt enough data, so get what we can
-                        break;
+                        break;                      //ncrunch: no coverage
                     }
 
                     var os = BitConverter.ToUInt32(RawBytes, index);
@@ -65,7 +65,7 @@ namespace Registry.Lists
             get { return _size > 0; }
         }
 
-        public bool IsReferenced { get; internal set; }
+        public bool IsReferenced { get;  set; }
 
         public int NumberOfEntries
         {
@@ -78,7 +78,6 @@ namespace Registry.Lists
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-            set { }
         }
 
         public int Size
@@ -90,7 +89,6 @@ namespace Registry.Lists
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         // public methods...
@@ -98,7 +96,7 @@ namespace Registry.Lists
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
             sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));

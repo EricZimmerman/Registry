@@ -67,7 +67,8 @@ namespace Registry.Other
                     return new xACLRecord(rawDacl, xACLRecord.ACLTypeEnum.Discretionary);
                 }
 
-                return null;
+                return null; //ncrunch: no coverage
+
             }
         }
 

@@ -52,11 +52,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestRegistryBaseClass.cs" />
+    <Compile Include="TestNKCellRecord.cs" />
+    <Compile Include="TestRegistryBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestRegistryHiveClass.cs" />
-    <Compile Include="TestRegistryHiveOnDemandClass.cs" />
-    <Compile Include="TestRegistryOtherClass.cs" />
+    <Compile Include="TestRegistryHive.cs" />
+    <Compile Include="TestRegistryHiveOnDemand.cs" />
+    <Compile Include="TestRegistryOther.cs" />
+    <Compile Include="TestSetup.cs" />
+    <Compile Include="TestSKCellRecord.cs" />
+    <Compile Include="TestVKCellRecord.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Registry\Registry.csproj">
@@ -65,7 +69,35 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Hives\Acronis_0x52_Usrclass.dat" />
+    <None Include="Hives\BCD" />
+    <None Include="Hives\DRIVERS" />
+    <None Include="Hives\ERZ_Win81_UsrClass.dat" />
+    <None Include="Hives\NotAHive" />
+    <None Include="Hives\NTUSER slack.DAT" />
+    <None Include="Hives\NTUSER.DAT" />
+    <None Include="Hives\NTUSER1.DAT" />
+    <None Include="Hives\SAM" />
+    <None Include="Hives\SAMBadHBinHeader" />
+    <None Include="Hives\SAM_DUPENAME" />
+    <None Include="Hives\SAM_hasBigEndianDWord" />
+    <None Include="Hives\SAM_RootValue" />
+    <None Include="Hives\SAN%28OTHER%29" />
+    <None Include="Hives\SECURITY" />
+    <None Include="Hives\SECURITYNoRoot" />
+    <None Include="Hives\software" />
+    <None Include="Hives\SYSTEM" />
+    <None Include="Hives\UsrClass 1.dat" />
+    <None Include="Hives\UsrClass BEEF000E.dat" />
+    <None Include="Hives\UsrClass FTP.dat" />
+    <None Include="Hives\UsrClass zip files unicode.dat" />
+    <None Include="Hives\UsrClass-win7.dat" />
+    <None Include="Hives\UsrClassJVM.dat" />
+    <None Include="Hives\UsrClassDeletedBags.dat" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Notes.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

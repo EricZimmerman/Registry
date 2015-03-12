@@ -5,8 +5,8 @@
         /// <summary>
         ///     The offset in the registry hive file to a record
         /// </summary>
-        long AbsoluteOffset { get;   set;}
+        long AbsoluteOffset { get;   }
 
-        string Signature { get;   set;}
+        string Signature { get;   }
     }
 }

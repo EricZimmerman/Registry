@@ -81,6 +81,7 @@ namespace Registry.Other
                 {
                     case 0x0:
                         return AceTypeEnum.AccessAllowedAceType;
+                    //ncrunch: no coverage start
                     case 0x1:
                         return AceTypeEnum.AccessDeniedAceType;
 
@@ -106,6 +107,7 @@ namespace Registry.Other
                         return AceTypeEnum.SystemAlarmObjectAceType;
                     default:
                         return AceTypeEnum.Unknown;
+                        //ncrunch: no coverage end
                 }
             }
         }

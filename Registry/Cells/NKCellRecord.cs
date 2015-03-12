@@ -35,13 +35,8 @@ namespace Registry.Cells
             VirtualStore = 0x0200
         }
 
-        // private fields...
-        //  private readonly int _size;
-        // protected internal constructors...
-
-
-        private int _rawBytesLength;
-        private IRegistry _registryHive;
+        private readonly int _rawBytesLength;
+        private readonly IRegistry _registryHive;
 
         // public fields...
         public List<ulong> ValueOffsets;
@@ -202,18 +197,14 @@ namespace Registry.Cells
                 var actualPaddingOffset = paddingBlock * 8;
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
-
-                if (paddingLength > 0)
+                
+                if (paddingLength > 0 && paddingOffset + paddingLength <= RawBytes.Length)
                 {
-                    if (paddingOffset + paddingLength <= RawBytes.Length)
-                    {
-                     return  new ArraySegment<byte>(RawBytes,paddingOffset,paddingLength).ToArray();
-                    }
+                    return  new ArraySegment<byte>(RawBytes,paddingOffset,paddingLength).ToArray();
                 }
 
                 return new byte[0];
             }
-            private set { }
         }
 
         /// <summary>
@@ -280,7 +271,7 @@ namespace Registry.Cells
 
                 if (num == 0xFFFFFFFF)
                 {
-                    return 0;
+                    num = 0;
                 }
                 return num;
             }
@@ -340,7 +331,6 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         public bool IsFree
@@ -354,18 +344,14 @@ namespace Registry.Cells
             get
             {
                 var raw = _registryHive.ReadBytesFromHive(AbsoluteOffset, _rawBytesLength);
-
                 return raw;
-
             }
-            private set { }
         }
         public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2); }
-            set { }
         }
 
         public int Size

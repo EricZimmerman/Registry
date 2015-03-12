@@ -68,13 +68,11 @@ namespace Registry.Other
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         public string Signature
         {
             get { return string.Empty; }
-            set { }
         }
 
         // public methods...
@@ -82,7 +80,7 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
             sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
 

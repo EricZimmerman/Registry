@@ -280,15 +280,24 @@ namespace ExampleApp
                         "There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
                         fName1Test.SoftParsingErrors));
 
-                
-
                     logger.Info(sb.ToString());
+
+//                    foreach (var cellTemplate in fName1Test.ListRecords)
+//                    {
+//                        Console.WriteLine(cellTemplate.ToString());
+//                    }
 
                     if (result.Value.ExportHiveData)
                     {
                         Console.WriteLine();
 
-                        var baseDir = Path.GetDirectoryName(testFile);
+                        var baseDir = Path.Combine(Path.GetDirectoryName(testFile),"out");
+
+                        if (Directory.Exists(baseDir) == false)
+                        {
+                            Directory.CreateDirectory(baseDir);
+                        }
+
                         var baseFname = Path.GetFileName(testFile);
 
                         var myName = string.Empty;

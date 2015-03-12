@@ -126,19 +126,12 @@ namespace Registry.Cells
                         dataBlockSize = (int)(Math.Ceiling(((double)DataLength / 8)) * 8) + 32;
                     }
 
-                    //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
-
-                    //sanity check the length. if its crazy big, make it manageable
-                    if (dataBlockSize < -2147483640)
-                    {
-                        dataBlockSize = dataBlockSize - -2147483648;
-                    }
-
                     if (IsFree && dataBlockSize == DataLength)
                     {
                         dataBlockSize += 4;
                     }
 
+                    //The most common case is simply where the data we want lives at OffsetToData, so we just go get it
                     //we know the offset to where the data lives, so grab bytes in order to get the size of the data *block* vs the size of the data in it
                     if (IsFree)
                     {
@@ -205,7 +198,7 @@ namespace Registry.Cells
                         //reset this so slack calculation works
                         dataBlockSize = _datablockRaw.Length;
 
-                        //since dataBlockRaw doesnt have the size on it in this case, adjust internalDataOffset accordingly
+                        //since dataBlockRaw doesn't have the size on it in this case, adjust internalDataOffset accordingly
                         _internalDataOffset = 0;
                     }
 
@@ -215,7 +208,6 @@ namespace Registry.Cells
                 return _datablockRaw; 
                 
             }
-            set {  }
         }
 
         private IRegistry _registryHive;
@@ -268,7 +260,6 @@ namespace Registry.Cells
             }
 
             DataType = (DataTypeEnum) dataTypeInternal;
-            
         }
 
         public byte[] Padding {
@@ -281,18 +272,14 @@ namespace Registry.Cells
                 var actualPaddingOffset = paddingBlock * 8;
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
-
-                if (paddingLength > 0)
+                
+                if (paddingLength > 0 && paddingOffset + paddingLength <= RawBytes.Length)
                 {
-                    if (paddingOffset + paddingLength <= RawBytes.Length)
-                    {
-                        return new ArraySegment<byte>(RawBytes, paddingOffset, paddingLength).ToArray();
-                    }
+                    return new ArraySegment<byte>(RawBytes, paddingOffset, paddingLength).ToArray();
                 }
-
+                
                 return new byte[0];
             }
-            private set { }
         }
 
         /// <summary>
@@ -374,26 +361,23 @@ namespace Registry.Cells
                         case DataTypeEnum.RegExpandSz:
                         case DataTypeEnum.RegMultiSz:
                         case DataTypeEnum.RegSz:
-                            if ((int) _dataLengthInternal > localDBL.Length || ValueDataRaw == null)
-                            {
-                                val = "(!!!! UNABLE TO DETERMINE STRING VALUE !!!!)";
-                            }
-                            else
-                            {
                                 var tempVal = Encoding.Unicode.GetString(localDBL, _internalDataOffset,
                                     (int) _dataLengthInternal);
 
-                                var nullIndex = tempVal.IndexOf('\0');
+                                var nullIndex = tempVal.IndexOf("\0\0");
 
                                 if (nullIndex > -1)
                                 {
-                                    val = tempVal.Substring(0, nullIndex);
+                                    var baseString = tempVal.Substring(0, nullIndex);
+                                    var chunks = baseString.Split('\0');
+                                    val = string.Join(" ", chunks);
                                 }
                                 else
                                 {
                                     val = tempVal;
                                 }
-                            }
+
+                            val = val.ToString().Trim('\0');
 
                             break;
 
@@ -426,14 +410,13 @@ namespace Registry.Cells
                             break;
 
                         case DataTypeEnum.RegQword:
-                            val = BitConverter.ToUInt64(localDBL, _internalDataOffset);
-
+                            val = _dataLengthInternal == 8 ? BitConverter.ToUInt64(localDBL, _internalDataOffset) : 0;
+                          
                             break;
 
                         case DataTypeEnum.RegUnknown:
                             val = localDBL;
 
-                            ValueDataSlack = new byte[0];
 
                             break;
 
@@ -447,8 +430,6 @@ namespace Registry.Cells
                         default:
                             DataType = DataTypeEnum.RegUnknown;
                             val = localDBL;
-
-                            ValueDataSlack = new byte[0];
 
                             break;
                     }
@@ -477,27 +458,15 @@ namespace Registry.Cells
         public byte[] ValueDataRaw {
             get
             {
+                byte[] ret= new byte[0];
 
                 if (_dataLengthInternal + _internalDataOffset > DataBlockRaw.Length)
                 {
-                    //we dont have enough data to copy, so take what we can get
+                    //we don't have enough data to copy, so take what we can get
                     if (DataBlockRaw.Length > 0)
                     {
-                        try
-                        {
-
-                          return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
+                        return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
                                     DataBlockRaw.Length - _internalDataOffset).ToArray();
-
-                        }
-                        catch (Exception)
-                        {
-                            return
-                                 new ArraySegment<byte>(DataBlockRaw, 0,
-                                    DataBlockRaw.Length).ToArray();
-
-
-                        }
                     }
                 }
                 else
@@ -505,12 +474,16 @@ namespace Registry.Cells
                     return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
                            (int)_dataLengthInternal).ToArray();
                 }
-               
 
-                throw new Exception("Couldn't determine ValueDataRaw!");
+                if (IsFree)
+                {
+                    return new byte[0];
+                }
+
+                return ret; 
 
             }
-            set {} }
+          }
 
         //The raw contents of this value record's slack space
         public byte[] ValueDataSlack {
@@ -526,23 +499,17 @@ namespace Registry.Cells
                 var maxSlackSize = Math.Ceiling((double)(_dataLengthInternal + 4) / 8) * 8 - _dataLengthInternal -
                                    _internalDataOffset;
 
-                ValueDataSlack = new byte[0];
 
                 if (dbRaw.Length > _dataLengthInternal + _internalDataOffset)
                 {
-                    ValueDataSlack = new Byte[Math.Abs((int)maxSlackSize)];
 
                     return
                         new ArraySegment<byte>(DataBlockRaw, (int) (_dataLengthInternal + _internalDataOffset),
                             (int) (Math.Abs(maxSlackSize))).ToArray();
-
-                    
                 }
 
                 return new byte[0];
-
             }
-            set { }
         }
 
         /// <summary>
@@ -552,7 +519,7 @@ namespace Registry.Cells
         {
             get
             {
-                string _valName;
+                string _valName = "(Unable to determine name)";
 
                 if (NameLength == 0)
                 {
@@ -569,10 +536,7 @@ namespace Registry.Cells
                             {
                                 _valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                             }
-                            else
-                            {
-                                _valName = "(Unable to determine name)";
-                            }
+
                         }
                         else
                         {
@@ -581,45 +545,20 @@ namespace Registry.Cells
                     }
                     else
                     {
-                        if (IsFree)
-                        {
-                            //make sure we have enough data
-                            if (RawBytes.Length >= NameLength + 0x18)
-                            {
-                                _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
-                            }
-                            else
-                            {
-                                _valName = "(Unable to determine name)";
-                            }
-                        }
-                        else
-                        {
                             // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
 
                             var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
 
                             var foundMatch = false;
-                            try
-                            {
+
                                 foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
-                                // look for hex chars followed by 00 separators
-                            }
-                            catch (ArgumentException)
-                            {
-                                // Syntax error in the regular expression
-                            }
 
                             if (foundMatch)
                             {
                                 // we found what appears to be unicode
                                 _valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
                             }
-                            else
-                            {
-                                _valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
-                            }
-                        }
+
                     }
                 }
 
@@ -631,7 +570,6 @@ namespace Registry.Cells
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         public bool IsFree
@@ -648,18 +586,15 @@ namespace Registry.Cells
                 return raw;
 
             }
-            private set { }
         }
         public long RelativeOffset { get;  private set;}
 
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-            set { }
         }
 
         public int Size { get { return BitConverter.ToInt32(RawBytes, 0); }
-            private set { } 
         }
         // public methods...
         public override string ToString()
@@ -703,14 +638,7 @@ namespace Registry.Cells
                 case DataTypeEnum.RegResourceList:
                 case DataTypeEnum.RegResourceRequirementsList:
                 case DataTypeEnum.RegFullResourceDescription:
-                    if (ValueData == null)
-                    {
-                        sb.AppendLine(string.Format("Value Data: {0}", ""));
-                    }
-                    else
-                    {
                         sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
-                    }
 
                     break;
 
@@ -731,14 +659,8 @@ namespace Registry.Cells
                     sb.AppendLine(string.Format("Value Data: {0:N}", ValueData));
                     break;
                 default:
-                    if (ValueData == null)
-                    {
-                        sb.AppendLine(string.Format("Value Data: {0}", ""));
-                    }
-                    else
-                    {
                         sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
-                    }
+
                     break;
             }
 

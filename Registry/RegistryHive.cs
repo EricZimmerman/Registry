@@ -185,10 +185,10 @@ namespace Registry
             }
 
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
-            {
-                _logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
+            {//ncrunch: no coverage
+                _logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", //ncrunch: no coverage
                     key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
-            }
+            }//ncrunch: no coverage
 
             // look for values in this key 
             foreach (var valueOffset in key.NKRecord.ValueOffsets)
@@ -201,22 +201,6 @@ namespace Registry
                 _logger.Debug("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
 
                 vk.IsReferenced = true;
-                
-             //   var dbListProcessed = false;
-
-//                foreach (var dataOffset in vk.DataOffsets)
-//                {
-//                    //there is a special case when registry version >= 1.4 and size > 16344
-//                    //if this is true, the first offset is a db record, found with the lists
-//                    if ((Header.MinorVersion > 3) && vk.DataLength > 16344 && dbListProcessed == false)
-//                    {
-//                        var db = ListRecords[(long) dataOffset];
-//
-//                        var dbr = db as DBListRecord;
-//                        dbr.IsReferenced = true;
-//                        dbListProcessed = true;
-//                    }
-//                }
                 
                 var value = new KeyValue(vk);
 
@@ -344,7 +328,7 @@ namespace Registry
 
                     break;
                 default:
-                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
+                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));  
             }
 
             return keys;
@@ -407,36 +391,34 @@ namespace Registry
                 {
                     try
                     {
-if (keyValuePair.Value.Signature == "vk")
-                    {
-                        ValueCountDeleted += 1;
-                        var val = keyValuePair.Value as VKCellRecord;
+                        if (keyValuePair.Value.Signature == "vk")
+                        {
+                            ValueCountDeleted += 1;
+                            var val = keyValuePair.Value as VKCellRecord;
 
-                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "",
-                            val.ValueName, (int) val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
-                    }
+                            sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "",
+                                val.ValueName, (int) val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
+                        }
 
-                    if (keyValuePair.Value.Signature == "nk")
-                    {
-                        //this should never be once we re-enable deleted key rebuilding
+                        if (keyValuePair.Value.Signature == "nk")
+                        {
+                            //this should never be once we re-enable deleted key rebuilding
 
-                        KeyCountDeleted += 1;
-                        var nk = keyValuePair.Value as NKCellRecord;
-                        var key = new RegistryKey(nk, null);
+                            KeyCountDeleted += 1;
+                            var nk = keyValuePair.Value as NKCellRecord;
+                            var key = new RegistryKey(nk, null);
 
-                        sw.WriteLine("key|{0}|{1}|{2}|{3}", key.NKRecord.IsFree ? "U" : "A",
-                            key.NKRecord.AbsoluteOffset, key.KeyName,
-                            key.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                            sw.WriteLine("key|{0}|{1}|{2}|{3}", key.NKRecord.IsFree ? "U" : "A",
+                                key.NKRecord.AbsoluteOffset, key.KeyName,
+                                key.LastWriteTime.Value.UtcDateTime.ToString("o"));
 
-                        DumpKeyCommonFormat(key, sw, ref KeyCountDeleted, ref ValueCountDeleted);
-                    }
+                            DumpKeyCommonFormat(key, sw, ref KeyCountDeleted, ref ValueCountDeleted);
+                        }
                     }
                     catch (Exception ex)
                     {
                      _logger.Warn("There was an error exporting free record at offset 0x{0:X}. Error: {1}",keyValuePair.Value.AbsoluteOffset,ex.Message);
                     }
-
-                    
                 }
 
                 sw.WriteLine("total_keys|{0}", KeyCount);
@@ -476,8 +458,14 @@ if (keyValuePair.Value.Signature == "vk")
             return null;
         }
 
+        private bool _parsed = false;
+
         public bool ParseHive()
         {
+            if (_parsed)
+            {
+                throw new Exception("ParseHive already called");
+            }
             TotalBytesRead = 0;
 
             TotalBytesRead += 4096;
@@ -628,13 +616,11 @@ if (keyValuePair.Value.Signature == "vk")
                 //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
 
                 if (Header.Length != TotalBytesRead - 0x1000)
-                {
-                    _logger.Warn(
+                {//ncrunch: no coverage
+                    _logger.Warn(//ncrunch: no coverage
                        "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
                        HiveLength(), TotalBytesRead);
-                }
-
-
+                }//ncrunch: no coverage
             }
 
             if (RecoverDeleted)
@@ -645,15 +631,24 @@ if (keyValuePair.Value.Signature == "vk")
             if (FlushRecordListsAfterParse)
             {
                 _logger.Info("Flushing record lists...");
-                CellRecords.Clear();
                 ListRecords.Clear();
-            }
 
+                var toRemove = CellRecords.Where(pair => pair.Value is NKCellRecord || pair.Value is VKCellRecord)
+                         .Select(pair => pair.Key)
+                         .ToList();
+
+                foreach (var key in toRemove)
+                {
+                    CellRecords.Remove(key);
+                }
+                
+            }
+            _parsed = true;
             return true;
         }
 
         /// <summary>
-        ///     Associates vk records with NK records and builds a heirarchy of nk records
+        ///     Associates vk records with NK records and builds a hierarchy of nk records
         ///     <remarks>Results of this method will be available in DeletedRegistryKeys</remarks>
         /// </summary>
         private void BuildDeletedRegistryKeys()
@@ -712,13 +707,13 @@ if (keyValuePair.Value.Signature == "vk")
 
                             offsetList = dr;
                         }
-                        catch (Exception)
-                        {
+                        catch (Exception)//ncrunch: no coverage
+                        {//ncrunch: no coverage
                             //sometimes the data node doesn't have enough data to even do this, or its wrong data
-                            _logger.Warn(
+                            _logger.Warn(//ncrunch: no coverage
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
-                        }
+                        }//ncrunch: no coverage
 
                         if (offsetList != null)
                         {
@@ -734,12 +729,12 @@ if (keyValuePair.Value.Signature == "vk")
                                     regKey.NKRecord.ValueOffsets.Add(os);
                                 }
                             }
-                            catch (Exception)
-                            {
-                                _logger.Warn(
+                            catch (Exception)//ncrunch: no coverage
+                            {//ncrunch: no coverage
+                                _logger.Warn(//ncrunch: no coverage
                                     "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
                                     nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
-                            }
+                            }//ncrunch: no coverage
                         }
                     }
 
@@ -794,12 +789,12 @@ if (keyValuePair.Value.Signature == "vk")
 
                     _deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
                 }
-                catch (Exception ex)
-                {
-                    _logger.Error(
+                catch (Exception ex)//ncrunch: no coverage
+                {//ncrunch: no coverage
+                    _logger.Error(//ncrunch: no coverage
                         string.Format("Error while processing deleted nk record at absolute offset 0x{0:X}",
                             unreferencedNkCell.Value.AbsoluteOffset), ex);
-                }
+                }//ncrunch: no coverage
             }
 
             _logger.Debug("Building tree of key/subkeys for deleted keys");

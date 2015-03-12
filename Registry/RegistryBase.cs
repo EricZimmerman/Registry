@@ -31,7 +31,7 @@ namespace Registry
             {
                 _logger.Error("Data in byte array is not a Registry hive (bad signature)");
 
-                throw new Exception("Data in byte array is not a Registry hive (bad signature)");
+                throw new ArgumentException("Data in byte array is not a Registry hive (bad signature)");
             }
 
             Initialize();

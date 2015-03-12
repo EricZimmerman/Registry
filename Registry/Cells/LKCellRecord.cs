@@ -6,6 +6,8 @@ using Registry.Other;
 
 // namespaces...
 
+
+//ncrunch: no coverage start
 namespace Registry.Cells
 {
     // public classes...

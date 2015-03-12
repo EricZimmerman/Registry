@@ -27,14 +27,21 @@ namespace Registry.Abstractions
         /// <summary>
         ///     A unique value that can be used to find this key in a collection
         /// </summary>
-        public string InternalGUID { get; set; }
+        public string InternalGUID { get;  }
 
         /// <summary>
         ///     The normalized representation of the value's value.
         /// </summary>
         public string ValueData
         {
-            get { return VKRecord.ValueData.ToString(); }
+            get
+            {
+                if (VKRecord.ValueData is byte[])
+                {
+                    return BitConverter.ToString((byte[])VKRecord.ValueData);
+                }
+                return VKRecord.ValueData.ToString();
+            }
         }
 
         /// <summary>
@@ -77,7 +84,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The underlying VKRecord for this Key. This allows access to all info about the VK Record
         /// </summary>
-        public VKCellRecord VKRecord { get; private set; }
+        public VKCellRecord VKRecord { get; }
 
         // public methods...
         public override string ToString()

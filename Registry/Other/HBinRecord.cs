@@ -66,10 +66,10 @@ namespace Registry.Other
                     LastWriteTimestamp = dt;
                 }
             }
-            catch (Exception)
-            {
+            catch (Exception)   //ncrunch: no coverage
+            {                   //ncrunch: no coverage
                 //very rarely you get a 'Not a valid Win32 FileTime' error, so trap it if thats the case
-            }
+            }                   //ncrunch: no coverage
 
             Spare = BitConverter.ToUInt32(rawBytes, 0xc);
         }
@@ -87,25 +87,25 @@ namespace Registry.Other
         /// <summary>
         ///     The relative offset to this record
         /// </summary>
-        public uint FileOffset { get;  private set;}
+        public uint FileOffset { get; }
 
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset? LastWriteTimestamp { get;  private set;}
+        public DateTimeOffset? LastWriteTimestamp { get; }
 
         /// <summary>
         ///     The offset to this record as stored by other records
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get;  private set;}
+        public long RelativeOffset { get; }
 
-        public uint Reserved { get;  private set;}
+        public uint Reserved { get; }
 
         /// <summary>
         ///     The signature of the hbin record. Should always be "hbin"
         /// </summary>
-        public string Signature { get;  private set;}
+        public string Signature { get; }
 
         /// <summary>
         ///     The size of the hive
@@ -114,9 +114,9 @@ namespace Registry.Other
         ///         negative size)
         ///     </remarks>
         /// </summary>
-        public uint Size { get;  private set;}
+        public uint Size { get; }
 
-        public uint Spare { get;  private set;}
+        public uint Spare { get; }
 
         public List<IRecordBase> Process()
         {
@@ -150,17 +150,12 @@ namespace Registry.Other
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
                 var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
 
+                //ncrunch: no coverage start
                 if (_logger.IsDebugEnabled)
                 {
                     var foundMatch = false;
-                    try
-                    {
+               
                         foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
-                    }
-                    catch (ArgumentException)
-                    {
-                        // Syntax error in the regular expression
-                    }
 
                     //only process records with 2 letter signatures. this avoids crazy output for data cells
                     if (foundMatch)
@@ -174,6 +169,7 @@ namespace Registry.Other
                             offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
                     }  
                 }
+                //ncrunch: no coverage end
 
                 ICellTemplate cellRecord = null;
                 IListTemplate listRecord = null;
@@ -186,7 +182,6 @@ namespace Registry.Other
                         case LfSignature:
                         case LhSignature:
                             listRecord = new LxListRecord(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
 
                         case LiSignature:
@@ -196,18 +191,15 @@ namespace Registry.Other
 
                         case RiSignature:
                             listRecord = new RIListRecord(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
 
                         case DbSignature:
                             listRecord = new DBListRecord(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
 
                         case LkSignature:
                             cellRecord = new LKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
-
-                            break;
+                            break;   //ncrunch: no coverage
 
                         case NkSignature:
                             if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
@@ -218,7 +210,6 @@ namespace Registry.Other
                             break;
                         case SkSignature:
                             cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
 
                         case VkSignature:
@@ -226,32 +217,33 @@ namespace Registry.Other
                             {
                                 cellRecord = new VKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset, _minorVersion, _registryHive);
                             }
-
                             break;
 
                         default:
                             dataRecord = new DataNode(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
                     //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else?
-                    //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
+                
 
                     var size = BitConverter.ToInt32(rawRecord, 0);
 
                     if (size < 0)
-                    {
-                        RegistryHive._hardParsingErrors += 1;
+                    {                                               //ncrunch: no coverage
+                        RegistryHive._hardParsingErrors += 1;       //ncrunch: no coverage
 
-                        _logger.Error(
-                            string.Format(
-                                "Hard error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",
-                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),
+                        _logger.Error(                             //ncrunch: no coverage     
+                            string.Format(                         
+                                "Hard error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",  
+                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),                
                             ex);
-                    }
+
+                        //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
+
+                    }                                              //ncrunch: no coverage                     
                     else
                     {
                         _logger.Warn(
@@ -314,7 +306,6 @@ namespace Registry.Other
 
             var offsetList2 = new List<int>();
 
-           // var sig = string.Empty;
             byte[] raw = null;
 
             _logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
@@ -351,9 +342,10 @@ namespace Registry.Other
                         continue;
                     }
 
-                  //  raw = new byte[Math.Abs((int) size)];
+                    raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs((int)size)).ToArray();
 
-                    raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs((int)size)).ToArray();//  new byte[readSize];
+                    if (raw.Length<6)
+                        continue; // since we need 4 bytes for the size and 2 for sig, if its smaller than 6, go to next one
 
                     var sig2 = BitConverter.ToInt16(raw, 4);
 
@@ -389,16 +381,16 @@ namespace Registry.Other
                     }
 
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex)                //ncrunch: no coverage
+                {                                   //ncrunch: no coverage
                     // this is a corrupted/unusable record
-                    _logger.Warn(
+                    _logger.Warn(                       //ncrunch: no coverage
                         string.Format(
                             "When recovering from slack at absolute offset 0x{0:X8}, an error happened! raw Length: 0x{1:x}",
                             relativeoffset + i + 0x1000, raw.Length), ex);
 
-                    RegistryHive._softParsingErrors += 1;
-                }
+                    RegistryHive._softParsingErrors += 1;   //ncrunch: no coverage
+                }                                   //ncrunch: no coverage
             }
 
 

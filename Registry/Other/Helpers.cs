@@ -461,6 +461,7 @@ namespace Registry.Other
             return field == null ? default(T) : (T) field.Field.GetRawConstantValue();
         }
 
+        //ncrunch: no coverage start
         public static SidTypeEnum GetSIDTypeFromSIDString(string SID)
         {
             var SIDType = SidTypeEnum.UnknownOrUserSID;
@@ -871,5 +872,8 @@ namespace Registry.Other
 
             return SIDType;
         }
+
+        //ncrunch: no coverage end
     }
+
 }

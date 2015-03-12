@@ -10,10 +10,9 @@ using static Registry.Other.Helpers;
 namespace Registry.Lists
 {
     // internal classes...
-    internal class LIListRecord : IListTemplate, IRecordBase
+    public class LIListRecord : IListTemplate, IRecordBase
     {
         // private fields...
-
 
         private readonly int _size;
         // public constructors...
@@ -27,12 +26,6 @@ namespace Registry.Lists
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-
-
-            if (IsFree)
-            {
-                return;
-            }
         }
 
         /// <summary>
@@ -53,9 +46,9 @@ namespace Registry.Lists
                     index += 4;
 
                     if (os == 0x0)
-                    {
+                    {                   //ncrunch: no coverage
                         //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
-                        break;
+                        break;          //ncrunch: no coverage
                     }
 
                     offsets.Add(os);
@@ -74,7 +67,7 @@ namespace Registry.Lists
             get { return _size > 0; }
         }
 
-        public bool IsReferenced { get; internal set; }
+        public bool IsReferenced { get;  set; }
 
         public int NumberOfEntries
         {
@@ -87,7 +80,6 @@ namespace Registry.Lists
         public string Signature
         {
             get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-            set { }
         }
 
         public int Size
@@ -99,7 +91,6 @@ namespace Registry.Lists
         public long AbsoluteOffset
         {
             get { return RelativeOffset + 4096; }
-            set { }
         }
 
         // public methods...
@@ -107,7 +98,7 @@ namespace Registry.Lists
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
+            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
             sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
