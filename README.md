@@ -1,5 +1,6 @@
 # Registry #
 
+NOTE: This project uses C# version 6 features! You will need VS 2015 to compile it. Alternatively you can just use the DLL from the ExampleApp project.
 
 Full featured, offline Registry parser in C#. 
 
