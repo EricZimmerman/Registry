@@ -149,7 +149,8 @@ namespace Registry.Abstractions
 
             sb.AppendLine();
             sb.AppendLine(keyName);
-            sb.AppendLine(string.Format(";Last write timestamp {0}]", LastWriteTime.Value.UtcDateTime.ToString("o")));
+            sb.AppendLine(string.Format(";Last write timestamp {0}", LastWriteTime.Value.UtcDateTime.ToString("o")));
+            //sb.AppendLine($";Last write timestamp {LastWriteTime.Value.UtcDateTime.ToString("o")}");
 
             foreach (var keyValue in Values)
             {
