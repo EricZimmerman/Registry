@@ -606,6 +606,7 @@ namespace Registry.Cells
             sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
             sb.AppendLine(string.Format("Signature: {0}", Signature));
             sb.AppendLine(string.Format("Data Type: {0}", DataType));
+            sb.AppendLine(string.Format("Data Type raw: 0x{0:X}", DataTypeRaw));
             sb.AppendLine();
             sb.AppendLine(string.Format("Is Free: {0}", IsFree));
 

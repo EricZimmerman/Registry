@@ -25,13 +25,6 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ComponentsHiveShouldHaveComponentsHiveType()
-        {
-            var r = new RegistryBase(@"..\..\Hives\Components");
-            Check.That(HiveTypeEnum.Components).IsEqualTo(r.HiveType);
-        }
-
-        [Test]
         public void DriversHiveShouldHaveDriversHiveType()
         {
             var r = new RegistryBase(@"..\..\Hives\Drivers");

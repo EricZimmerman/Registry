@@ -112,7 +112,7 @@ namespace Registry
                 keyCount += 1;
 
                 sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NKRecord.IsFree ? "U" : "A",
-                    subkey.NKRecord.AbsoluteOffset, subkey.KeyName,
+                    subkey.NKRecord.AbsoluteOffset, subkey.KeyPath,
                     subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
 
                 foreach (var val in subkey.Values)
@@ -358,9 +358,32 @@ namespace Registry
             var KeyCountDeleted = 0;
             var ValueCountDeleted = 0;
 
+            var header = new StringBuilder();
+            header.AppendLine("## Registry common export format");
+            header.AppendLine("## Key format");
+            header.AppendLine("## key|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|LastWriteTime in UTC");
+            header.AppendLine("## Value format");
+            header.AppendLine("## value|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|Value name|Data type (as decimal integer)|Value data as bytes separated by a singe space");
+            header.AppendLine("##");
+            header.AppendLine("## Comparison of deleted keys/values is done to compare recovery of vk and nk records, not the algorithm used to associate deleted keys to other keys and their values.");
+            header.AppendLine("## When including deleted keys, only the recovered key name should be included, not the full path to the deleted key.");
+            header.AppendLine("## When including deleted values, do not include the parent key information.");
+            header.AppendLine("##");
+            header.AppendLine("## The following totals should also be included");
+            header.AppendLine("##");
+            header.AppendLine("## total_keys|total in use key count");
+            header.AppendLine("## total_values|total in use value count");
+            header.AppendLine("## total_deleted_keys|total recovered free key count");
+            header.AppendLine("## total_deleted_values|total recovered free value count");
+            header.AppendLine("##");
+            header.AppendLine("## Before comparison with other common export implementations, the files should be sorted");
+            header.AppendLine("##");
+
             using (var sw = new StreamWriter(outfile, false))
             {
                 sw.AutoFlush = true;
+
+                sw.Write(header.ToString());
 
                 if (deletedOnly == false)
                 {

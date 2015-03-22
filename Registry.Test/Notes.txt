@@ -25,4 +25,55 @@ big endian dword = CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM
 regunknown = CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Groups\Names\None
 
 
+regnone
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Aliases
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases\Names
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Groups
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\RXACT
+
+regunknown
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases\Names\Hyper-V Administrators
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases\Names\Remote Desktop Users
+sam CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases\Names\Users
+sambig end CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Groups\Names\None
+
+
+
+5 each
+
+                case DataTypeEnum.RegLink:
+                    sb.AppendLine(string.Format("Value Data: {0}", ValueData));
+
+                    break;
+
+                case DataTypeEnum.RegNone:
+
+                case DataTypeEnum.RegResourceList:
+                case DataTypeEnum.RegResourceRequirementsList:
+                case DataTypeEnum.RegFullResourceDescription:
+                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
+
+                    break;
+
+                case DataTypeEnum.RegFileTime:
+
+                    if (ValueData != null)
+                    {
+                        var dto = (DateTimeOffset) ValueData;
+
+                        sb.AppendLine(string.Format("Value Data: {0}", dto));
+                    }
+
+                    break;
+
+                default:
+                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
+
+                    break;
+
+
+
+
 
