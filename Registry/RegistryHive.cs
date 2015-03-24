@@ -700,6 +700,12 @@ namespace Registry
                         KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
                     };
 
+					//some sanity checking on things
+	                if (regKey.NKRecord.Size < 0x50 + regKey.NKRecord.NameLength)
+	                {
+		                continue;
+	                }
+
                     //Build ValueOffsets for this NKRecord
                     if (regKey.NKRecord.ValueListCellIndex > 0)
                     {
