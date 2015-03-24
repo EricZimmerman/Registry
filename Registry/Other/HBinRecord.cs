@@ -199,17 +199,22 @@ namespace Registry.Other
 
                         case LkSignature:
                             cellRecord = new LKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
-                            break;   //ncrunch: no coverage
+                            break; //ncrunch: no coverage
 
                         case NkSignature:
                             if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
                             {
-                                cellRecord = new NKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset, _registryHive);
+                                cellRecord = new NKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
+                                    _registryHive);
                             }
 
                             break;
                         case SkSignature:
-                            cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            if (rawRecord.Length >= 0x14)  // the minimum length for a recoverable record
+                            {
+                                cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            }
+                    
                             break;
 
                         case VkSignature:
