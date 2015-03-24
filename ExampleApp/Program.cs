@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -12,333 +11,341 @@ using NLog.Config;
 using NLog.Targets;
 using Registry;
 using Registry.Cells;
-using Registry.Other;
 
 // namespaces...
 
 namespace ExampleApp
 {
-    // internal classes...
-    internal class Program
-    {
-        // private methods...
+	// internal classes...
+	internal class Program
+	{
+		// private methods...
 
-        private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)
-        {
-            var config = new LoggingConfiguration();
+		private static LoggingConfiguration GetNlogConfig(int level, string logFilePath)
+		{
+			var config = new LoggingConfiguration();
 
-            var loglevel = LogLevel.Info;
+			var loglevel = LogLevel.Info;
 
-            switch (level)
-            {
-                case 1:
-                    loglevel = LogLevel.Debug;
-                    break;
+			switch (level)
+			{
+				case 1:
+					loglevel = LogLevel.Debug;
+					break;
 
-                case 2:
-                    loglevel = LogLevel.Trace;
-                    break;
-                default:
-                    break;
-            }
+				case 2:
+					loglevel = LogLevel.Trace;
+					break;
+				default:
+					break;
+			}
 
-            var callsite = "${callsite:className=false}";
-            if (loglevel < LogLevel.Trace)
-            {
-                //if trace use expanded callstack
-                callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";
-            }
+			var callsite = "${callsite:className=false}";
+			if (loglevel < LogLevel.Trace)
+			{
+				//if trace use expanded callstack
+				callsite = "${callsite:className=false:fileName=true:includeSourcePath=true:methodName=true}";
+			}
 
-            // Step 2. Create targets and add them to the configuration 
-            var consoleTarget = new ColoredConsoleTarget();
+			// Step 2. Create targets and add them to the configuration 
+			var consoleTarget = new ColoredConsoleTarget();
 
-            //var consoleWrapper = new AsyncTargetWrapper();
-            //consoleWrapper.WrappedTarget = consoleTarget;
-            //consoleWrapper.QueueLimit = 5000;
-            //consoleWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+			//var consoleWrapper = new AsyncTargetWrapper();
+			//consoleWrapper.WrappedTarget = consoleTarget;
+			//consoleWrapper.QueueLimit = 5000;
+			//consoleWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
 
-            //     config.AddTarget("console", consoleWrapper);
-            config.AddTarget("console", consoleTarget);
-
-
-            if (logFilePath != null)
-            {
-                if (Directory.Exists(logFilePath))
-                {
-                    var fileTarget = new FileTarget();
-
-                    //var fileWrapper = new AsyncTargetWrapper();
-                    //fileWrapper.WrappedTarget = fileTarget;
-                    //fileWrapper.QueueLimit = 5000;
-                    //fileWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
-
-                    //config.AddTarget("file", fileWrapper);
-                    config.AddTarget("file", fileTarget);
-
-                    fileTarget.FileName = string.Format("{0}/{1}_log.txt", logFilePath, Guid.NewGuid());
-                        // "${basedir}/file.txt";
-
-                    fileTarget.Layout = @"${longdate} ${logger} " + callsite +
-                                        " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
-
-                    //var rule2 = new LoggingRule("*", loglevel, fileWrapper);
-                    var rule2 = new LoggingRule("*", loglevel, fileTarget);
-                    config.LoggingRules.Add(rule2);
-                }
-            }
-
-            consoleTarget.Layout = @"${longdate} ${logger} " + callsite +
-                                   " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
-
-            // Step 4. Define rules
-            //   var rule1 = new LoggingRule("*", loglevel, consoleWrapper);
-            var rule1 = new LoggingRule("*", loglevel, consoleTarget);
-            config.LoggingRules.Add(rule1);
+			//     config.AddTarget("console", consoleWrapper);
+			config.AddTarget("console", consoleTarget);
 
 
-            return config;
-        }
+			if (logFilePath != null)
+			{
+				if (Directory.Exists(logFilePath))
+				{
+					var fileTarget = new FileTarget();
 
-        private static void Main(string[] args)
-        {
-            var testFiles = new List<string>();
+					//var fileWrapper = new AsyncTargetWrapper();
+					//fileWrapper.WrappedTarget = fileTarget;
+					//fileWrapper.QueueLimit = 5000;
+					//fileWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Grow;
+
+					//config.AddTarget("file", fileWrapper);
+					config.AddTarget("file", fileTarget);
+
+					fileTarget.FileName = string.Format("{0}/{1}_log.txt", logFilePath, Guid.NewGuid());
+					// "${basedir}/file.txt";
+
+					fileTarget.Layout = @"${longdate} ${logger} " + callsite +
+					                    " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
+					//var rule2 = new LoggingRule("*", loglevel, fileWrapper);
+					var rule2 = new LoggingRule("*", loglevel, fileTarget);
+					config.LoggingRules.Add(rule2);
+				}
+			}
+
+			consoleTarget.Layout = @"${longdate} ${logger} " + callsite +
+			                       " ${level:uppercase=true} ${message} ${exception:format=ToString,StackTrace}";
+
+			// Step 4. Define rules
+			//   var rule1 = new LoggingRule("*", loglevel, consoleWrapper);
+			var rule1 = new LoggingRule("*", loglevel, consoleTarget);
+			config.LoggingRules.Add(rule1);
 
 
-            var result = Parser.Default.ParseArguments<Options>(args);
-            if (!result.Errors.Any())
-            {
-                if (result.Value.HiveName == null && result.Value.DirectoryName == null)
-                {
-                    Console.WriteLine(result.Value.GetUsage());
-                    Environment.Exit(1);
-                }
+			return config;
+		}
 
-                if (!string.IsNullOrEmpty(result.Value.HiveName))
-                {
-                    if (!string.IsNullOrEmpty(result.Value.DirectoryName))
-                    {
-                        Console.WriteLine("Must specify either -d or -f, but not both");
-                        Environment.Exit(1);
-                    }
-                }
+		private static void Main(string[] args)
+		{
+			var testFiles = new List<string>();
 
-                if (!string.IsNullOrEmpty(result.Value.DirectoryName))
-                {
-                    if (!string.IsNullOrEmpty(result.Value.HiveName))
-                    {
-                        Console.WriteLine("Must specify either -d or -f, but not both");
-                        Environment.Exit(1);
-                    }
-                }
 
-                if (!string.IsNullOrEmpty(result.Value.HiveName))
-                {
-                    testFiles.Add(result.Value.HiveName);
-                }
-                else
-                {
-                    if (Directory.Exists(result.Value.DirectoryName))
-                    {
-                        foreach (var file in Directory.GetFiles(result.Value.DirectoryName))
-                        {
-                            testFiles.Add(file);
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Directory '{0}' does not exist!", result.Value.DirectoryName);
-                        Environment.Exit(1);
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine(result.Value.GetUsage());
-                Environment.Exit(1);
-            }
+			var result = Parser.Default.ParseArguments<Options>(args);
+			if (!result.Errors.Any())
+			{
+				if (result.Value.HiveName == null && result.Value.DirectoryName == null)
+				{
+					Console.WriteLine(result.Value.GetUsage());
+					Environment.Exit(1);
+				}
 
-            var verboseLevel = result.Value.VerboseLevel;
-            if (verboseLevel < 0)
-            {
-                verboseLevel = 0;
-            }
-            if (verboseLevel > 2)
-            {
-                verboseLevel = 2;
-            }
+				if (!string.IsNullOrEmpty(result.Value.HiveName))
+				{
+					if (!string.IsNullOrEmpty(result.Value.DirectoryName))
+					{
+						Console.WriteLine("Must specify either -d or -f, but not both");
+						Environment.Exit(1);
+					}
+				}
 
-            var config = GetNlogConfig(verboseLevel, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-            LogManager.Configuration = config;
+				if (!string.IsNullOrEmpty(result.Value.DirectoryName))
+				{
+					if (!string.IsNullOrEmpty(result.Value.HiveName))
+					{
+						Console.WriteLine("Must specify either -d or -f, but not both");
+						Environment.Exit(1);
+					}
+				}
 
-            var logger = LogManager.GetCurrentClassLogger();
+				if (!string.IsNullOrEmpty(result.Value.HiveName))
+				{
+					testFiles.Add(result.Value.HiveName);
+				}
+				else
+				{
+					if (Directory.Exists(result.Value.DirectoryName))
+					{
+						foreach (var file in Directory.GetFiles(result.Value.DirectoryName))
+						{
+							testFiles.Add(file);
+						}
+					}
+					else
+					{
+						Console.WriteLine("Directory '{0}' does not exist!", result.Value.DirectoryName);
+						Environment.Exit(1);
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine(result.Value.GetUsage());
+				Environment.Exit(1);
+			}
 
-            foreach (var testFile in testFiles)
-            {
-                if (File.Exists(testFile) == false)
-                {
-                    logger.Error("'{0}' does not exist!", testFile);
-                    continue;
-                }
+			var verboseLevel = result.Value.VerboseLevel;
+			if (verboseLevel < 0)
+			{
+				verboseLevel = 0;
+			}
+			if (verboseLevel > 2)
+			{
+				verboseLevel = 2;
+			}
 
-                logger.Info("Processing '{0}'", testFile);
-                Console.Title = string.Format("Processing '{0}'", testFile);
+			var config = GetNlogConfig(verboseLevel, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+			LogManager.Configuration = config;
 
-                var sw = new Stopwatch();
-                try
-                {
-                    var fName1Test = new RegistryHive(testFile);
+			var logger = LogManager.GetCurrentClassLogger();
 
-                    fName1Test.NlogConfig = config;
-              
-                    sw.Start();
+			foreach (var testFile in testFiles)
+			{
+				if (File.Exists(testFile) == false)
+				{
+					logger.Error("'{0}' does not exist!", testFile);
+					continue;
+				}
 
-                    fName1Test.RecoverDeleted = result.Value.RecoverDeleted;
+				logger.Info("Processing '{0}'", testFile);
+				Console.Title = string.Format("Processing '{0}'", testFile);
 
-                    fName1Test.FlushRecordListsAfterParse = !result.Value.DontFlushLists;
+				var sw = new Stopwatch();
+				try
+				{
+					var registryHive = new RegistryHive(testFile);
+					if (registryHive.Header.ValidateCheckSum() == false)
+					{
+						logger.Warn("CheckSum mismatch!");
+					}
 
-                    fName1Test.ParseHive();
+					if (registryHive.Header.Sequence1 != registryHive.Header.Sequence2)
+					{
+						logger.Warn("Sequence mismatch!");
+					}
 
-                    logger.Info("Finished processing '{0}'", testFile);
-                    Console.Title = string.Format("Finished processing '{0}'", testFile);
+					registryHive.NlogConfig = config;
 
-                    sw.Stop();
+					sw.Start();
 
-                    var freeCells = fName1Test.CellRecords.Where(t => t.Value.IsFree);
-                    var referencedCells = fName1Test.CellRecords.Where(t => t.Value.IsReferenced);
+					registryHive.RecoverDeleted = result.Value.RecoverDeleted;
 
-                    var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
-                    var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
-                    var skFree = freeCells.Count(t => t.Value is SKCellRecord);
-                    var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
+					registryHive.FlushRecordListsAfterParse = !result.Value.DontFlushLists;
 
-                    var freeLists = fName1Test.ListRecords.Where(t => t.Value.IsFree);
-                    var referencedList = fName1Test.ListRecords.Where(t => t.Value.IsReferenced);
+					registryHive.ParseHive();
 
-                    var goofyCellsShouldBeUsed =
-                        fName1Test.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+					logger.Info("Finished processing '{0}'", testFile);
 
-                    var goofyListsShouldBeUsed =
-                        fName1Test.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
+					Console.Title = string.Format("Finished processing '{0}'", testFile);
 
-                    var sb = new StringBuilder();
+					sw.Stop();
 
-                    sb.AppendLine("Results:");
-                    sb.AppendLine();
+					var freeCells = registryHive.CellRecords.Where(t => t.Value.IsFree);
+					var referencedCells = registryHive.CellRecords.Where(t => t.Value.IsReferenced);
 
-                    sb.AppendLine(
-                        string.Format(
-                            "Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}",
-                            fName1Test.HBinRecordCount, fName1Test.HBinRecordTotalSize, fName1Test.Header.Length));
+					var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
+					var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
+					var skFree = freeCells.Count(t => t.Value is SKCellRecord);
+					var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
 
-                    if (fName1Test.FlushRecordListsAfterParse == false)
-                    {
-                        
-                    
+					var freeLists = registryHive.ListRecords.Where(t => t.Value.IsFree);
+					var referencedList = registryHive.ListRecords.Where(t => t.Value.IsReferenced);
 
-                    sb.AppendLine(
-                        string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-                            fName1Test.CellRecords.Count, fName1Test.CellRecords.Count(w => w.Value is NKCellRecord),
-                            fName1Test.CellRecords.Count(w => w.Value is VKCellRecord),
-                            fName1Test.CellRecords.Count(w => w.Value is SKCellRecord),
-                            fName1Test.CellRecords.Count(w => w.Value is LKCellRecord)));
-                    sb.AppendLine(string.Format("Found {0:N0} List records", fName1Test.ListRecords.Count));
+					var goofyCellsShouldBeUsed =
+						registryHive.CellRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
-                    sb.AppendLine();
+					var goofyListsShouldBeUsed =
+						registryHive.ListRecords.Where(t => t.Value.IsFree == false && t.Value.IsReferenced == false);
 
-                    sb.AppendLine(string.Format("There are {0:N0} cell records marked as being referenced ({1:P})",
-                        referencedCells.Count(), referencedCells.Count()/(double) fName1Test.CellRecords.Count));
-                    sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
-                        referencedList.Count(), referencedList.Count()/(double) fName1Test.ListRecords.Count));
+					var sb = new StringBuilder();
 
-                    if (result.Value.RecoverDeleted)
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine("Free record info");
-                        sb.AppendLine(string.Format(
-                            "{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-                            freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-                        sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
-                    }
+					sb.AppendLine("Results:");
+					sb.AppendLine();
 
-                        sb.AppendLine();
-                        sb.AppendLine(
-                            string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
-                                fName1Test.CellRecords.Count ==
-                                freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
-                        sb.AppendLine(
-                            string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
-                                fName1Test.ListRecords.Count ==
-                                freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+					sb.AppendLine(
+						string.Format(
+							"Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}",
+							registryHive.HBinRecordCount, registryHive.HBinRecordTotalSize, registryHive.Header.Length));
 
-                    }
+					if (registryHive.FlushRecordListsAfterParse == false)
+					{
+						sb.AppendLine(
+							string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+								registryHive.CellRecords.Count, registryHive.CellRecords.Count(w => w.Value is NKCellRecord),
+								registryHive.CellRecords.Count(w => w.Value is VKCellRecord),
+								registryHive.CellRecords.Count(w => w.Value is SKCellRecord),
+								registryHive.CellRecords.Count(w => w.Value is LKCellRecord)));
+						sb.AppendLine(string.Format("Found {0:N0} List records", registryHive.ListRecords.Count));
+						sb.AppendLine();
+						sb.AppendLine(string.Format($"Header CheckSums match: {registryHive.Header.ValidateCheckSum()}"));
+						sb.AppendLine(string.Format($"Header sequence 1: {registryHive.Header.Sequence1}, Header sequence 2: {registryHive.Header.Sequence2}"));
+						
+						sb.AppendLine();
 
-                    sb.AppendLine();
-                    sb.AppendLine(string.Format(
-                        "There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
-                        fName1Test.HardParsingErrors));
-                    sb.AppendLine(string.Format(
-                        "There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
-                        fName1Test.SoftParsingErrors));
+						sb.AppendLine(string.Format("There are {0:N0} cell records marked as being referenced ({1:P})",
+							referencedCells.Count(), referencedCells.Count()/(double) registryHive.CellRecords.Count));
+						sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
+							referencedList.Count(), referencedList.Count()/(double) registryHive.ListRecords.Count));
 
-                    logger.Info(sb.ToString());
+						if (result.Value.RecoverDeleted)
+						{
+							sb.AppendLine();
+							sb.AppendLine("Free record info");
+							sb.AppendLine(string.Format(
+								"{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
+								freeCells.Count(), nkFree, vkFree, skFree, lkFree));
+							sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
+						}
+
+						sb.AppendLine();
+						sb.AppendLine(
+							string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
+								registryHive.CellRecords.Count ==
+								freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
+						sb.AppendLine(
+							string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
+								registryHive.ListRecords.Count ==
+								freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+					}
+
+					sb.AppendLine();
+					sb.AppendLine(string.Format(
+						"There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
+						registryHive.HardParsingErrors));
+					sb.AppendLine(string.Format(
+						"There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
+						registryHive.SoftParsingErrors));
+
+					logger.Info(sb.ToString());
 
 //                    foreach (var cellTemplate in fName1Test.ListRecords)
 //                    {
 //                        Console.WriteLine(cellTemplate.ToString());
 //                    }
 
-                    if (result.Value.ExportHiveData)
-                    {
-                        Console.WriteLine();
+					if (result.Value.ExportHiveData)
+					{
+						Console.WriteLine();
 
-                        var baseDir = Path.Combine(Path.GetDirectoryName(testFile),"out");
+						var baseDir = Path.Combine(Path.GetDirectoryName(testFile), "out");
 
-                        if (Directory.Exists(baseDir) == false)
-                        {
-                            Directory.CreateDirectory(baseDir);
-                        }
+						if (Directory.Exists(baseDir) == false)
+						{
+							Directory.CreateDirectory(baseDir);
+						}
 
-                        var baseFname = Path.GetFileName(testFile);
+						var baseFname = Path.GetFileName(testFile);
 
-                        var myName = string.Empty;
+						var myName = string.Empty;
 
-                        var deletedOnly = result.Value.ExportDeletedOnly;
+						var deletedOnly = result.Value.ExportDeletedOnly;
 
-                        if (deletedOnly)
-                        {
-                            myName = "_EricZ_recovered.txt";
-                        }
-                        else
-                        {
-                            myName = "_EricZ_all.txt";
-                        }
+						if (deletedOnly)
+						{
+							myName = "_EricZ_recovered.txt";
+						}
+						else
+						{
+							myName = "_EricZ_all.txt";
+						}
 
-                        var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
+						var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
 
-                        logger.Info("Exporting hive data to '{0}'", outfile);
+						logger.Info("Exporting hive data to '{0}'", outfile);
 
-                        fName1Test.ExportDataToCommonFormat(outfile, deletedOnly);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("There was an error: {0}", ex.Message);
-                }
+						registryHive.ExportDataToCommonFormat(outfile, deletedOnly);
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine("There was an error: {0}", ex.Message);
+				}
 
-                logger.Info("Processing took {0:N4} seconds\r\n", sw.Elapsed.TotalSeconds);
+				logger.Info("Processing took {0:N4} seconds\r\n", sw.Elapsed.TotalSeconds);
 
-                Console.WriteLine();
-                Console.WriteLine();
+				Console.WriteLine();
+				Console.WriteLine();
 
-                if (result.Value.PauseAfterEachFile)
-                {
-                    Console.WriteLine("Press any key to continue to next file");
-                    Console.ReadKey();
+				if (result.Value.PauseAfterEachFile)
+				{
+					Console.WriteLine("Press any key to continue to next file");
+					Console.ReadKey();
 
-                    Console.WriteLine();
-                    Console.WriteLine();
-                }
-            }
-        }
-    }
+					Console.WriteLine();
+					Console.WriteLine();
+				}
+			}
+		}
+	}
 }

@@ -232,13 +232,13 @@ namespace Registry
 
                     foreach (var offset in lxRecord.Offsets)
                     {
-                        _logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset);
+                        _logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset.Key);
                         var cell = CellRecords[offset.Key];
 
                         var nk = cell as NKCellRecord;
                         nk.IsReferenced = true;
 
-                        _logger.Debug("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset,
+                        _logger.Debug("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
                             nk.Name);
 
                         var tempKey = new RegistryKey(nk, key);
@@ -288,7 +288,7 @@ namespace Registry
 
                             foreach (var offset3 in lxRecord_.Offsets)
                             {
-                                _logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset3);
+                                _logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset3.Key);
                                 var cell = CellRecords[offset3.Key];
 
                                 var nk = cell as NKCellRecord;

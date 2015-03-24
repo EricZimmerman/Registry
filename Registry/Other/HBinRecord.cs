@@ -363,7 +363,7 @@ namespace Registry.Other
                             }
 
                             var nk = new NKCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
-                            if (nk.LastWriteTimestamp.Year > 1700)
+                            if (nk.LastWriteTimestamp.Year > 1900)
                             {
                                 _logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
                                     relativeoffset + actualStart + 0x1000);
