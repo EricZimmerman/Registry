@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
 using NLog;
-using NLog.Config;
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -18,7 +15,7 @@ using static Registry.Other.Helpers;
 namespace Registry
 {
     // public classes...
-    public class RegistryHive :RegistryBase
+    public class RegistryHive : RegistryBase
     {
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
@@ -26,9 +23,10 @@ namespace Registry
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
+        private bool _parsed;
 
         /// <summary>
-        /// If true, CellRecords and ListRecords will be purged to free memory
+        ///     If true, CellRecords and ListRecords will be purged to free memory
         /// </summary>
         public bool FlushRecordListsAfterParse = true;
 
@@ -37,7 +35,7 @@ namespace Registry
         ///     <see cref="Registry" />
         ///     class.
         /// </summary>
-        public RegistryHive(string hivePath) :base(hivePath)
+        public RegistryHive(string hivePath) : base(hivePath)
         {
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
@@ -67,7 +65,7 @@ namespace Registry
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get; private set; }
+        public Dictionary<long, ICellTemplate> CellRecords { get; }
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -83,7 +81,7 @@ namespace Registry
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get; private set; }
+        public Dictionary<long, IListTemplate> ListRecords { get; }
 
         public RegistryKey Root { get; private set; }
 
@@ -98,15 +96,18 @@ namespace Registry
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)
         {
-            if (((key.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent) && ((key.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
+            if (((key.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent) &&
+                ((key.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
             {
                 return;
             }
 
             foreach (var subkey in key.SubKeys)
             {
-                if (((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent) && ((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
-                    {
+                if (((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) ==
+                     RegistryKey.KeyFlagsEnum.HasActiveParent) &&
+                    ((subkey.KeyFlags & RegistryKey.KeyFlagsEnum.Deleted) == RegistryKey.KeyFlagsEnum.Deleted))
+                {
                     return;
                 }
 
@@ -186,10 +187,13 @@ namespace Registry
             }
 
             if (key.NKRecord.ValueOffsets.Count != key.NKRecord.ValueListCount)
-            {//ncrunch: no coverage
-                _logger.Warn("Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}", //ncrunch: no coverage
+            {
+//ncrunch: no coverage
+                _logger.Warn(
+                    "Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
+                    //ncrunch: no coverage
                     key.NKRecord.ValueListCount, key.NKRecord.ValueOffsets.Count);
-            }//ncrunch: no coverage
+            } //ncrunch: no coverage
 
             // look for values in this key 
             foreach (var valueOffset in key.NKRecord.ValueOffsets)
@@ -202,7 +206,7 @@ namespace Registry
                 _logger.Debug("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
 
                 vk.IsReferenced = true;
-                
+
                 var value = new KeyValue(vk);
 
                 key.Values.Add(value);
@@ -222,7 +226,7 @@ namespace Registry
             _logger.Debug("Looking for list record at relative offset 0x{0:X}", key.NKRecord.SubkeyListsStableCellIndex);
             var l = ListRecords[key.NKRecord.SubkeyListsStableCellIndex];
 
-         var sig = BitConverter.ToInt16(l.RawBytes, 4);
+            var sig = BitConverter.ToInt16(l.RawBytes, 4);
 
             switch (sig)
             {
@@ -329,7 +333,7 @@ namespace Registry
 
                     break;
                 default:
-                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));  
+                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
             }
 
             return keys;
@@ -346,12 +350,11 @@ namespace Registry
         }
 
         /// <summary>
-        /// Exports contents of Registry to text format.
+        ///     Exports contents of Registry to text format.
         /// </summary>
         /// <remarks>Be sure to set FlushRecordListsAfterParse to FALSE if you want deleted records included</remarks>
         /// <param name="outfile">The outfile.</param>
         /// <param name="deletedOnly">if set to <c>true</c> [deleted only].</param>
-
         public void ExportDataToCommonFormat(string outfile, bool deletedOnly)
         {
             var KeyCount = 0; //root key
@@ -362,12 +365,16 @@ namespace Registry
             var header = new StringBuilder();
             header.AppendLine("## Registry common export format");
             header.AppendLine("## Key format");
-            header.AppendLine("## key|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|LastWriteTime in UTC");
+            header.AppendLine(
+                "## key|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|LastWriteTime in UTC");
             header.AppendLine("## Value format");
-            header.AppendLine("## value|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|Value name|Data type (as decimal integer)|Value data as bytes separated by a singe space");
+            header.AppendLine(
+                "## value|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|Value name|Data type (as decimal integer)|Value data as bytes separated by a singe space");
             header.AppendLine("##");
-            header.AppendLine("## Comparison of deleted keys/values is done to compare recovery of vk and nk records, not the algorithm used to associate deleted keys to other keys and their values.");
-            header.AppendLine("## When including deleted keys, only the recovered key name should be included, not the full path to the deleted key.");
+            header.AppendLine(
+                "## Comparison of deleted keys/values is done to compare recovery of vk and nk records, not the algorithm used to associate deleted keys to other keys and their values.");
+            header.AppendLine(
+                "## When including deleted keys, only the recovered key name should be included, not the full path to the deleted key.");
             header.AppendLine("## When including deleted values, do not include the parent key information.");
             header.AppendLine("##");
             header.AppendLine("## The following totals should also be included");
@@ -377,7 +384,8 @@ namespace Registry
             header.AppendLine("## total_deleted_keys|total recovered free key count");
             header.AppendLine("## total_deleted_values|total recovered free value count");
             header.AppendLine("##");
-            header.AppendLine("## Before comparison with other common export implementations, the files should be sorted");
+            header.AppendLine(
+                "## Before comparison with other common export implementations, the files should be sorted");
             header.AppendLine("##");
 
             using (var sw = new StreamWriter(outfile, false))
@@ -420,8 +428,10 @@ namespace Registry
                             ValueCountDeleted += 1;
                             var val = keyValuePair.Value as VKCellRecord;
 
-                            sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset, "",
-                                val.ValueName, (int) val.DataType, BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
+                            sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset,
+                                "",
+                                val.ValueName, (int) val.DataType,
+                                BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
                         }
 
                         if (keyValuePair.Value.Signature == "nk")
@@ -441,7 +451,8 @@ namespace Registry
                     }
                     catch (Exception ex)
                     {
-                     _logger.Warn("There was an error exporting free record at offset 0x{0:X}. Error: {1}",keyValuePair.Value.AbsoluteOffset,ex.Message);
+                        _logger.Warn("There was an error exporting free record at offset 0x{0:X}. Error: {1}",
+                            keyValuePair.Value.AbsoluteOffset, ex.Message);
                     }
                 }
 
@@ -482,8 +493,6 @@ namespace Registry
             return null;
         }
 
-        private bool _parsed = false;
-
         public bool ParseHive()
         {
             if (_parsed)
@@ -500,7 +509,7 @@ namespace Registry
             ////Look at first hbin, get its size, then read that many bytes to create hbin record
             long offsetInHive = 4096;
 
-            var hiveLength = Header.Length + 0x1000; 
+            var hiveLength = Header.Length + 0x1000;
 
             //keep reading the file until we reach the end
             while (offsetInHive < hiveLength)
@@ -542,9 +551,9 @@ namespace Registry
 
                 try
                 {
-                    var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted,this);
+                    var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted, this);
 
-                    _logger.Trace("hbin info: {0}",h.ToString());
+                    _logger.Trace("hbin info: {0}", h.ToString());
 
                     _logger.Debug("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
 
@@ -640,11 +649,12 @@ namespace Registry
                 //as a second check, compare Header length with what we read (taking the header into account as Header.Length is only for hbin records)
 
                 if (Header.Length != TotalBytesRead - 0x1000)
-                {//ncrunch: no coverage
-                    _logger.Warn(//ncrunch: no coverage
-                       "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
-                       HiveLength(), TotalBytesRead);
-                }//ncrunch: no coverage
+                {
+//ncrunch: no coverage
+                    _logger.Warn( //ncrunch: no coverage
+                        "Hive length (0x{0:x}) does not equal bytes read (0x{1:x})!! Check the end of the hive for erroneous data",
+                        HiveLength(), TotalBytesRead);
+                } //ncrunch: no coverage
             }
 
             if (RecoverDeleted)
@@ -658,14 +668,13 @@ namespace Registry
                 ListRecords.Clear();
 
                 var toRemove = CellRecords.Where(pair => pair.Value is NKCellRecord || pair.Value is VKCellRecord)
-                         .Select(pair => pair.Key)
-                         .ToList();
+                    .Select(pair => pair.Key)
+                    .ToList();
 
                 foreach (var key in toRemove)
                 {
                     CellRecords.Remove(key);
                 }
-                
             }
             _parsed = true;
             return true;
@@ -701,11 +710,11 @@ namespace Registry
                         KeyFlags = RegistryKey.KeyFlagsEnum.Deleted
                     };
 
-					//some sanity checking on things
-	                if (regKey.NKRecord.Size < 0x50 + regKey.NKRecord.NameLength)
-	                {
-		                continue;
-	                }
+                    //some sanity checking on things
+                    if (regKey.NKRecord.Size < 0x50 + regKey.NKRecord.NameLength)
+                    {
+                        continue;
+                    }
 
                     //Build ValueOffsets for this NKRecord
                     if (regKey.NKRecord.ValueListCellIndex > 0)
@@ -737,13 +746,14 @@ namespace Registry
 
                             offsetList = dr;
                         }
-                        catch (Exception)//ncrunch: no coverage
-                        {//ncrunch: no coverage
+                        catch (Exception) //ncrunch: no coverage
+                        {
+//ncrunch: no coverage
                             //sometimes the data node doesn't have enough data to even do this, or its wrong data
-                            _logger.Warn(//ncrunch: no coverage
+                            _logger.Warn( //ncrunch: no coverage
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
-                        }//ncrunch: no coverage
+                        } //ncrunch: no coverage
 
                         if (offsetList != null)
                         {
@@ -759,12 +769,13 @@ namespace Registry
                                     regKey.NKRecord.ValueOffsets.Add(os);
                                 }
                             }
-                            catch (Exception)//ncrunch: no coverage
-                            {//ncrunch: no coverage
-                                _logger.Warn(//ncrunch: no coverage
+                            catch (Exception) //ncrunch: no coverage
+                            {
+//ncrunch: no coverage
+                                _logger.Warn( //ncrunch: no coverage
                                     "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
                                     nk.AbsoluteOffset, regKey.NKRecord.ValueListCellIndex);
-                            }//ncrunch: no coverage
+                            } //ncrunch: no coverage
                         }
                     }
 
@@ -819,12 +830,13 @@ namespace Registry
 
                     _deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
                 }
-                catch (Exception ex)//ncrunch: no coverage
-                {//ncrunch: no coverage
-                    _logger.Error(//ncrunch: no coverage
+                catch (Exception ex) //ncrunch: no coverage
+                {
+//ncrunch: no coverage
+                    _logger.Error( //ncrunch: no coverage
                         string.Format("Error while processing deleted nk record at absolute offset 0x{0:X}",
                             unreferencedNkCell.Value.AbsoluteOffset), ex);
-                }//ncrunch: no coverage
+                } //ncrunch: no coverage
             }
 
             _logger.Debug("Building tree of key/subkeys for deleted keys");
@@ -915,7 +927,8 @@ namespace Registry
 
                         if (KeyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath.ToLowerInvariant()) == false)
                         {
-                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.ToLowerInvariant(), deletedRegistryKey.Value);
+                            KeyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.ToLowerInvariant(),
+                                deletedRegistryKey.Value);
                         }
 
                         _logger.Debug(
@@ -997,7 +1010,7 @@ namespace Registry
                 {
                     if (keyValue.ValueDataRaw.Length >= minimumSizeInBytes)
                     {
-                        yield return new ValueBySizeInfo(registryKey.Value,keyValue);
+                        yield return new ValueBySizeInfo(registryKey.Value, keyValue);
                     }
                 }
             }
@@ -1016,12 +1029,11 @@ namespace Registry
                 }
                 else
                 {
-                  if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         yield return new SearchHit(registryKey.Value, null);
-                    }  
+                    }
                 }
-               
             }
         }
 
@@ -1040,12 +1052,11 @@ namespace Registry
                     }
                     else
                     {
-                         if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             yield return new SearchHit(registryKey.Value, keyValue);
-                        } 
+                        }
                     }
-                
                 }
             }
         }
@@ -1058,7 +1069,7 @@ namespace Registry
                 {
                     if (useRegEx)
                     {
-                        if (Regex.IsMatch(keyValue.ValueData, searchTerm,RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(keyValue.ValueData, searchTerm, RegexOptions.IgnoreCase))
                         {
                             yield return new SearchHit(registryKey.Value, keyValue);
                         }
@@ -1070,7 +1081,6 @@ namespace Registry
                             yield return new SearchHit(registryKey.Value, keyValue);
                         }
                     }
-                    
                 }
             }
         }
