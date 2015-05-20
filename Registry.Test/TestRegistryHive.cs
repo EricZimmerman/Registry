@@ -51,7 +51,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFind32HitsForFoodInKeyName()
         {
-            var hits = TestSetup.UsrClass1.FindStringInKeyName("food").ToList();
+            var hits = TestSetup.UsrClass1.FindInKeyName("food").ToList();
 
             Check.That(hits.Count).IsEqualTo(32);
         }
@@ -59,7 +59,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindThreeHitsForMuiCacheInKeyName()
         {
-            var hits = TestSetup.UsrClass1.FindStringInKeyName("MuiCache").ToList();
+            var hits = TestSetup.UsrClass1.FindInKeyName("MuiCache").ToList();
 
             Check.That(hits.Count).IsEqualTo(3);
         }
@@ -67,7 +67,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindNoHitsForZimmermanInKeyName()
         {
-            var hits = TestSetup.UsrClass1.FindStringInKeyName("Zimmerman").ToList();
+            var hits = TestSetup.UsrClass1.FindInKeyName("Zimmerman").ToList();
 
             Check.That(hits.Count).IsEqualTo(0);
         }
@@ -75,13 +75,77 @@ namespace Registry.Test
         [Test]
         public void ShouldFind100HitsForURLInKeyAndValueName()
         {
-            var keyhits = TestSetup.UsrClass1.FindStringInKeyName("URL").ToList();
+            var keyHits = TestSetup.UsrClass1.FindInKeyName("URL").ToList();
 
-            Check.That(keyhits.Count).IsEqualTo(21);
+            Check.That(keyHits.Count).IsEqualTo(21);
 
-            var valhits = TestSetup.UsrClass1.FindStringInValueName("URL").ToList();
+            var valHits = TestSetup.UsrClass1.FindInValueName("URL").ToList();
 
-            Check.That(valhits.Count).IsEqualTo(79);
+            Check.That(valHits.Count).IsEqualTo(79);
+        }
+
+        [Test]
+        public void ShouldFind4HitsForPostboxURLInValueData()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueData("Postbox URL").ToList();
+
+            Check.That(hits.Count).IsEqualTo(4);
+        }
+
+        [Test]
+        public void ShouldFind4HitsForBingXInValueDataWithRegEx()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhs]",true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(3);
+
+             hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhts]", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(4);
+        }
+
+        [Test]
+        public void ShouldFind4HitsForBingXInKeyNamesWithRegEx()
+        {
+            var hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(44);
+
+            hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]o", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(11);
+        }
+
+        [Test]
+        public void ShouldFind4HitsForBinaryDataInValueData()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueData("43-74-53-83-24-55-30").ToList();
+
+            Check.That(hits.Count).IsEqualTo(6);
+        }
+
+        [Test]
+        public void ShouldFind4HitsForBinaryDataInValueDataWithRegEx()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueData("04-00-EF-BE", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(56);
+
+             hits = TestSetup.UsrClass1.FindInValueData("47-4F-4F-4E", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(4);
+
+            hits = TestSetup.UsrClass1.FindInValueData("44-65-62", true).ToList(); //finds deb
+
+            Check.That(hits.Count).IsEqualTo(2);
+
+            hits = TestSetup.UsrClass1.FindInValueData("44-65-73", true).ToList(); //finds des
+
+            Check.That(hits.Count).IsEqualTo(1);
+
+            hits = TestSetup.UsrClass1.FindInValueData("44-65-(62|73)", true).ToList(); //finds deb or des
+
+            Check.That(hits.Count).IsEqualTo(3);
         }
 
         [Test]

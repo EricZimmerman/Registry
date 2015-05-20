@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using NFluent;
 using NLog;
 using NLog.Config;
@@ -1002,31 +1003,74 @@ namespace Registry
             }
         }
 
-        public IEnumerable<SearchHit> FindStringInKeyName(string searchTerm)
+        public IEnumerable<SearchHit> FindInKeyName(string searchTerm, bool useRegEx = false)
         {
             foreach (var registryKey in KeyPathKeyMap)
             {
-                if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                if (useRegEx)
                 {
-                    yield return new SearchHit(registryKey.Value, null);
+                    if (Regex.IsMatch(registryKey.Value.KeyName, searchTerm, RegexOptions.IgnoreCase))
+                    {
+                        yield return new SearchHit(registryKey.Value, null);
+                    }
                 }
-                
-
+                else
+                {
+                  if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        yield return new SearchHit(registryKey.Value, null);
+                    }  
+                }
+               
             }
         }
 
-        public IEnumerable<SearchHit> FindStringInValueName(string searchTerm)
+        public IEnumerable<SearchHit> FindInValueName(string searchTerm, bool useRegEx = false)
         {
             foreach (var registryKey in KeyPathKeyMap)
             {
-         
                 foreach (var keyValue in registryKey.Value.Values)
                 {
-                    if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (useRegEx)
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue);
+                        if (Regex.IsMatch(keyValue.ValueName, searchTerm, RegexOptions.IgnoreCase))
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
                     }
-                 
+                    else
+                    {
+                         if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        } 
+                    }
+                
+                }
+            }
+        }
+
+        public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                foreach (var keyValue in registryKey.Value.Values)
+                {
+                    if (useRegEx)
+                    {
+                        if (Regex.IsMatch(keyValue.ValueData, searchTerm,RegexOptions.IgnoreCase))
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
+                    }
+                    else
+                    {
+                        if (keyValue.ValueData.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
+                    }
+                    
                 }
             }
         }
