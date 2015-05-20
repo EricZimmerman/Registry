@@ -136,7 +136,7 @@ namespace Registry.Test
 
 
             key =
-                TestSetup.UsrclassDeleted.FindKey(
+                TestSetup.UsrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1");
 
             exported = Helpers.ExportToReg(@"exportDeletedTest.reg", key, HiveTypeEnum.UsrClass, false);

@@ -11,7 +11,7 @@ namespace Registry.Test
         public void ShouldVerifyNkRecordProperties()
         {
             var key =
-                TestSetup.Sam.FindKey(0x418);
+                TestSetup.Sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
 
@@ -57,7 +57,7 @@ namespace Registry.Test
         [Test]
         public void ShouldHavePaddingLengthOfZeroWhenRecordIsFree()
         {
-            var key = TestSetup.Bcd.FindKey(0x10e8);
+            var key = TestSetup.Bcd.GetKey(0x10e8);
 
             Check.That(key).IsNotNull();
             Check.That(key.NKRecord.Padding.Length).IsEqualTo(0);

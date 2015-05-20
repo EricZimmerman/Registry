@@ -31,7 +31,7 @@ namespace Registry.Test
         [Test]
         public void VerifySKInfo()
         {
-            var key = TestSetup.Sam.FindKey(@"SAM\Domains\Account");
+            var key = TestSetup.Sam.GetKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
 

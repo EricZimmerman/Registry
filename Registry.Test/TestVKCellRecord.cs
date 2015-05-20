@@ -13,7 +13,7 @@ namespace Registry.Test
         public void ShouldFindKeyValueAndCheckProperties()
         {
             var key =
-                TestSetup.Sam.FindKey(0x418);
+                TestSetup.Sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
 
@@ -46,7 +46,7 @@ namespace Registry.Test
 
             //This key has slack
             key =
-                TestSetup.Sam.FindKey(
+                TestSetup.Sam.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Users\000001F4");
 
             Check.That(key).IsNotNull();
@@ -331,7 +331,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.UsrclassAcronis.FindKey(
+                TestSetup.UsrclassAcronis.GetKey(
                     @"S-1-5-21-3851833874-1800822990-1357392098-1000_Classes\Local Settings\MuiCache\12\52C64B7E");
 
             Check.That(key).IsNotNull();
@@ -344,7 +344,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.Bcd.FindKey(
+                TestSetup.Bcd.GetKey(
                     @"System\Objects\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\Elements\14000006");
 
             Check.That(key).IsNotNull();
@@ -358,7 +358,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(6);
 
             key =
-                TestSetup.Bcd.FindKey(
+                TestSetup.Bcd.GetKey(
                     @"System\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\14000006");
 
             Check.That(key).IsNotNull();
@@ -401,7 +401,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.UsrclassAcronis.FindKey(
+                TestSetup.UsrclassAcronis.GetKey(
                     @"S-1-5-21-3851833874-1800822990-1357392098-1000_Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
 
             Check.That(key).IsNotNull();
@@ -415,7 +415,7 @@ namespace Registry.Test
 
 
             key =
-                TestSetup.UsrclassDeleted.FindKey(
+                TestSetup.UsrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
 
             Check.That(key).IsNotNull();
@@ -428,7 +428,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.NtUserSlack.FindKey(
+                TestSetup.NtUserSlack.GetKey(
                     @"$$$PROTO.HIV\Software\Microsoft\VisualStudio\7.0\External Tools");
 
             Check.That(key).IsNotNull();
@@ -670,7 +670,7 @@ namespace Registry.Test
         public void TestVKRecordRegBinaryDeletedValue()
         {
             var key =
-                TestSetup.UsrclassDeleted.FindKey(
+                TestSetup.UsrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1");
 
             Check.That(key).IsNotNull();

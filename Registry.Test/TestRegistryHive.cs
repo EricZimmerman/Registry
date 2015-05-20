@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NFluent;
 using NLog;
 using NLog.Config;
@@ -15,6 +17,51 @@ namespace Registry.Test
         public void PreTestSetup()
         {
             LogManager.Configuration = null;
+        }
+
+        [Test]
+        public void ShouldFindFiveValuesForSize4096()
+        {
+            var keys = TestSetup.UsrClass1.FindByValueSize(4096).ToList();
+
+            Check.That(keys.Count).IsEqualTo(5);
+        }
+
+        [Test]
+        public void ShouldFindTwoValuesForSize100000()
+        {
+            var keys = TestSetup.UsrClass1.FindByValueSize(100000).ToList();
+
+            Check.That(keys.Count).IsEqualTo(2);
+        }
+
+        [Test]
+        public void ShouldExportValuesToFile()
+        {
+            var keys = TestSetup.UsrClass1.FindByValueSize(100000).ToList();
+
+            foreach (var valueBySizeInfo in keys)
+            {
+                File.WriteAllBytes($"{valueBySizeInfo.Value.ValueName}.bin", valueBySizeInfo.Value.ValueDataRaw);
+
+                Check.That(File.Exists($"{valueBySizeInfo.Value.ValueName}.bin")).IsTrue();
+            }
+        }
+
+        [Test]
+        public void ShouldFindThreeHitsForFood()
+        {
+            var hits = TestSetup.UsrClass1.FindStringInName("food").ToList();
+
+            Check.That(hits.Count).IsEqualTo(3);
+        }
+
+        [Test]
+        public void ShouldFindThreeHitsForMuiCache()
+        {
+            var hits = TestSetup.UsrClass1.FindStringInName("MuiCache").ToList();
+
+            Check.That(hits.Count).IsEqualTo(3);
         }
 
         [Test]
@@ -122,7 +169,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindAKeyWithoutRootKeyName()
         {
-            var key = TestSetup.Sam.FindKey(@"SAM\Domains");
+            var key = TestSetup.Sam.GetKey(@"SAM\Domains");
 
             Check.That(key).IsNotNull();
         }
@@ -162,7 +209,7 @@ namespace Registry.Test
         public void ShouldReturnKeyBasedOnRelativePath()
         {
             var key =
-                TestSetup.Sam.FindKey(0x418);
+                TestSetup.Sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
         }
@@ -171,7 +218,7 @@ namespace Registry.Test
         public void ShouldReturnNullWhenKeyPathNotFound()
         {
             var key =
-                TestSetup.Sam.FindKey(@"SAM\Domains\DoesNotExist");
+                TestSetup.Sam.GetKey(@"SAM\Domains\DoesNotExist");
 
             Check.That(key).IsNull();
         }
@@ -180,7 +227,7 @@ namespace Registry.Test
         public void ShouldReturnNullWhenRelativeOffsetNotFound()
         {
             var key =
-                TestSetup.Sam.FindKey(0x999418);
+                TestSetup.Sam.GetKey(0x999418);
 
             Check.That(key).IsNull();
         }

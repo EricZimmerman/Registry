@@ -451,7 +451,7 @@ namespace Registry
             }
         }
 
-        public RegistryKey FindKey(string keyPath)
+        public RegistryKey GetKey(string keyPath)
         {
             keyPath = keyPath.ToLowerInvariant();
 
@@ -471,7 +471,7 @@ namespace Registry
             return null;
         }
 
-        public RegistryKey FindKey(long relativeOffset)
+        public RegistryKey GetKey(long relativeOffset)
         {
             if (RelativeOffsetKeyMap.ContainsKey(relativeOffset))
             {
@@ -893,7 +893,7 @@ namespace Registry
                     if (parentNk.IsReferenced && parentNk.IsFree == false)
                     {
                         //parent exists in our primary tree, so get that key
-                        var pk = FindKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex);
+                        var pk = GetKey(deletedRegistryKey.Value.NKRecord.ParentCellIndex);
 
                         _logger.Debug(
                             "Copying subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
@@ -986,6 +986,39 @@ namespace Registry
             }
 
             return hiveMetadata;
+        }
+
+        public IEnumerable<ValueBySizeInfo> FindByValueSize(int minimumSizeInBytes)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                foreach (var keyValue in registryKey.Value.Values)
+                {
+                    if (keyValue.ValueDataRaw.Length >= minimumSizeInBytes)
+                    {
+                        yield return new ValueBySizeInfo(registryKey.Value,keyValue);
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<SearchHit> FindStringInName(string searchTerm)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                if (registryKey.Value.KeyName.Contains(searchTerm))
+                {
+                    yield return new SearchHit(registryKey.Value, null);
+                }
+
+                foreach (var keyValue in registryKey.Value.Values)
+                {
+                    if (keyValue.ValueName.Contains(searchTerm))
+                    {
+                        yield return new SearchHit(registryKey.Value, keyValue);
+                    }
+                }
+            }
         }
     }
 }

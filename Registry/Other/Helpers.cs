@@ -353,6 +353,11 @@ namespace Registry.Other
             return true;
         }
 
+        public static string StripRootKeyNameFromKeyPath(string keyPath)
+        {
+                var pos = keyPath.IndexOf("\\", StringComparison.Ordinal);
+                return keyPath.Substring(pos + 1);
+        }
 
         /// <summary>
         ///     Converts a SID as stored in the registry to a human readable version.
