@@ -1002,21 +1002,31 @@ namespace Registry
             }
         }
 
-        public IEnumerable<SearchHit> FindStringInName(string searchTerm)
+        public IEnumerable<SearchHit> FindStringInKeyName(string searchTerm)
         {
             foreach (var registryKey in KeyPathKeyMap)
             {
-                if (registryKey.Value.KeyName.Contains(searchTerm))
+                if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     yield return new SearchHit(registryKey.Value, null);
                 }
+                
 
+            }
+        }
+
+        public IEnumerable<SearchHit> FindStringInValueName(string searchTerm)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+         
                 foreach (var keyValue in registryKey.Value.Values)
                 {
-                    if (keyValue.ValueName.Contains(searchTerm))
+                    if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         yield return new SearchHit(registryKey.Value, keyValue);
                     }
+                 
                 }
             }
         }

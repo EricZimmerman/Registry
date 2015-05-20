@@ -49,19 +49,39 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFindThreeHitsForFood()
+        public void ShouldFind32HitsForFoodInKeyName()
         {
-            var hits = TestSetup.UsrClass1.FindStringInName("food").ToList();
+            var hits = TestSetup.UsrClass1.FindStringInKeyName("food").ToList();
+
+            Check.That(hits.Count).IsEqualTo(32);
+        }
+
+        [Test]
+        public void ShouldFindThreeHitsForMuiCacheInKeyName()
+        {
+            var hits = TestSetup.UsrClass1.FindStringInKeyName("MuiCache").ToList();
 
             Check.That(hits.Count).IsEqualTo(3);
         }
 
         [Test]
-        public void ShouldFindThreeHitsForMuiCache()
+        public void ShouldFindNoHitsForZimmermanInKeyName()
         {
-            var hits = TestSetup.UsrClass1.FindStringInName("MuiCache").ToList();
+            var hits = TestSetup.UsrClass1.FindStringInKeyName("Zimmerman").ToList();
 
-            Check.That(hits.Count).IsEqualTo(3);
+            Check.That(hits.Count).IsEqualTo(0);
+        }
+
+        [Test]
+        public void ShouldFind100HitsForURLInKeyAndValueName()
+        {
+            var keyhits = TestSetup.UsrClass1.FindStringInKeyName("URL").ToList();
+
+            Check.That(keyhits.Count).IsEqualTo(21);
+
+            var valhits = TestSetup.UsrClass1.FindStringInValueName("URL").ToList();
+
+            Check.That(valhits.Count).IsEqualTo(79);
         }
 
         [Test]
