@@ -11,20 +11,34 @@ namespace Registry.Abstractions
         public RegistryKey Key { get; }
         public KeyValue Value { get; }
 
+        public bool StripRootKeyName { get; set; }
+
        public SearchHit(RegistryKey key, KeyValue value)
        {
            Key = key;
            Value = value;
        }
 
-       public override string ToString()
-       {
+        public static string StripRootKeyNameFromKeyPath(string keyPath)
+        {
+            var pos = keyPath.IndexOf("\\", StringComparison.Ordinal);
+            return keyPath.Substring(pos + 1);
+        }
+
+        public override string ToString()
+        {
+            var kp = Key.KeyPath;
+            if (StripRootKeyName)
+            {
+                kp = StripRootKeyNameFromKeyPath(kp);
+            }
+
            if (Value != null)
            {
-               return $"{Key.KeyPath}::{Value.ValueName}";
+               return $"{kp}::{Value.ValueName}";
            }
            
-            return $"{Key.KeyPath}";
+            return kp;
         }
     }
 }

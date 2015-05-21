@@ -281,8 +281,8 @@ namespace Registry.Abstractions
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
-            sb.AppendLine();
+//            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
+//            sb.AppendLine();
 
             sb.AppendLine(string.Format("NK Record: {0}", NKRecord));
 
@@ -310,7 +310,7 @@ namespace Registry.Abstractions
                 i += 1;
             }
 
-            sb.AppendLine();
+         //   sb.AppendLine();
 
 
             return sb.ToString();

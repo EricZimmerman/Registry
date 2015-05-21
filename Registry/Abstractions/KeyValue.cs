@@ -98,8 +98,8 @@ namespace Registry.Abstractions
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
-            sb.AppendLine();
+//            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
+//            sb.AppendLine();
 
             sb.AppendLine(string.Format("VK Record: {0}", VKRecord));
 

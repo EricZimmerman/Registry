@@ -117,6 +117,18 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldFindHitsValueNamesWithRegEx()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueName("(App|Display)Name", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(326);
+
+            hits = TestSetup.UsrClass1.FindInValueName("Capability(Co|Si)", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(66);
+        }
+
+        [Test]
         public void ShouldFind4HitsForBinaryDataInValueData()
         {
             var hits = TestSetup.UsrClass1.FindInValueData("43-74-53-83-24-55-30").ToList();
