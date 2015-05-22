@@ -143,7 +143,7 @@ namespace Registry.Test
 
             Check.That(hits.Count).IsEqualTo(56);
 
-             hits = TestSetup.UsrClass1.FindInValueData("47-4F-4F-4E", true).ToList();
+            hits = TestSetup.UsrClass1.FindInValueData("47-4F-4F-4E", true).ToList();
 
             Check.That(hits.Count).IsEqualTo(4);
 
@@ -159,6 +159,48 @@ namespace Registry.Test
 
             Check.That(hits.Count).IsEqualTo(3);
         }
+
+        [Test]
+        public void ShouldFind1544eforeTimeStamp()
+        {
+            var dt = new DateTimeOffset(2014,5,21,23,59,59,TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime(dt,null).ToList();
+
+            Check.That(hits.Count).IsEqualTo(1544);
+        }
+
+        [Test]
+        public void ShouldFind1248AfterTimeStamp()
+        {
+            var dt = new DateTimeOffset(2014, 11, 13, 00,00,00, TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime( null, dt).ToList();
+
+            Check.That(hits.Count).IsEqualTo(1248);
+        }
+
+        [Test]
+        public void ShouldFindTwoBetweenTimeStamp()
+        {
+            //2014-05-20T18:35:55.6760797Z
+            //2014-05-20T21:52:19.5199166Z
+            //2014-05-20T21:52:19.5209172Z
+            //2014-05-21T13:47:51.2202567Zs
+
+            var start = new DateTimeOffset(2014, 5, 20, 19,00,00, TimeSpan.FromSeconds(0));
+            var end = new DateTimeOffset(2014, 5, 20, 23, 59, 59, TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime(start, end).ToList();
+
+            Check.That(hits.Count).IsEqualTo(2);
+        }
+
+        //between 2014-05-19 23:59:59 and 2014-05-21 00:00:00
+        //2
+        //
+        //before 2014-05-21 23:59:59
+        // 1500
+        //
+        //after 2014-11-13 00:00:00
+        //1247
 
         [Test]
         public void ShouldThrowExceptionWhenCallingParseHiveTwice()

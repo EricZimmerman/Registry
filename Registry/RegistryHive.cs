@@ -1037,6 +1037,34 @@ namespace Registry
             }
         }
 
+        public IEnumerable<SearchHit> FindByLastWriteTime(DateTimeOffset? start,DateTimeOffset? end)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                if (start != null && end != null)
+                {
+                    if (start <= registryKey.Value.LastWriteTime && registryKey.Value.LastWriteTime <= end)
+                    {
+                        yield return new SearchHit(registryKey.Value, null);
+                    }
+                }
+                else if (start != null)
+                {
+                    if (start >= registryKey.Value.LastWriteTime)
+                    {
+                        yield return new SearchHit(registryKey.Value, null);
+                    }
+                }
+                else if (end != null)
+                {
+                    if (registryKey.Value.LastWriteTime >= end)
+                    {
+                        yield return new SearchHit(registryKey.Value, null);
+                    }
+                }
+            }
+        }
+
         public IEnumerable<SearchHit> FindInValueName(string searchTerm, bool useRegEx = false)
         {
             foreach (var registryKey in KeyPathKeyMap)
