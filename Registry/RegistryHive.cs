@@ -1048,16 +1048,16 @@ namespace Registry
                         yield return new SearchHit(registryKey.Value, null);
                     }
                 }
-                else if (start != null)
+                else if (end != null)
                 {
-                    if (start >= registryKey.Value.LastWriteTime)
+                    if (registryKey.Value.LastWriteTime < end)
                     {
                         yield return new SearchHit(registryKey.Value, null);
                     }
                 }
-                else if (end != null)
+                else if (start != null)
                 {
-                    if (registryKey.Value.LastWriteTime >= end)
+                    if (registryKey.Value.LastWriteTime > start)
                     {
                         yield return new SearchHit(registryKey.Value, null);
                     }
