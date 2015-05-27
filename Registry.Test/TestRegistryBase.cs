@@ -55,22 +55,7 @@ namespace Registry.Test
         {
             Check.ThatCode(() => { new RegistryBase(@"..\..\Hives\NotAHive"); }).Throws<Exception>();
         }
-
-        [Test]
-        public void NLogConfigShouldBeSameAsWhatWasSet()
-        {
-            var config = new LoggingConfiguration();
-            var consoleTarget = new ColoredConsoleTarget();
-            config.AddTarget("console", consoleTarget);
-            var rule1 = new LoggingRule("*", LogLevel.Info, consoleTarget);
-            config.LoggingRules.Add(rule1);
-
-            TestSetup.Security.NlogConfig = config;
-
-            Check.That(config).Equals(TestSetup.Security.NlogConfig);
-
-            TestSetup.Security.NlogConfig = null;
-        }
+        
 
         [Test]
         public void NtuserHiveShouldHaveNtuserHiveType()

@@ -13,7 +13,6 @@ namespace Registry
 {
     public class RegistryBase :IRegistry
     {
-        private LoggingConfiguration _nlogConfig;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public RegistryBase()
@@ -135,16 +134,7 @@ namespace Registry
         public  long TotalBytesRead { get; internal set; }
 
         public byte[] FileBytes { get; private set; }
-        public LoggingConfiguration NlogConfig
-      {
-            get { return _nlogConfig; }
-            set
-            {
-                _nlogConfig = value;
-                LogManager.Configuration = _nlogConfig;
-            }
-        }
-
+       
         public HiveTypeEnum HiveType { get; private set; }
 
         public string HivePath { get;}

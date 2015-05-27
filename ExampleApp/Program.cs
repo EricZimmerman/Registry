@@ -194,9 +194,7 @@ namespace ExampleApp
 					{
 						logger.Warn("Sequence mismatch!");
 					}
-
-					registryHive.NlogConfig = config;
-
+                    
 					sw.Start();
 
 					registryHive.RecoverDeleted = result.Value.RecoverDeleted;

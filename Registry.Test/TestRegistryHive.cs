@@ -216,37 +216,7 @@ namespace Registry.Test
             Check.That(r.Header.Length).IsNotEqualTo(r.HBinRecordTotalSize);
         }
 
-        [Test]
-        public void NLogConfigInfoTest()
-        {
-            var config = new LoggingConfiguration();
-            var consoleTarget = new ColoredConsoleTarget();
-            config.AddTarget("console", consoleTarget);
-            var rule1 = new LoggingRule("*", LogLevel.Info, consoleTarget);
-            config.LoggingRules.Add(rule1);
-
-            TestSetup.Sam.NlogConfig = config;
-
-            Check.That(config).Equals(TestSetup.Sam.NlogConfig);
-
-            TestSetup.Sam.NlogConfig = null;
-        }
-
-        [Test]
-        public void NLogConfigTraceTest()
-        {
-            var config = new LoggingConfiguration();
-            var consoleTarget = new ColoredConsoleTarget();
-            config.AddTarget("console", consoleTarget);
-            var rule1 = new LoggingRule("*", LogLevel.Trace, consoleTarget);
-            config.LoggingRules.Add(rule1);
-
-            TestSetup.SamDupeNameOnDemand.NlogConfig = config;
-
-            Check.That(config).Equals(TestSetup.SamDupeNameOnDemand.NlogConfig);
-
-            TestSetup.SamDupeNameOnDemand.NlogConfig = null;
-        }
+       
 
         [Test]
         public void RecoverDeletedShouldBeTrue()

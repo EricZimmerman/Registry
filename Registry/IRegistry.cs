@@ -13,8 +13,7 @@ namespace Registry
     public interface IRegistry
     {
         byte[] FileBytes { get; }
-        LoggingConfiguration NlogConfig { get; set; }
-
+        
          HiveTypeEnum HiveType { get;   }
 
         string HivePath { get; }
