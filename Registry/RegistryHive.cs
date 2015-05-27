@@ -19,7 +19,7 @@ namespace Registry
     {
         internal static int _hardParsingErrors;
         internal static int _softParsingErrors;
-        public static long TotalBytesRead;
+       // public static long TotalBytesRead;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly Dictionary<string, RegistryKey> KeyPathKeyMap = new Dictionary<string, RegistryKey>();
         private readonly Dictionary<long, RegistryKey> RelativeOffsetKeyMap = new Dictionary<long, RegistryKey>();

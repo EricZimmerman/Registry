@@ -132,6 +132,8 @@ namespace Registry
             return sig.Equals(RegfSignature);
         }
 
+        public  long TotalBytesRead { get; internal set; }
+
         public byte[] FileBytes { get; private set; }
         public LoggingConfiguration NlogConfig
       {

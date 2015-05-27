@@ -125,7 +125,7 @@ namespace Registry.Other
             //additional cell data starts 32 bytes (0x20) in
             var offsetInHbin = 0x20;
 
-            RegistryHive.TotalBytesRead += 0x20;
+            _registryHive.TotalBytesRead += 0x20;
 
             while (offsetInHbin < Size)
             {
@@ -145,7 +145,7 @@ namespace Registry.Other
 
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();//  new byte[readSize];
 
-                RegistryHive.TotalBytesRead += readSize;
+                _registryHive.TotalBytesRead += readSize;
 
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
                 var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
