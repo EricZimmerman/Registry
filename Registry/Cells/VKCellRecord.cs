@@ -601,28 +601,28 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(Size)));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
-            sb.AppendLine(string.Format("Data Type: {0}", DataType));
-            sb.AppendLine(string.Format("Data Type raw: 0x{0:X}", DataTypeRaw));
+            sb.AppendLine($"Size: 0x{Math.Abs(Size):X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
+            sb.AppendLine($"Signature: {Signature}");
+            sb.AppendLine($"Data Type: {DataType}");
+            sb.AppendLine($"Data Type raw: 0x{DataTypeRaw:X}");
             sb.AppendLine();
-            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
-
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("Data Length: 0x{0:X}", DataLength));
-            sb.AppendLine(string.Format("Offset To Data: 0x{0:X}", OffsetToData));
+            sb.AppendLine($"Is Free: {IsFree}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Name Length: 0x{0:X}", NameLength));
-            sb.AppendLine(string.Format("Name Present Flag: 0x{0:X}", NamePresentFlag));
+            sb.AppendLine($"Data Length: 0x{DataLength:X}");
+            sb.AppendLine($"Offset To Data: 0x{OffsetToData:X}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
+            sb.AppendLine($"Name Length: 0x{NameLength:X}");
+            sb.AppendLine($"Name Present Flag: 0x{NamePresentFlag:X}");
+
+            sb.AppendLine();
+
+            sb.AppendLine($"Value Name: {ValueName}");
 
             switch (DataType)
             {
@@ -630,7 +630,7 @@ namespace Registry.Cells
                 case DataTypeEnum.RegExpandSz:
                 case DataTypeEnum.RegMultiSz:
                 case DataTypeEnum.RegLink:
-                    sb.AppendLine(string.Format("Value Data: {0}", ValueData));
+                    sb.AppendLine($"Value Data: {ValueData}");
 
                     break;
 
@@ -639,7 +639,7 @@ namespace Registry.Cells
                 case DataTypeEnum.RegResourceList:
                 case DataTypeEnum.RegResourceRequirementsList:
                 case DataTypeEnum.RegFullResourceDescription:
-                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
+                        sb.AppendLine($"Value Data: {BitConverter.ToString((byte[]) ValueData)}");
 
                     break;
 
@@ -649,7 +649,7 @@ namespace Registry.Cells
                     {
                         var dto = (DateTimeOffset) ValueData;
 
-                        sb.AppendLine(string.Format("Value Data: {0}", dto));
+                        sb.AppendLine($"Value Data: {dto}");
                     }
 
                     break;
@@ -657,24 +657,24 @@ namespace Registry.Cells
                 case DataTypeEnum.RegDwordBigEndian:
                 case DataTypeEnum.RegDword:
                 case DataTypeEnum.RegQword:
-                    sb.AppendLine(string.Format("Value Data: {0:N}", ValueData));
+                    sb.AppendLine($"Value Data: {ValueData:N}");
                     break;
                 default:
-                        sb.AppendLine(string.Format("Value Data: {0}", BitConverter.ToString((byte[]) ValueData)));
+                        sb.AppendLine($"Value Data: {BitConverter.ToString((byte[]) ValueData)}");
 
                     break;
             }
 
             if (ValueDataSlack != null)
             {
-                sb.AppendLine(string.Format("Value Data Slack: {0}", BitConverter.ToString(ValueDataSlack, 0)));
+                sb.AppendLine($"Value Data Slack: {BitConverter.ToString(ValueDataSlack, 0)}");
             }
 
             sb.AppendLine();
 
             if (Padding.Length > 0)
             {
-                sb.AppendLine(string.Format("Padding: {0}", BitConverter.ToString(Padding)));
+                sb.AppendLine($"Padding: {BitConverter.ToString(Padding)}");
             }
            
             return sb.ToString();

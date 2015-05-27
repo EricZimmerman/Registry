@@ -139,18 +139,18 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("ACE Size: 0x{0:X}", ACESize));
+            sb.AppendLine($"ACE Size: 0x{ACESize:X}");
 
-            sb.AppendLine(string.Format("ACE Type: {0}", ACEType));
+            sb.AppendLine($"ACE Type: {ACEType}");
 
-            sb.AppendLine(string.Format("ACE Flags: {0}", ACEFlags));
+            sb.AppendLine($"ACE Flags: {ACEFlags}");
 
-            sb.AppendLine(string.Format("Mask: {0}", Mask));
+            sb.AppendLine($"Mask: {Mask}");
 
-            sb.AppendLine(string.Format("SID: {0}", SID));
-            sb.AppendLine(string.Format("SID Type: {0}", SIDType));
+            sb.AppendLine($"SID: {SID}");
+            sb.AppendLine($"SID Type: {SIDType}");
 
-            sb.AppendLine(string.Format("SID Type Description: {0}", Helpers.GetDescriptionFromEnumValue(SIDType)));
+            sb.AppendLine($"SID Type Description: {Helpers.GetDescriptionFromEnumValue(SIDType)}");
 
             return sb.ToString();
         }

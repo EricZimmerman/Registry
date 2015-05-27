@@ -83,7 +83,7 @@ namespace Registry
             }
             _logger.Debug("Hive is a {0} hive", HiveType);
 
-            var version = string.Format("{0}.{1}", Header.MajorVersion, Header.MinorVersion);
+            var version = $"{Header.MajorVersion}.{Header.MinorVersion}";
 
             _logger.Debug("Hive version is {0}", version);
         }
@@ -114,7 +114,7 @@ namespace Registry
             {
                 _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
 
-                throw new Exception(String.Format("'{0}' is not a Registry hive (bad signature)", hivePath));
+                throw new Exception($"'{hivePath}' is not a Registry hive (bad signature)");
             }
 
             HivePath = hivePath;

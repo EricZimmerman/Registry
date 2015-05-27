@@ -110,45 +110,45 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
+            sb.AppendLine($"Signature: {Signature}");
 
-            sb.AppendLine(string.Format("FileName: {0}", FileName));
-
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("Sequence1: 0x{0:X}", Sequence1));
-            sb.AppendLine(string.Format("Sequence2: 0x{0:X}", Sequence2));
+            sb.AppendLine($"FileName: {FileName}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
+            sb.AppendLine($"Sequence1: 0x{Sequence1:X}");
+            sb.AppendLine($"Sequence2: 0x{Sequence2:X}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Major version: {0}", MajorVersion));
-            sb.AppendLine(string.Format("Minor version: {0}", MinorVersion));
+            sb.AppendLine($"Last Write Timestamp: {LastWriteTimestamp}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Type: 0x{0:X}", Type));
-            sb.AppendLine(string.Format("Format: 0x{0:X}", Format));
+
+            sb.AppendLine($"Major version: {MajorVersion}");
+            sb.AppendLine($"Minor version: {MinorVersion}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("RootCellOffset: 0x{0:X}", RootCellOffset));
+            sb.AppendLine($"Type: 0x{Type:X}");
+            sb.AppendLine($"Format: 0x{Format:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Length: 0x{0:X}", Length));
+            sb.AppendLine($"RootCellOffset: 0x{RootCellOffset:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Cluster: 0x{0:X}", Cluster));
+            sb.AppendLine($"Length: 0x{Length:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CheckSum));
-            sb.AppendLine(string.Format("CheckSum: 0x{0:X}", CalculatedChecksum));
-            sb.AppendLine(string.Format("CheckSums match: {0}", CalculatedChecksum == CheckSum));
+            sb.AppendLine($"Cluster: 0x{Cluster:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("BootType: 0x{0:X}", BootType));
-            sb.AppendLine(string.Format("BootRecover: 0x{0:X}", BootRecover));
+            sb.AppendLine($"CheckSum: 0x{CheckSum:X}");
+            sb.AppendLine($"CheckSum: 0x{CalculatedChecksum:X}");
+            sb.AppendLine($"CheckSums match: {CalculatedChecksum == CheckSum}");
+
+            sb.AppendLine();
+            sb.AppendLine($"BootType: 0x{BootType:X}");
+            sb.AppendLine($"BootRecover: 0x{BootRecover:X}");
 
             return sb.ToString();
         }

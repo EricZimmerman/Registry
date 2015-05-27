@@ -145,31 +145,31 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Revision: 0x{0:X}", Revision));
-            sb.AppendLine(string.Format("Control: {0}", Control));
+            sb.AppendLine($"Revision: 0x{Revision:X}");
+            sb.AppendLine($"Control: {Control}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Owner offset: 0x{0:X}", OwnerOffset));
-            sb.AppendLine(string.Format("Owner SID: {0}", OwnerSID));
-            sb.AppendLine(string.Format("Owner SID Type: {0}", OwnerSIDType));
+            sb.AppendLine($"Owner offset: 0x{OwnerOffset:X}");
+            sb.AppendLine($"Owner SID: {OwnerSID}");
+            sb.AppendLine($"Owner SID Type: {OwnerSIDType}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Group offset: 0x{0:X}", GroupOffset));
-            sb.AppendLine(string.Format("Group SID: {0}", GroupSID));
-            sb.AppendLine(string.Format("Group SID Type: {0}", GroupSIDType));
+            sb.AppendLine($"Group offset: 0x{GroupOffset:X}");
+            sb.AppendLine($"Group SID: {GroupSID}");
+            sb.AppendLine($"Group SID Type: {GroupSIDType}");
 
             if (DACL != null)
             {
                 sb.AppendLine();
-                sb.AppendLine(string.Format("Dacl Offset: 0x{0:X}", DaclOffset));
-                sb.AppendLine(string.Format("DACL: {0}", DACL));
+                sb.AppendLine($"Dacl Offset: 0x{DaclOffset:X}");
+                sb.AppendLine($"DACL: {DACL}");
             }
 
             if (SACL != null)
             {
                 sb.AppendLine();
-                sb.AppendLine(string.Format("Sacl Offset: 0x{0:X}", SaclOffset));
-                sb.AppendLine(string.Format("SACL: {0}", SACL));
+                sb.AppendLine($"Sacl Offset: 0x{SaclOffset:X}");
+                sb.AppendLine($"SACL: {SACL}");
             }
 
             return sb.ToString();

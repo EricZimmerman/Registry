@@ -126,25 +126,25 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
+            sb.AppendLine($"Size: 0x{Math.Abs(_size):X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
+            sb.AppendLine($"Signature: {Signature}");
 
-            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("Forward Link: 0x{0:X}", FLink));
-            sb.AppendLine(string.Format("Backward Link: 0x{0:X}", BLink));
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("Reference Count: {0:N0}", ReferenceCount));
+            sb.AppendLine($"Is Free: {IsFree}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Security descriptor length: 0x{0:X}", DescriptorLength));
+            sb.AppendLine($"Forward Link: 0x{FLink:X}");
+            sb.AppendLine($"Backward Link: 0x{BLink:X}");
+            sb.AppendLine();
+
+            sb.AppendLine($"Reference Count: {ReferenceCount:N0}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Security descriptor: {0}", SecurityDescriptor));
+            sb.AppendLine($"Security descriptor length: 0x{DescriptorLength:X}");
+
+            sb.AppendLine();
+            sb.AppendLine($"Security descriptor: {SecurityDescriptor}");
 
             return sb.ToString();
         }

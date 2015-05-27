@@ -241,9 +241,7 @@ namespace Registry.Other
                         RegistryHive._hardParsingErrors += 1;       //ncrunch: no coverage
 
                         _logger.Error(                             //ncrunch: no coverage     
-                            string.Format(                         
-                                "Hard error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",  
-                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),                
+                            $"Hard error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",                
                             ex);
 
                         //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
@@ -252,9 +250,7 @@ namespace Registry.Other
                     else
                     {
                         _logger.Warn(
-                            string.Format(
-                                "Soft error processing record with cell signature {0} at Absolute Offset: 0x{1:X} with raw data: {2}",
-                                cellSignature, offsetInHbin + RelativeOffset + 4096, BitConverter.ToString(rawRecord)),
+                            $"Soft error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",
                             ex);
                         //This record is marked 'Free' so its not as important of an error
                         RegistryHive._softParsingErrors += 1;
@@ -390,9 +386,7 @@ namespace Registry.Other
                 {                                   //ncrunch: no coverage
                     // this is a corrupted/unusable record
                     _logger.Warn(                       //ncrunch: no coverage
-                        string.Format(
-                            "When recovering from slack at absolute offset 0x{0:X8}, an error happened! raw Length: 0x{1:x}",
-                            relativeoffset + i + 0x1000, raw.Length), ex);
+                        $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw.Length:x}", ex);
 
                     RegistryHive._softParsingErrors += 1;   //ncrunch: no coverage
                 }                                   //ncrunch: no coverage
@@ -407,25 +401,25 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine($"Size: 0x{Size:X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
 
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
+            sb.AppendLine($"Signature: {Signature}");
 
             if (LastWriteTimestamp.HasValue)
             {
-                sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
+                sb.AppendLine($"Last Write Timestamp: {LastWriteTimestamp}");
             }
 
             sb.AppendLine();
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("File offset: 0x{0:X}", FileOffset));
+            sb.AppendLine($"File offset: 0x{FileOffset:X}");
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Reserved: 0x{0:X}", Reserved));
-            sb.AppendLine(string.Format("Spare: 0x{0:X}", Spare));
+            sb.AppendLine($"Reserved: 0x{Reserved:X}");
+            sb.AppendLine($"Spare: 0x{Spare:X}");
 
             return sb.ToString();
         }

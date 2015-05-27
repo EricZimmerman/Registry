@@ -73,10 +73,10 @@ namespace Registry.Abstractions
                 if (Parent == null)
                 {
                     //This is the root key
-                    return string.Format("{0}", KeyName);
+                    return $"{KeyName}";
                 }
 
-                return string.Format(@"{0}\{1}", Parent.KeyPath, KeyName);
+                return $@"{Parent.KeyPath}\{KeyName}";
             }
 
             set { _keyPath = value; }
@@ -144,12 +144,12 @@ namespace Registry.Abstractions
             var normalizedKeyPath = string.Join("\\", keyNames.Skip(1));
 
             var keyName = normalizedKeyPath.Length > 0
-                ? string.Format("[{0}\\{1}]", keyBase, normalizedKeyPath)
-                : string.Format("[{0}]", keyBase);
+                ? $"[{keyBase}\\{normalizedKeyPath}]"
+                : $"[{keyBase}]";
 
             sb.AppendLine();
             sb.AppendLine(keyName);
-            sb.AppendLine(string.Format(";Last write timestamp {0}", LastWriteTime.Value.UtcDateTime.ToString("o")));
+            sb.AppendLine($";Last write timestamp {LastWriteTime.Value.UtcDateTime.ToString("o")}");
             //sb.AppendLine($";Last write timestamp {LastWriteTime.Value.UtcDateTime.ToString("o")}");
 
             foreach (var keyValue in Values)
@@ -162,7 +162,7 @@ namespace Registry.Abstractions
                 else
                 {
                     keyNameOut = keyNameOut.Replace("\\", "\\\\");
-                    keyNameOut = string.Format("\"{0}\"", keyNameOut.Replace("\"", "\\\""));
+                    keyNameOut = $"\"{keyNameOut.Replace("\"", "\\\"")}\"";
                 }
 
                 var keyValueOut = "";
@@ -170,8 +170,7 @@ namespace Registry.Abstractions
                 switch (keyValue.VKRecord.DataType)
                 {
                     case VKCellRecord.DataTypeEnum.RegSz:
-                        keyValueOut = string.Format("\"{0}\"",
-                            keyValue.ValueData.Replace("\\", "\\\\").Replace("\"", "\\\""));
+                        keyValueOut = $"\"{keyValue.ValueData.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
                         break;
 
                     case VKCellRecord.DataTypeEnum.RegNone:
@@ -184,42 +183,40 @@ namespace Registry.Abstractions
                     case VKCellRecord.DataTypeEnum.RegResourceRequirementsList:
                     case VKCellRecord.DataTypeEnum.RegExpandSz:
 
-                        var prefix = string.Format("hex({0:x}):", (int) keyValue.VKRecord.DataType);
+                        var prefix = $"hex({(int) keyValue.VKRecord.DataType:x}):";
 
                         keyValueOut =
-                            string.Format("{0}{1}", prefix,
-                                BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")).ToLowerInvariant();
+                            $"{prefix}{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}".ToLowerInvariant();
 
                         if (keyValueOut.Length + prefix.Length + keyNameOut.Length > 76)
                         {
-                            keyValueOut = string.Format("{0}{1}", prefix,
-                                FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, prefix.Length));
+                            keyValueOut =
+                                $"{prefix}{FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, prefix.Length)}";
                         }
 
                         break;
 
                     case VKCellRecord.DataTypeEnum.RegDword:
                         keyValueOut =
-                            string.Format("dword:{0:X8}", BitConverter.ToInt32(keyValue.ValueDataRaw, 0))
+                            $"dword:{BitConverter.ToInt32(keyValue.ValueDataRaw, 0):X8}"
                                 .ToLowerInvariant();
                         break;
 
                     case VKCellRecord.DataTypeEnum.RegBinary:
 
                         keyValueOut =
-                            string.Format("hex:{0}", BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ","))
+                            $"hex:{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}"
                                 .ToLowerInvariant();
 
                         if (keyValueOut.Length + 5 + keyNameOut.Length > 76)
                         {
-                            keyValueOut = string.Format("hex:{0}",
-                                FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, 5));
+                            keyValueOut = $"hex:{FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, 5)}";
                         }
 
                         break;
                 }
 
-                sb.AppendLine(string.Format("{0}={1}", keyNameOut, keyValueOut));
+                sb.AppendLine($"{keyNameOut}={keyValueOut}");
             }
 
             return sb.ToString().TrimEnd();
@@ -239,7 +236,7 @@ namespace Registry.Abstractions
 
             while (dataIndex < data.Length)
             {
-                tempkeyVal.Append(string.Format("{0:x2},", data[dataIndex]));
+                tempkeyVal.Append($"{data[dataIndex]:x2},");
                 dataIndex += 1;
                 charsWritten += 3; //2 hex chars plus a comma
                 lineLength += 3;
@@ -268,44 +265,44 @@ namespace Registry.Abstractions
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Key Name: {0}", KeyName));
-            sb.AppendLine(string.Format("Key Path: {0}", KeyPath));
+            sb.AppendLine($"Key Name: {KeyName}");
+            sb.AppendLine($"Key Path: {KeyPath}");
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Last Write Time: {0}", LastWriteTime));
+            sb.AppendLine($"Last Write Time: {LastWriteTime}");
             sb.AppendLine();
 
             // sb.AppendLine(string.Format("Is Deleted: {0}", IsDeleted));
 
-            sb.AppendLine(string.Format("Key flags: {0}", KeyFlags));
+            sb.AppendLine($"Key flags: {KeyFlags}");
 
             sb.AppendLine();
 
 //            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
 //            sb.AppendLine();
 
-            sb.AppendLine(string.Format("NK Record: {0}", NKRecord));
+            sb.AppendLine($"NK Record: {NKRecord}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("SubKey count: {0:N0}", SubKeys.Count));
+            sb.AppendLine($"SubKey count: {SubKeys.Count:N0}");
 
             var i = 0;
             foreach (var sk in SubKeys)
             {
-                sb.AppendLine(string.Format("------------ SubKey #{0} ------------", i));
+                sb.AppendLine($"------------ SubKey #{i} ------------");
                 sb.AppendLine(sk.ToString());
                 i += 1;
             }
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Value count: {0:N0}", Values.Count));
+            sb.AppendLine($"Value count: {Values.Count:N0}");
 
             i = 0;
             foreach (var value in Values)
             {
-                sb.AppendLine(string.Format("------------ Value #{0} ------------", i));
+                sb.AppendLine($"------------ Value #{i} ------------");
                 sb.AppendLine(value.ToString());
                 i += 1;
             }

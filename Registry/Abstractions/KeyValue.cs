@@ -91,17 +91,17 @@ namespace Registry.Abstractions
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Value Name: {0}", ValueName));
-            sb.AppendLine(string.Format("Value Type: {0}", ValueType));
-            sb.AppendLine(string.Format("Value Data: {0}", ValueData));
-            sb.AppendLine(string.Format("Value Slack: {0}", ValueSlack));
+            sb.AppendLine($"Value Name: {ValueName}");
+            sb.AppendLine($"Value Type: {ValueType}");
+            sb.AppendLine($"Value Data: {ValueData}");
+            sb.AppendLine($"Value Slack: {ValueSlack}");
 
             sb.AppendLine();
 
 //            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
 //            sb.AppendLine();
 
-            sb.AppendLine(string.Format("VK Record: {0}", VKRecord));
+            sb.AppendLine($"VK Record: {VKRecord}");
 
             return sb.ToString();
         }

@@ -124,7 +124,7 @@ namespace Registry
 					
 					break;
 				default:
-					throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
+					throw new Exception($"Unknown subkey list type {l.Signature}!");
             }
 
             return keys;
@@ -187,7 +187,7 @@ namespace Registry
 				case LiSignature:
 					return new LIListRecord(rawBytes, relativeOffset);
 				default:
-					throw new Exception(string.Format("Unknown list signature: {0}", sig)); //ncrunch: no coverage
+					throw new Exception($"Unknown list signature: {sig}"); //ncrunch: no coverage
             }
 		}
 

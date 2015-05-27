@@ -266,58 +266,58 @@ namespace Registry.Cells
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Math.Abs(_size)));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
-            sb.AppendLine(string.Format("Flags: {0}", Flags));
+            sb.AppendLine($"Size: 0x{Math.Abs(_size):X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
+            sb.AppendLine($"Signature: {Signature}");
+            sb.AppendLine($"Flags: {Flags}");
             sb.AppendLine();
-            sb.AppendLine(string.Format("Name: {0}", Name));
+            sb.AppendLine($"Name: {Name}");
             sb.AppendLine();
-            sb.AppendLine(string.Format("Last Write Timestamp: {0}", LastWriteTimestamp));
-            sb.AppendLine();
-
-            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("Debug: 0x{0:X}", Debug));
-
-            sb.AppendLine();
-            sb.AppendLine(string.Format("Maximum Class Length: 0x{0:X}", MaximumClassLength));
-            sb.AppendLine(string.Format("Class Cell Index: 0x{0:X}", ClassCellIndex));
-            sb.AppendLine(string.Format("Class Length: 0x{0:X}", ClassLength));
-
+            sb.AppendLine($"Last Write Timestamp: {LastWriteTimestamp}");
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Maximum Value Data Length: 0x{0:X}", MaximumValueDataLength));
-            sb.AppendLine(string.Format("Maximum Value Name Length: 0x{0:X}", MaximumValueNameLength));
+            sb.AppendLine($"Is Free: {IsFree}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Name Length: 0x{0:X}", NameLength));
-            sb.AppendLine(string.Format("Maximum Name Length: 0x{0:X}", MaximumNameLength));
+            sb.AppendLine($"Debug: 0x{Debug:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Parent Cell Index: 0x{0:X}", ParentCellIndex));
-            sb.AppendLine(string.Format("Security Cell Index: 0x{0:X}", SecurityCellIndex));
+            sb.AppendLine($"Maximum Class Length: 0x{MaximumClassLength:X}");
+            sb.AppendLine($"Class Cell Index: 0x{ClassCellIndex:X}");
+            sb.AppendLine($"Class Length: 0x{ClassLength:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Subkey Counts Stable: 0x{0:X}", SubkeyCountsStable));
+
+            sb.AppendLine($"Maximum Value Data Length: 0x{MaximumValueDataLength:X}");
+            sb.AppendLine($"Maximum Value Name Length: 0x{MaximumValueNameLength:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Hive pointer: 0x{0:X}", HivePointer));
-            sb.AppendLine(string.Format("Root cell index: 0x{0:X}", RootCellIndex));
+            sb.AppendLine($"Name Length: 0x{NameLength:X}");
+            sb.AppendLine($"Maximum Name Length: 0x{MaximumNameLength:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Subkey Counts Volatile: 0x{0:X}", SubkeyCountsVolatile));
+            sb.AppendLine($"Parent Cell Index: 0x{ParentCellIndex:X}");
+            sb.AppendLine($"Security Cell Index: 0x{SecurityCellIndex:X}");
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("User Flags: 0x{0:X}", UserFlags));
-            sb.AppendLine(string.Format("Virtual Control Flags: 0x{0:X}", VirtualControlFlags));
-            sb.AppendLine(string.Format("Work Var: 0x{0:X}", WorkVar));
+            sb.AppendLine($"Subkey Counts Stable: 0x{SubkeyCountsStable:X}");
+
+            sb.AppendLine();
+            sb.AppendLine($"Hive pointer: 0x{HivePointer:X}");
+            sb.AppendLine($"Root cell index: 0x{RootCellIndex:X}");
+
+            sb.AppendLine();
+            sb.AppendLine($"Subkey Counts Volatile: 0x{SubkeyCountsVolatile:X}");
+
+            sb.AppendLine();
+            sb.AppendLine($"User Flags: 0x{UserFlags:X}");
+            sb.AppendLine($"Virtual Control Flags: 0x{VirtualControlFlags:X}");
+            sb.AppendLine($"Work Var: 0x{WorkVar:X}");
 
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("Padding: {0}", BitConverter.ToString(Padding)));
+            sb.AppendLine($"Padding: {BitConverter.ToString(Padding)}");
 
             return sb.ToString();
         }

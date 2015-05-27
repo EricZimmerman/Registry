@@ -111,26 +111,26 @@ namespace Registry.Lists
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
-            sb.AppendLine(string.Format("Signature: {0}", Signature));
+            sb.AppendLine($"Size: 0x{Size:X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
+            sb.AppendLine($"Signature: {Signature}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
+            sb.AppendLine($"Is Free: {IsFree}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Number Of Entries: {0:N0}", NumberOfEntries));
+            sb.AppendLine($"Number Of Entries: {NumberOfEntries:N0}");
             sb.AppendLine();
 
             var i = 0;
 
             foreach (var offset in Offsets)
             {
-                sb.AppendLine(string.Format("------------ Offset/hash record #{0} ------------", i));
-                sb.AppendLine(string.Format("Offset: 0x{0:X}, Hash: {1}", offset.Key, offset.Value));
+                sb.AppendLine($"------------ Offset/hash record #{i} ------------");
+                sb.AppendLine($"Offset: 0x{offset.Key:X}, Hash: {offset.Value}");
                 i += 1;
             }
             sb.AppendLine();
@@ -140,7 +140,7 @@ namespace Registry.Lists
             //ncrunch: no coverage start
             if (IsFree)
             {
-                sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
+                sb.AppendLine($"Raw Bytes: {BitConverter.ToString(RawBytes)}");
                 sb.AppendLine();
             }
             //ncrunch: no coverage end

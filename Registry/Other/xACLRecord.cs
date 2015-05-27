@@ -103,20 +103,20 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("ACL Revision: 0x{0:X}", AclRevision));
-            sb.AppendLine(string.Format("ACL Size: 0x{0:X}", AclSize));
-            sb.AppendLine(string.Format("ACL Type: {0}", ACLType));
-            sb.AppendLine(string.Format("Sbz1: 0x{0:X}", Sbz1));
-            sb.AppendLine(string.Format("Sbz2: 0x{0:X}", Sbz2));
+            sb.AppendLine($"ACL Revision: 0x{AclRevision:X}");
+            sb.AppendLine($"ACL Size: 0x{AclSize:X}");
+            sb.AppendLine($"ACL Type: {ACLType}");
+            sb.AppendLine($"Sbz1: 0x{Sbz1:X}");
+            sb.AppendLine($"Sbz2: 0x{Sbz2:X}");
 
-            sb.AppendLine(string.Format("ACE Records Count: {0}", AceCount));
+            sb.AppendLine($"ACE Records Count: {AceCount}");
 
             sb.AppendLine();
 
             var i = 0;
             foreach (var aceRecord in ACERecords)
             {
-                sb.AppendLine(string.Format("------------ Ace record #{0} ------------", i));
+                sb.AppendLine($"------------ Ace record #{i} ------------");
                 sb.AppendLine(aceRecord.ToString());
                 i += 1;
             }

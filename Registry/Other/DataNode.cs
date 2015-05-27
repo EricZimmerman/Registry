@@ -80,17 +80,17 @@ namespace Registry.Other
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(string.Format("Size: 0x{0:X}", Size));
-            sb.AppendLine(string.Format("Relative Offset: 0x{0:X}", RelativeOffset));
-            sb.AppendLine(string.Format("Absolute Offset: 0x{0:X}", AbsoluteOffset));
+            sb.AppendLine($"Size: 0x{Size:X}");
+            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Is Free: {0}", IsFree));
+            sb.AppendLine($"Is Free: {IsFree}");
 
             sb.AppendLine();
 
-            sb.AppendLine(string.Format("Raw Bytes: {0}", BitConverter.ToString(RawBytes)));
+            sb.AppendLine($"Raw Bytes: {BitConverter.ToString(RawBytes)}");
             sb.AppendLine();
 
             return sb.ToString();

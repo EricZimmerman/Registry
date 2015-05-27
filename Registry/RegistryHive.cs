@@ -333,7 +333,7 @@ namespace Registry
 
                     break;
                 default:
-                    throw new Exception(string.Format("Unknown subkey list type {0}!", l.Signature));
+                    throw new Exception($"Unknown subkey list type {l.Signature}!");
             }
 
             return keys;
@@ -473,7 +473,7 @@ namespace Registry
             }
 
             //handle case where someone doesn't pass in ROOT keyname
-            var newPath = string.Format("{0}\\{1}", Root.KeyName, keyPath).ToLowerInvariant();
+            var newPath = $"{Root.KeyName}\\{keyPath}".ToLowerInvariant();
 
             if (KeyPathKeyMap.ContainsKey(newPath))
             {
@@ -595,7 +595,7 @@ namespace Registry
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(string.Format("Error processing hbin at absolute offset 0x{0:X}.", offsetInHive), ex);
+                    _logger.Error($"Error processing hbin at absolute offset 0x{offsetInHive:X}.", ex);
                 }
 
                 offsetInHive += hbinSize;
@@ -834,8 +834,7 @@ namespace Registry
                 {
 //ncrunch: no coverage
                     _logger.Error( //ncrunch: no coverage
-                        string.Format("Error while processing deleted nk record at absolute offset 0x{0:X}",
-                            unreferencedNkCell.Value.AbsoluteOffset), ex);
+                        $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}", ex);
                 } //ncrunch: no coverage
             }
 
@@ -862,8 +861,7 @@ namespace Registry
                             "Found subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
                             deletedRegistryKey.Value.NKRecord.AbsoluteOffset, parent.NKRecord.AbsoluteOffset);
 
-                        deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", parent.KeyPath,
-                            deletedRegistryKey.Value.KeyName);
+                        deletedRegistryKey.Value.KeyPath = $@"{parent.KeyPath}\{deletedRegistryKey.Value.KeyName}";
 
                         parent.SubKeys.Add(deletedRegistryKey.Value);
 
@@ -912,8 +910,7 @@ namespace Registry
                             "Copying subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
                             deletedRegistryKey.Value.NKRecord.AbsoluteOffset, pk.NKRecord.AbsoluteOffset);
 
-                        deletedRegistryKey.Value.KeyPath = string.Format(@"{0}\{1}", pk.KeyPath,
-                            deletedRegistryKey.Value.KeyName);
+                        deletedRegistryKey.Value.KeyPath = $@"{pk.KeyPath}\{deletedRegistryKey.Value.KeyName}";
 
                         deletedRegistryKey.Value.KeyFlags |= RegistryKey.KeyFlagsEnum.HasActiveParent;
 
@@ -959,8 +956,7 @@ namespace Registry
             _logger.Trace("Updating child paths or key {0}", key.KeyPath);
             foreach (var sk in key.SubKeys)
             {
-                sk.KeyPath = string.Format(@"{0}\{1}", key.KeyPath,
-                    sk.KeyName);
+                sk.KeyPath = $@"{key.KeyPath}\{sk.KeyName}";
 
                 RelativeOffsetKeyMap.Add(sk.NKRecord.RelativeOffset, sk);
 

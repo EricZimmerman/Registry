@@ -73,7 +73,7 @@ namespace ExampleApp
 					//config.AddTarget("file", fileWrapper);
 					config.AddTarget("file", fileTarget);
 
-					fileTarget.FileName = string.Format("{0}/{1}_log.txt", logFilePath, Guid.NewGuid());
+					fileTarget.FileName = $"{logFilePath}/{Guid.NewGuid()}_log.txt";
 					// "${basedir}/file.txt";
 
 					fileTarget.Layout = @"${longdate} ${logger} " + callsite +
@@ -179,7 +179,7 @@ namespace ExampleApp
 				}
 
 				logger.Info("Processing '{0}'", testFile);
-				Console.Title = string.Format("Processing '{0}'", testFile);
+				Console.Title = $"Processing '{testFile}'";
 
 				var sw = new Stopwatch();
 				try
@@ -205,7 +205,7 @@ namespace ExampleApp
 
 					logger.Info("Finished processing '{0}'", testFile);
 
-					Console.Title = string.Format("Finished processing '{0}'", testFile);
+					Console.Title = $"Finished processing '{testFile}'";
 
 					sw.Stop();
 
@@ -232,58 +232,45 @@ namespace ExampleApp
 					sb.AppendLine();
 
 					sb.AppendLine(
-						string.Format(
-							"Found {0:N0} hbin records. Total size of seen hbin records: 0x{1:X}, Header hive size: 0x{2:X}",
-							registryHive.HBinRecordCount, registryHive.HBinRecordTotalSize, registryHive.Header.Length));
+					    $"Found {registryHive.HBinRecordCount:N0} hbin records. Total size of seen hbin records: 0x{registryHive.HBinRecordTotalSize:X}, Header hive size: 0x{registryHive.Header.Length:X}");
 
 					if (registryHive.FlushRecordListsAfterParse == false)
 					{
 						sb.AppendLine(
-							string.Format("Found {0:N0} Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-								registryHive.CellRecords.Count, registryHive.CellRecords.Count(w => w.Value is NKCellRecord),
-								registryHive.CellRecords.Count(w => w.Value is VKCellRecord),
-								registryHive.CellRecords.Count(w => w.Value is SKCellRecord),
-								registryHive.CellRecords.Count(w => w.Value is LKCellRecord)));
-						sb.AppendLine(string.Format("Found {0:N0} List records", registryHive.ListRecords.Count));
+						    $"Found {registryHive.CellRecords.Count:N0} Cell records (nk: {registryHive.CellRecords.Count(w => w.Value is NKCellRecord):N0}, vk: {registryHive.CellRecords.Count(w => w.Value is VKCellRecord):N0}, sk: {registryHive.CellRecords.Count(w => w.Value is SKCellRecord):N0}, lk: {registryHive.CellRecords.Count(w => w.Value is LKCellRecord):N0})");
+						sb.AppendLine($"Found {registryHive.ListRecords.Count:N0} List records");
 						sb.AppendLine();
 						sb.AppendLine(string.Format($"Header CheckSums match: {registryHive.Header.ValidateCheckSum()}"));
 						sb.AppendLine(string.Format($"Header sequence 1: {registryHive.Header.Sequence1}, Header sequence 2: {registryHive.Header.Sequence2}"));
 						
 						sb.AppendLine();
 
-						sb.AppendLine(string.Format("There are {0:N0} cell records marked as being referenced ({1:P})",
-							referencedCells.Count(), referencedCells.Count()/(double) registryHive.CellRecords.Count));
-						sb.AppendLine(string.Format("There are {0:N0} list records marked as being referenced ({1:P})",
-							referencedList.Count(), referencedList.Count()/(double) registryHive.ListRecords.Count));
+						sb.AppendLine(
+						    $"There are {referencedCells.Count():N0} cell records marked as being referenced ({referencedCells.Count()/(double) registryHive.CellRecords.Count:P})");
+						sb.AppendLine(
+						    $"There are {referencedList.Count():N0} list records marked as being referenced ({referencedList.Count()/(double) registryHive.ListRecords.Count:P})");
 
 						if (result.Value.RecoverDeleted)
 						{
 							sb.AppendLine();
 							sb.AppendLine("Free record info");
-							sb.AppendLine(string.Format(
-								"{0:N0} free Cell records (nk: {1:N0}, vk: {2:N0}, sk: {3:N0}, lk: {4:N0})",
-								freeCells.Count(), nkFree, vkFree, skFree, lkFree));
-							sb.AppendLine(string.Format("{0:N0} free List records", freeLists.Count()));
+							sb.AppendLine(
+							    $"{freeCells.Count():N0} free Cell records (nk: {nkFree:N0}, vk: {vkFree:N0}, sk: {skFree:N0}, lk: {lkFree:N0})");
+							sb.AppendLine($"{freeLists.Count():N0} free List records");
 						}
 
 						sb.AppendLine();
 						sb.AppendLine(
-							string.Format("Cells: Free + referenced + marked as in use but not referenced == Total? {0}",
-								registryHive.CellRecords.Count ==
-								freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()));
+						    $"Cells: Free + referenced + marked as in use but not referenced == Total? {registryHive.CellRecords.Count == freeCells.Count() + referencedCells.Count() + goofyCellsShouldBeUsed.Count()}");
 						sb.AppendLine(
-							string.Format("Lists: Free + referenced + marked as in use but not referenced == Total? {0}",
-								registryHive.ListRecords.Count ==
-								freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()));
+						    $"Lists: Free + referenced + marked as in use but not referenced == Total? {registryHive.ListRecords.Count == freeLists.Count() + referencedList.Count() + goofyListsShouldBeUsed.Count()}");
 					}
 
 					sb.AppendLine();
-					sb.AppendLine(string.Format(
-						"There were {0:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)",
-						registryHive.HardParsingErrors));
-					sb.AppendLine(string.Format(
-						"There were {0:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)",
-						registryHive.SoftParsingErrors));
+					sb.AppendLine(
+					    $"There were {registryHive.HardParsingErrors:N0} hard parsing errors (a record marked 'in use' that didn't parse correctly.)");
+					sb.AppendLine(
+					    $"There were {registryHive.SoftParsingErrors:N0} soft parsing errors (a record marked 'free' that didn't parse correctly.)");
 
 					logger.Info(sb.ToString());
 
@@ -318,7 +305,7 @@ namespace ExampleApp
 							myName = "_EricZ_all.txt";
 						}
 
-						var outfile = Path.Combine(baseDir, string.Format("{0}{1}", baseFname, myName));
+						var outfile = Path.Combine(baseDir, $"{baseFname}{myName}");
 
 						logger.Info("Exporting hive data to '{0}'", outfile);
 
