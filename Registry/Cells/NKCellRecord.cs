@@ -78,20 +78,11 @@ namespace Registry.Cells
         /// <summary>
         ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
-        public ushort ClassLength
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x4e); }
-        }
+        public ushort ClassLength => BitConverter.ToUInt16(RawBytes, 0x4e);
 
-        public byte Debug
-        {
-            get { return RawBytes[0x3b]; }
-        }
+        public byte Debug => RawBytes[0x3b];
 
-        public FlagEnum Flags
-        {
-            get { return (FlagEnum) BitConverter.ToUInt16(RawBytes, 6); }
-        }
+        public FlagEnum Flags => (FlagEnum) BitConverter.ToUInt16(RawBytes, 6);
 
         /// <summary>
         ///     The last write time of this key
@@ -106,25 +97,13 @@ namespace Registry.Cells
             }
         }
 
-        public uint MaximumClassLength
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x3c); }
-        }
+        public uint MaximumClassLength => BitConverter.ToUInt32(RawBytes, 0x3c);
 
-        public ushort MaximumNameLength
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x38); }
-        }
+        public ushort MaximumNameLength => BitConverter.ToUInt16(RawBytes, 0x38);
 
-        public uint MaximumValueDataLength
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x44); }
-        }
+        public uint MaximumValueDataLength => BitConverter.ToUInt32(RawBytes, 0x44);
 
-        public uint MaximumValueNameLength
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x40); }
-        }
+        public uint MaximumValueNameLength => BitConverter.ToUInt32(RawBytes, 0x40);
 
         /// <summary>
         ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
@@ -176,10 +155,7 @@ namespace Registry.Cells
             }
         }
 
-        public ushort NameLength
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x4c); }
-        }
+        public ushort NameLength => BitConverter.ToUInt16(RawBytes, 0x4c);
 
         public byte[] Padding
         {
@@ -210,18 +186,12 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the parent key for this record
         /// </summary>
-        public uint ParentCellIndex
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
-        }
+        public uint ParentCellIndex => BitConverter.ToUInt32(RawBytes, 0x14);
 
         /// <summary>
         ///     The relative offset to the security record for this record
         /// </summary>
-        public uint SecurityCellIndex
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x30); }
-        }
+        public uint SecurityCellIndex => BitConverter.ToUInt32(RawBytes, 0x30);
 
         /// <summary>
         ///     When true, this key has been deleted
@@ -235,15 +205,9 @@ namespace Registry.Cells
         /// <summary>
         ///     The number of subkeys this key contains
         /// </summary>
-        public uint SubkeyCountsStable
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x18); }
-        }
+        public uint SubkeyCountsStable => BitConverter.ToUInt32(RawBytes, 0x18);
 
-        public uint SubkeyCountsVolatile
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x1c); }
-        }
+        public uint SubkeyCountsVolatile => BitConverter.ToUInt32(RawBytes, 0x1c);
 
         /// <summary>
         ///     The relative offset to a list (or list of lists) that points to other NKRecords. These records are subkeys of this
@@ -307,10 +271,7 @@ namespace Registry.Cells
         /// <summary>
         ///     The number of values this key contains
         /// </summary>
-        public uint ValueListCount
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x28); }
-        }
+        public uint ValueListCount => BitConverter.ToUInt32(RawBytes, 0x28);
 
         public int VirtualControlFlags
         {
@@ -322,21 +283,12 @@ namespace Registry.Cells
             }
         }
 
-        public uint WorkVar
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x48); }
-        }
+        public uint WorkVar => BitConverter.ToUInt32(RawBytes, 0x48);
 
         // public properties...
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
-        public bool IsFree
-        {
-            get { return BitConverter.ToInt32(RawBytes, 0) > 0; }
-        }
+        public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
 
         public bool IsReferenced { get; internal set; }
         public byte[] RawBytes
@@ -349,15 +301,9 @@ namespace Registry.Cells
         }
         public long RelativeOffset { get;  private set;}
 
-        public string Signature
-        {
-            get { return Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2); }
-        }
+        public string Signature => Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2);
 
-        public int Size
-        {
-            get { return Math.Abs(BitConverter.ToInt32(RawBytes, 0)); }
-        }
+        public int Size => Math.Abs(BitConverter.ToInt32(RawBytes, 0));
 
         // public methods...
         public override string ToString()

@@ -63,15 +63,9 @@ namespace Registry.Other
         }
 
         // public properties...
-        public AceFlagsEnum ACEFlags
-        {
-            get { return (AceFlagsEnum) RawBytes[1]; }
-        }
+        public AceFlagsEnum ACEFlags => (AceFlagsEnum) RawBytes[1];
 
-        public ushort ACESize
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 2); }
-        }
+        public ushort ACESize => BitConverter.ToUInt16(RawBytes, 2);
 
         public AceTypeEnum ACEType
         {
@@ -112,10 +106,7 @@ namespace Registry.Other
             }
         }
 
-        public MasksEnum Mask
-        {
-            get { return (MasksEnum) BitConverter.ToUInt32(RawBytes, 4); }
-        }
+        public MasksEnum Mask => (MasksEnum) BitConverter.ToUInt32(RawBytes, 4);
 
         public byte[] RawBytes { get;  private set;}
 
@@ -129,10 +120,7 @@ namespace Registry.Other
             }
         }
 
-        public Helpers.SidTypeEnum SIDType
-        {
-            get { return Helpers.GetSIDTypeFromSIDString(SID); }
-        }
+        public Helpers.SidTypeEnum SIDType => Helpers.GetSIDTypeFromSIDString(SID);
 
         // public methods...
         public override string ToString()

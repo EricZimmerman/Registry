@@ -26,18 +26,9 @@ namespace Registry.Other
         }
 
         // public properties...
-        public byte[] Data
-        {
-            get
-            {
-                return new ArraySegment<byte>(RawBytes, 4, RawBytes.Length - 4).ToArray();
-            }
-        }
+        public byte[] Data => new ArraySegment<byte>(RawBytes, 4, RawBytes.Length - 4).ToArray();
 
-        public bool IsFree
-        {
-            get { return _size > 0; }
-        }
+        public bool IsFree => _size > 0;
 
         public byte[] RawBytes { get; private set; }
 
@@ -56,24 +47,15 @@ namespace Registry.Other
         /// </summary>
         public long RelativeOffset { get; private set; }
 
-        public int Size
-        {
-            get { return Math.Abs(_size); }
-        }
+        public int Size => Math.Abs(_size);
 
         // public properties...
         /// <summary>
         ///     The offset to this record from the beginning of the hive, in bytes
         /// </summary>
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
-        public string Signature
-        {
-            get { return string.Empty; }
-        }
+        public string Signature => string.Empty;
 
         // public methods...
         public override string ToString()

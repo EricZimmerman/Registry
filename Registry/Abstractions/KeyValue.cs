@@ -47,39 +47,24 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The value as stored in the hive as a series of bytes
         /// </summary>
-        public byte[] ValueDataRaw
-        {
-            get { return VKRecord.ValueDataRaw; }
-        }
+        public byte[] ValueDataRaw => VKRecord.ValueDataRaw;
 
-        public string ValueName
-        {
-            get { return VKRecord.ValueName; }
-        }
+        public string ValueName => VKRecord.ValueName;
 
         /// <summary>
         ///     If present, the value slack as a string of bytes delimited by hyphens
         /// </summary>
-        public string ValueSlack
-        {
-            get { return BitConverter.ToString(VKRecord.ValueDataSlack); }
-        }
+        public string ValueSlack => BitConverter.ToString(VKRecord.ValueDataSlack);
 
         /// <summary>
         ///     The value slack as stored in the hive as a series of bytes
         /// </summary>
-        public byte[] ValueSlackRaw
-        {
-            get { return VKRecord.ValueDataSlack; }
-        }
+        public byte[] ValueSlackRaw => VKRecord.ValueDataSlack;
 
         /// <summary>
         ///     The values type (VKCellRecord.DataTypeEnum)
         /// </summary>
-        public string ValueType
-        {
-            get { return VKRecord.DataType.ToString(); }
-        }
+        public string ValueType => VKRecord.DataType.ToString();
 
         /// <summary>
         ///     The underlying VKRecord for this Key. This allows access to all info about the VK Record
@@ -91,12 +76,12 @@ namespace Registry.Abstractions
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"Value Name: {ValueName}");
-            sb.AppendLine($"Value Type: {ValueType}");
-            sb.AppendLine($"Value Data: {ValueData}");
-            sb.AppendLine($"Value Slack: {ValueSlack}");
-
-            sb.AppendLine();
+//            sb.AppendLine($"Value Name: {ValueName}");
+//            sb.AppendLine($"Value Type: {ValueType}");
+//            sb.AppendLine($"Value Data: {ValueData}");
+//            sb.AppendLine($"Value Slack: {ValueSlack}");
+//
+//            sb.AppendLine();
 
 //            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
 //            sb.AppendLine();

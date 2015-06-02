@@ -46,36 +46,21 @@ namespace Registry.Cells
         /// <summary>
         ///     A relative offset to the previous SK record
         /// </summary>
-        public uint BLink
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
-        }
+        public uint BLink => BitConverter.ToUInt32(RawBytes, 0x0c);
 
-        public uint DescriptorLength
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
-        }
+        public uint DescriptorLength => BitConverter.ToUInt32(RawBytes, 0x14);
 
         /// <summary>
         ///     A relative offset to the next SK record
         /// </summary>
-        public uint FLink
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
-        }
+        public uint FLink => BitConverter.ToUInt32(RawBytes, 0x08);
 
         /// <summary>
         ///     A count of how many keys this security record applies to
         /// </summary>
-        public uint ReferenceCount
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x10); }
-        }
+        public uint ReferenceCount => BitConverter.ToUInt32(RawBytes, 0x10);
 
-        public ushort Reserved
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x6); }
-        }
+        public ushort Reserved => BitConverter.ToUInt16(RawBytes, 0x6);
 
         /// <summary>
         ///     The security descriptor object for this record
@@ -97,29 +82,17 @@ namespace Registry.Cells
         }
 
         // public properties...
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
-        public bool IsFree
-        {
-            get { return _size > 0; }
-        }
+        public bool IsFree => _size > 0;
 
         public bool IsReferenced { get; internal set; }
         public byte[] RawBytes { get;  private set;}
         public long RelativeOffset { get;  private set;}
 
-        public string Signature
-        {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-        }
+        public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-        public int Size
-        {
-            get { return Math.Abs(_size); }
-        }
+        public int Size => Math.Abs(_size);
 
         // public methods...
         public override string ToString()

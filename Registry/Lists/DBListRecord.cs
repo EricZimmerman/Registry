@@ -30,43 +30,25 @@ namespace Registry.Lists
         /// <summary>
         ///     The relative offset to another data node that contains a list of relative offsets to data for a VK record
         /// </summary>
-        public uint OffsetToOffsets
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x8); }
-        }
+        public uint OffsetToOffsets => BitConverter.ToUInt32(RawBytes, 0x8);
 
         // public properties...
 
-        public bool IsFree
-        {
-            get { return _size > 0; }
-        }
+        public bool IsFree => _size > 0;
 
         public bool IsReferenced { get;  set; }
 
-        public int NumberOfEntries
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
-        }
+        public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
         public byte[] RawBytes { get;  set; }
         public long RelativeOffset { get; set; }
 
-        public string Signature
-        {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-        }
+        public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-        public int Size
-        {
-            get { return Math.Abs(_size); }
-        }
+        public int Size => Math.Abs(_size);
 
         // public properties...
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
         // public methods...
         public override string ToString()

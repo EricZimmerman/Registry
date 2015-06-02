@@ -159,10 +159,7 @@ namespace Registry.Cells
 
         public byte Debug { get;  private set;}
 
-        public FlagEnum Flags
-        {
-            get { return (FlagEnum) BitConverter.ToUInt16(RawBytes, 6); }
-        }
+        public FlagEnum Flags => (FlagEnum) BitConverter.ToUInt16(RawBytes, 6);
 
         /// <summary>
         ///     The last write time of this key
@@ -193,10 +190,7 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the parent key for this record
         /// </summary>
-        public uint ParentCellIndex
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x14); }
-        }
+        public uint ParentCellIndex => BitConverter.ToUInt32(RawBytes, 0x14);
 
         /// <summary>
         ///     The relative offset to the security record for this record
@@ -215,15 +209,9 @@ namespace Registry.Cells
         /// <summary>
         ///     The number of subkeys this key contains
         /// </summary>
-        public uint SubkeyCountsStable
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x18); }
-        }
+        public uint SubkeyCountsStable => BitConverter.ToUInt32(RawBytes, 0x18);
 
-        public uint SubkeyCountsVolatile
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x1c); }
-        }
+        public uint SubkeyCountsVolatile => BitConverter.ToUInt32(RawBytes, 0x1c);
 
         /// <summary>
         ///     The relative offset to the root cell this record is linked to.
@@ -241,10 +229,7 @@ namespace Registry.Cells
             set { }
         }
 
-        public bool IsFree
-        {
-            get { return _size > 0; }
-        }
+        public bool IsFree => _size > 0;
 
         public bool IsReferenced { get; internal set; }
         public byte[] RawBytes { get;  private set;}
@@ -256,10 +241,7 @@ namespace Registry.Cells
             set { }
         }
 
-        public int Size
-        {
-            get { return Math.Abs(_size); }
-        }
+        public int Size => Math.Abs(_size);
 
         // public methods...
         public override string ToString()

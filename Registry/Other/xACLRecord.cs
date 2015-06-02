@@ -30,10 +30,7 @@ namespace Registry.Other
         }
 
         // public properties...
-        public ushort AceCount
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x4); }
-        }
+        public ushort AceCount => BitConverter.ToUInt16(RawBytes, 0x4);
 
         public List<ACERecord> ACERecords
         {
@@ -75,28 +72,16 @@ namespace Registry.Other
             }
         }
 
-        public byte AclRevision
-        {
-            get { return RawBytes[0]; }
-        }
+        public byte AclRevision => RawBytes[0];
 
-        public ushort AclSize
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x2); }
-        }
+        public ushort AclSize => BitConverter.ToUInt16(RawBytes, 0x2);
 
         public ACLTypeEnum ACLType { get;  private set;}
         public byte[] RawBytes { get;  private set;}
 
-        public byte Sbz1
-        {
-            get { return RawBytes[1]; }
-        }
+        public byte Sbz1 => RawBytes[1];
 
-        public ushort Sbz2
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x6); }
-        }
+        public ushort Sbz2 => BitConverter.ToUInt16(RawBytes, 0x6);
 
         // public methods...
         public override string ToString()

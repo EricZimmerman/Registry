@@ -70,10 +70,7 @@ namespace Registry
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
         /// </summary>
-        public int HardParsingErrors
-        {
-            get { return _hardParsingErrors; }
-        }
+        public int HardParsingErrors => _hardParsingErrors;
 
         public uint HBinRecordTotalSize { get; private set; } //Dictionary<long, HBinRecord>
         public int HBinRecordCount { get; private set; } //Dictionary<long, HBinRecord>
@@ -88,10 +85,7 @@ namespace Registry
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == true
         /// </summary>
-        public int SoftParsingErrors
-        {
-            get { return _softParsingErrors; }
-        }
+        public int SoftParsingErrors => _softParsingErrors;
 
         private void DumpKeyCommonFormat(RegistryKey key, StreamWriter sw, ref int keyCount,
             ref int valueCount)

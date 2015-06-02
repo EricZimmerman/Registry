@@ -78,10 +78,7 @@ namespace Registry.Other
         /// <summary>
         ///     The offset to this record from the beginning of the hive, in bytes
         /// </summary>
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
         // public properties...
         /// <summary>

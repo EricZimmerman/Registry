@@ -52,10 +52,7 @@ namespace Registry.Other
         }
 
         // public properties...
-        public ControlEnum Control
-        {
-            get { return (ControlEnum) BitConverter.ToUInt16(RawBytes, 0x02); }
-        }
+        public ControlEnum Control => (ControlEnum) BitConverter.ToUInt16(RawBytes, 0x02);
 
         public xACLRecord DACL
         {
@@ -72,15 +69,9 @@ namespace Registry.Other
             }
         }
 
-        public uint DaclOffset
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x10); }
-        }
+        public uint DaclOffset => BitConverter.ToUInt32(RawBytes, 0x10);
 
-        public uint GroupOffset
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
-        }
+        public uint GroupOffset => BitConverter.ToUInt32(RawBytes, 0x08);
 
         public string GroupSID
         {
@@ -90,15 +81,9 @@ namespace Registry.Other
                 return Helpers.ConvertHexStringToSidString(rawGroup);
             }
         }
-        public Helpers.SidTypeEnum GroupSIDType
-        {
-            get { return Helpers.GetSIDTypeFromSIDString(GroupSID); }
-        }
+        public Helpers.SidTypeEnum GroupSIDType => Helpers.GetSIDTypeFromSIDString(GroupSID);
 
-        public uint OwnerOffset
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x04); }
-        }
+        public uint OwnerOffset => BitConverter.ToUInt32(RawBytes, 0x04);
 
         public string OwnerSID
         {
@@ -109,18 +94,12 @@ namespace Registry.Other
             }
         }
 
-        public Helpers.SidTypeEnum OwnerSIDType
-        {
-            get { return Helpers.GetSIDTypeFromSIDString(OwnerSID); }
-        }
+        public Helpers.SidTypeEnum OwnerSIDType => Helpers.GetSIDTypeFromSIDString(OwnerSID);
 
         public string Padding { get; private set; }
         public byte[] RawBytes { get;  private set;}
 
-        public byte Revision
-        {
-            get { return RawBytes[0]; }
-        }
+        public byte Revision => RawBytes[0];
 
         public xACLRecord SACL
         {
@@ -135,10 +114,7 @@ namespace Registry.Other
             }
         }
 
-        public uint SaclOffset
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
-        }
+        public uint SaclOffset => BitConverter.ToUInt32(RawBytes, 0x0c);
 
         // public methods...
         public override string ToString()

@@ -52,10 +52,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The name of this key. For the full path, see KeyPath
         /// </summary>
-        public string KeyName
-        {
-            get { return NKRecord.Name; }
-        }
+        public string KeyName => NKRecord.Name;
 
         /// <summary>
         ///     The full path to the  key, including its KeyName
@@ -85,10 +82,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The last write time of this key
         /// </summary>
-        public DateTimeOffset? LastWriteTime
-        {
-            get { return NKRecord.LastWriteTimestamp; }
-        }
+        public DateTimeOffset? LastWriteTime => NKRecord.LastWriteTimestamp;
 
         /// <summary>
         ///     The underlying NKRecord for this Key. This allows access to all info about the NK Record

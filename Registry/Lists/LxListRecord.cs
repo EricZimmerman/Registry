@@ -75,36 +75,21 @@ namespace Registry.Lists
             }
         }
 
-        public bool IsFree
-        {
-            get { return _size > 0; }
-        }
+        public bool IsFree => _size > 0;
 
         public bool IsReferenced { get; internal set; }
 
-        public int NumberOfEntries
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
-        }
+        public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
         public byte[] RawBytes { get;  private set;}
         public long RelativeOffset { get;  private set;}
 
-        public string Signature
-        {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-        }
+        public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-        public int Size
-        {
-            get { return Math.Abs(_size); }
-        }
+        public int Size => Math.Abs(_size);
 
         // public properties...
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
         // public methods...
         public override string ToString()

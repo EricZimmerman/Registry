@@ -289,30 +289,18 @@ namespace Registry.Cells
         public List<ulong> DataOffsets { get;  private set;}
 
         // public properties...
-        public uint DataLength
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x08); }
-        }
+        public uint DataLength => BitConverter.ToUInt32(RawBytes, 0x08);
 
         public DataTypeEnum DataType { get; set; }
         //we need to preserve the datatype as it exists (so we can see unsupported types easily)
-        public uint DataTypeRaw
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x10) & DEVPROP_MASK_TYPE; }
-        }
+        public uint DataTypeRaw => BitConverter.ToUInt32(RawBytes, 0x10) & DEVPROP_MASK_TYPE;
 
-        public ushort NameLength
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x06); }
-        }
+        public ushort NameLength => BitConverter.ToUInt16(RawBytes, 0x06);
 
         /// <summary>
         ///     Used to determine if the name is stored in ASCII (> 0) or Unicode (== 0)
         /// </summary>
-        public ushort NamePresentFlag
-        {
-            get { return BitConverter.ToUInt16(RawBytes, 0x14); }
-        }
+        public ushort NamePresentFlag => BitConverter.ToUInt16(RawBytes, 0x14);
 
         /// <summary>
         ///     The relative offset to the data for this record. If the high bit is set, the data is resident in the offset itself.
@@ -321,10 +309,7 @@ namespace Registry.Cells
         ///         determined by subtracting 0x80000000
         ///     </remarks>
         /// </summary>
-        public uint OffsetToData
-        {
-            get { return BitConverter.ToUInt32(RawBytes, 0x0c); }
-        }
+        public uint OffsetToData => BitConverter.ToUInt32(RawBytes, 0x0c);
 
         /// <summary>
         ///     The normalized Value of this value record. This is what is visible under the 'Data' column in RegEdit
@@ -567,15 +552,9 @@ namespace Registry.Cells
         }
 
         // public properties...
-        public long AbsoluteOffset
-        {
-            get { return RelativeOffset + 4096; }
-        }
+        public long AbsoluteOffset => RelativeOffset + 4096;
 
-        public bool IsFree
-        {
-            get { return BitConverter.ToInt32(RawBytes, 0) > 0; }
-        }
+        public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
 
         public bool IsReferenced { get; internal set; }
         public byte[] RawBytes {
@@ -589,13 +568,9 @@ namespace Registry.Cells
         }
         public long RelativeOffset { get;  private set;}
 
-        public string Signature
-        {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
-        }
+        public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-        public int Size { get { return BitConverter.ToInt32(RawBytes, 0); }
-        }
+        public int Size => BitConverter.ToInt32(RawBytes, 0);
         // public methods...
         public override string ToString()
         {
@@ -605,7 +580,7 @@ namespace Registry.Cells
             sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
             sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
             sb.AppendLine($"Signature: {Signature}");
-            sb.AppendLine($"Data Type: {DataType}");
+         
             sb.AppendLine($"Data Type raw: 0x{DataTypeRaw:X}");
             sb.AppendLine();
             sb.AppendLine($"Is Free: {IsFree}");
@@ -622,7 +597,15 @@ namespace Registry.Cells
 
             sb.AppendLine();
 
+            if (Padding.Length > 0)
+            {
+                sb.AppendLine($"Padding: {BitConverter.ToString(Padding)}");
+            }
+
+            sb.AppendLine();
+
             sb.AppendLine($"Value Name: {ValueName}");
+            sb.AppendLine($"Value Type: {DataType}");
 
             switch (DataType)
             {
@@ -670,12 +653,7 @@ namespace Registry.Cells
                 sb.AppendLine($"Value Data Slack: {BitConverter.ToString(ValueDataSlack, 0)}");
             }
 
-            sb.AppendLine();
-
-            if (Padding.Length > 0)
-            {
-                sb.AppendLine($"Padding: {BitConverter.ToString(Padding)}");
-            }
+          
            
             return sb.ToString();
         }
