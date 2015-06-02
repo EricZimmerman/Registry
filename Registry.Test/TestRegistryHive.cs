@@ -36,6 +36,21 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldHaveGoodRegMultiSz()
+        {
+            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
+            var key = TestSetup.UsrclassDeleted.GetKey(@"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E");
+
+            var val = key.Values.Single(t => t.ValueName == "LanguageList");
+
+            Check.That(val).IsNotNull();
+
+            Check.That(val.ValueName).IsEqualTo("LanguageList");
+            Check.That(val.ValueData).IsEqualTo("en-US en");
+
+        }
+
+        [Test]
         public void ShouldExportValuesToFile()
         {
             var keys = TestSetup.UsrClass1.FindByValueSize(100000).ToList();
