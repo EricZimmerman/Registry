@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Registry.Other;
 
 namespace Registry.Abstractions
 {
@@ -19,23 +20,17 @@ namespace Registry.Abstractions
            Value = value;
        }
 
-        public static string StripRootKeyNameFromKeyPath(string keyPath)
-        {
-            var pos = keyPath.IndexOf("\\", StringComparison.Ordinal);
-            return keyPath.Substring(pos + 1);
-        }
-
         public override string ToString()
         {
             var kp = Key.KeyPath;
             if (StripRootKeyName)
             {
-                kp = StripRootKeyNameFromKeyPath(kp);
+                kp = Helpers.StripRootKeyNameFromKeyPath(kp);
             }
 
            if (Value != null)
            {
-               return $"{kp}::{Value.ValueName}";
+               return $"{kp} Value: {Value.ValueName}";
            }
            
             return kp;

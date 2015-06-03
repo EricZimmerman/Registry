@@ -16,11 +16,5 @@ namespace Registry.Abstractions
           Key = key;
           Value = value;
       }
-
-        public  string StripRootKeyNameFromKeyPath()
-        {
-            var pos = Key.KeyPath.IndexOf("\\", StringComparison.Ordinal);
-            return Key.KeyPath.Substring(pos + 1);
-        }
     }
 }
