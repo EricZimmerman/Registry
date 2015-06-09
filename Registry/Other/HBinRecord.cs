@@ -17,7 +17,6 @@ namespace Registry.Other
     // public classes...
     public class HBinRecord
     {
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly bool _recoverDeleted;
         private readonly int _minorVersion;
         private byte[] _rawBytes;
@@ -47,7 +46,8 @@ namespace Registry.Other
 
             Check.That(sig).IsEqualTo(HbinSignature);
 
-            _logger.Debug("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
+
+            reg._logger.Debug("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -148,7 +148,7 @@ namespace Registry.Other
                 var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
 
                 //ncrunch: no coverage start
-                if (_logger.IsDebugEnabled)
+                if (_registryHive._logger.IsDebugEnabled)
                 {
                     var foundMatch = false;
                
@@ -157,12 +157,12 @@ namespace Registry.Other
                     //only process records with 2 letter signatures. this avoids crazy output for data cells
                     if (foundMatch)
                     {
-                        _logger.Debug("Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
+                        _registryHive._logger.Debug("Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
                             cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
                     }
                     else
                     {
-                        _logger.Debug("Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
+                        _registryHive._logger.Debug("Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
                             offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
                     }  
                 }
@@ -237,7 +237,7 @@ namespace Registry.Other
                     {                                               //ncrunch: no coverage
                         RegistryHive._hardParsingErrors += 1;       //ncrunch: no coverage
 
-                        _logger.Error(                             //ncrunch: no coverage     
+                        _registryHive._logger.Error(                             //ncrunch: no coverage     
                             $"Hard error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",                
                             ex);
 
@@ -246,7 +246,7 @@ namespace Registry.Other
                     }                                              //ncrunch: no coverage                     
                     else
                     {
-                        _logger.Warn(
+                        _registryHive._logger.Warn(
                             $"Soft error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",
                             ex);
                         //This record is marked 'Free' so its not as important of an error
@@ -306,7 +306,7 @@ namespace Registry.Other
 
             byte[] raw = null;
 
-            _logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
+            _registryHive._logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}", relativeoffset + 0x1000);
 
             for (int i = 0; i < remainingData.Length; i++)
             {
@@ -358,7 +358,7 @@ namespace Registry.Other
                             var nk = new NKCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                             if (nk.LastWriteTimestamp.Year > 1900)
                             {
-                                _logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
+                                _registryHive._logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
                                     relativeoffset + actualStart + 0x1000);
                                 records.Add(nk);
                             }
@@ -371,7 +371,7 @@ namespace Registry.Other
                                 continue;
                             }
                             var vk = new VKCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion, _registryHive);
-                            _logger.Debug("Found vk record in slack at absolute offset 0x{0:X}",
+                            _registryHive._logger.Debug("Found vk record in slack at absolute offset 0x{0:X}",
                                 relativeoffset + actualStart + 0x1000);
                             records.Add(vk);
 
@@ -382,7 +382,7 @@ namespace Registry.Other
                 catch (Exception ex)                //ncrunch: no coverage
                 {                                   //ncrunch: no coverage
                     // this is a corrupted/unusable record
-                    _logger.Warn(                       //ncrunch: no coverage
+                    _registryHive._logger.Warn(                       //ncrunch: no coverage
                         $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw.Length:x}", ex);
 
                     RegistryHive._softParsingErrors += 1;   //ncrunch: no coverage

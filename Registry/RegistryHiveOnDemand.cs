@@ -16,8 +16,6 @@ namespace Registry
 {
 	public class RegistryHiveOnDemand :RegistryBase
 	{
-		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-	 
 
 		public RegistryHiveOnDemand(string hivePath) :base(hivePath)
 		{

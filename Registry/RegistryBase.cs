@@ -13,7 +13,7 @@ namespace Registry
 {
     public class RegistryBase :IRegistry
     {
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        internal readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public RegistryBase()
         {
@@ -25,6 +25,7 @@ namespace Registry
             FileBytes = rawBytes;
             HivePath = "None";
 
+          _logger=  LogManager.GetLogger("rawBytes");
 
             if (!HasValidSignature())
             {
@@ -109,6 +110,8 @@ namespace Registry
 
             binaryReader.Close();
             fileStream.Close();
+
+            _logger = LogManager.GetLogger(hivePath);
 
             if (!HasValidSignature())
             {
