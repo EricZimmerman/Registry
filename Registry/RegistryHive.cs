@@ -587,7 +587,7 @@ namespace Registry
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"Error processing hbin at absolute offset 0x{offsetInHive:X}.", ex);
+                    _logger.Error(ex,$"Error processing hbin at absolute offset 0x{offsetInHive:X}.");
                 }
 
                 offsetInHive += hbinSize;
@@ -826,7 +826,7 @@ namespace Registry
                 {
 //ncrunch: no coverage
                     _logger.Error( //ncrunch: no coverage
-                        $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}", ex);
+                        ex,$"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
                 } //ncrunch: no coverage
             }
 

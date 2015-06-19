@@ -238,8 +238,7 @@ namespace Registry.Other
                         RegistryHive._hardParsingErrors += 1;       //ncrunch: no coverage
 
                         _registryHive._logger.Error(                             //ncrunch: no coverage     
-                            $"Hard error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",                
-                            ex);
+                            ex,$"Hard error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}");
 
                         //TODO store it somewhere else as a placeholder if its in use. include relative offset and other critical stuff
 
@@ -247,8 +246,7 @@ namespace Registry.Other
                     else
                     {
                         _registryHive._logger.Warn(
-                            $"Soft error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}",
-                            ex);
+                            ex,$"Soft error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}");
                         //This record is marked 'Free' so its not as important of an error
                         RegistryHive._softParsingErrors += 1;
                     }
@@ -383,7 +381,7 @@ namespace Registry.Other
                 {                                   //ncrunch: no coverage
                     // this is a corrupted/unusable record
                     _registryHive._logger.Warn(                       //ncrunch: no coverage
-                        $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw.Length:x}", ex);
+                        ex,$"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw.Length:x}");
 
                     RegistryHive._softParsingErrors += 1;   //ncrunch: no coverage
                 }                                   //ncrunch: no coverage
