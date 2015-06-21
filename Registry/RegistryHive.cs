@@ -455,6 +455,46 @@ namespace Registry
             }
         }
 
+        public RegistryKey GetDeletedKey(string keyPath, string lastwritetimestamp)
+        {
+            var segs = keyPath.Split('\\');
+
+            //get a list that contains all matching root level unassociated keys
+            var keys = DeletedRegistryKeys.Where(t => t.KeyPath == segs[0]);
+
+            //drill down into each until we find the right one based on last write time
+            foreach (var registryKey in keys)
+            {
+                var foo = registryKey;
+
+                var startKey = registryKey;
+
+                for (var i = 1; i < segs.Length; i++)
+                {
+                    foo = startKey.SubKeys.SingleOrDefault(t => t.KeyName == segs[i]);
+                    if (foo != null)
+                    {
+                        startKey = foo;
+                    }
+                }
+
+                if (foo == null)
+                {
+                    continue;
+                }
+
+                if (foo.LastWriteTime.ToString() != lastwritetimestamp)
+                {
+                    continue;
+                }
+                return foo;
+
+                //  break;
+            }
+
+            return null;
+        }
+
         public RegistryKey GetKey(string keyPath)
         {
             keyPath = keyPath.ToLowerInvariant();
