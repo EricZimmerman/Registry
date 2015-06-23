@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
-using NLog;
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -627,7 +626,7 @@ namespace Registry
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex,$"Error processing hbin at absolute offset 0x{offsetInHive:X}.");
+                    _logger.Error(ex, $"Error processing hbin at absolute offset 0x{offsetInHive:X}.");
                 }
 
                 offsetInHive += hbinSize;
@@ -866,7 +865,8 @@ namespace Registry
                 {
 //ncrunch: no coverage
                     _logger.Error( //ncrunch: no coverage
-                        ex,$"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
+                        ex,
+                        $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
                 } //ncrunch: no coverage
             }
 
@@ -1065,7 +1065,7 @@ namespace Registry
             }
         }
 
-        public IEnumerable<SearchHit> FindByLastWriteTime(DateTimeOffset? start,DateTimeOffset? end)
+        public IEnumerable<SearchHit> FindByLastWriteTime(DateTimeOffset? start, DateTimeOffset? end)
         {
             foreach (var registryKey in KeyPathKeyMap)
             {
@@ -1117,8 +1117,15 @@ namespace Registry
             }
         }
 
-        public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false)
+        public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false, bool literal = false)
         {
+            var hex = Encoding.ASCII.GetBytes(searchTerm);
+
+            var asAscii = BitConverter.ToString(hex);
+
+            hex = Encoding.Unicode.GetBytes(searchTerm);
+            var asUnicode = BitConverter.ToString(hex);
+
             foreach (var registryKey in KeyPathKeyMap)
             {
                 foreach (var keyValue in registryKey.Value.Values)
@@ -1136,13 +1143,35 @@ namespace Registry
                         {
                             yield return new SearchHit(registryKey.Value, keyValue);
                         }
+
+                        if (literal)
+                        {
+                            continue;
+                        }
+                        if (keyValue.ValueData.IndexOf(asAscii, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
+
+                        if (keyValue.ValueData.IndexOf(asUnicode, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
                     }
                 }
             }
         }
 
-        public IEnumerable<SearchHit> FindInValueDataSlack(string searchTerm, bool useRegEx = false)
+        public IEnumerable<SearchHit> FindInValueDataSlack(string searchTerm, bool useRegEx = false,
+            bool literal = false)
         {
+            var hex = Encoding.ASCII.GetBytes(searchTerm);
+
+            var asAscii = BitConverter.ToString(hex);
+
+            hex = Encoding.Unicode.GetBytes(searchTerm);
+            var asUnicode = BitConverter.ToString(hex);
+
             foreach (var registryKey in KeyPathKeyMap)
             {
                 foreach (var keyValue in registryKey.Value.Values)
@@ -1156,9 +1185,24 @@ namespace Registry
                     }
                     else
                     {
-                        if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (literal)
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                yield return new SearchHit(registryKey.Value, keyValue);
+                            }
+                        }
+                        else
+                        {
+                            if (keyValue.ValueSlack.IndexOf(asAscii, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                yield return new SearchHit(registryKey.Value, keyValue);
+                            }
+
+                            if (keyValue.ValueSlack.IndexOf(asUnicode, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                yield return new SearchHit(registryKey.Value, keyValue);
+                            }
                         }
                     }
                 }
