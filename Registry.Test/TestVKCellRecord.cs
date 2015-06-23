@@ -368,7 +368,7 @@ namespace Registry.Test
             Check.That(val).IsNotNull();
             Check.That(val.VKRecord.DataType).IsEqualTo(VKCellRecord.DataTypeEnum.RegMultiSz);
             Check.That(val.VKRecord.ValueData).IsEqualTo("{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}");
-            Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
+            Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(84);
         }
 
         [Test]
@@ -692,7 +692,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.OffsetToData).Equals((uint) 0x5348);
             Check.That(val.VKRecord.Padding.Length).Equals(7);
             Check.That(val.VKRecord.ValueData).IsInstanceOf<byte[]>();
-            Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(6);
+            Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(94);
             Check.That(val.VKRecord.ValueDataRaw.Length).IsEqualTo(14);
             Check.That(val.VKRecord.ToString()).IsNotEmpty();
         }

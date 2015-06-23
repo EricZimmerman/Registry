@@ -100,6 +100,14 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldFind4HitsFor320033003200InValueDataSlack()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueDataSlack("32-00-33-00-32-00").ToList();
+
+            Check.That(hits.Count).IsEqualTo(6);
+        }
+
+        [Test]
         public void ShouldFind4HitsForPostboxURLInValueData()
         {
             var hits = TestSetup.UsrClass1.FindInValueData("Postbox URL").ToList();

@@ -475,22 +475,14 @@ namespace Registry.Cells
             get
             {
                 var dbRaw = DataBlockRaw;
-
-                //we can determine max slack size since all data cells are a multiple of 8 bytes long
-                //we know how long our data should be from the vk record (dataLengthInternal).
-                //we add 4 to account for the length of where the value lives, then divide by 8 and round up.
-                //this number * 8 is the maximum size the data record should be to hold the value.
-                //take away what we used (dataLengthInternal) and then account for our offset to said data (internalDataOffset)
-                var maxSlackSize = Math.Ceiling((double)(_dataLengthInternal + 4) / 8) * 8 - _dataLengthInternal -
-                                   _internalDataOffset;
-
-
+             
                 if (dbRaw.Length > _dataLengthInternal + _internalDataOffset)
                 {
+                    var slackStart = (int) (_dataLengthInternal + _internalDataOffset);
+                    var slackLen = dbRaw.Length - slackStart;
 
                     return
-                        new ArraySegment<byte>(DataBlockRaw, (int) (_dataLengthInternal + _internalDataOffset),
-                            (int) (Math.Abs(maxSlackSize))).ToArray();
+                      new ArraySegment<byte>(DataBlockRaw, slackStart,slackLen).ToArray();
                 }
 
                 return new byte[0];

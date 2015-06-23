@@ -1140,5 +1140,29 @@ namespace Registry
                 }
             }
         }
+
+        public IEnumerable<SearchHit> FindInValueDataSlack(string searchTerm, bool useRegEx = false)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                foreach (var keyValue in registryKey.Value.Values)
+                {
+                    if (useRegEx)
+                    {
+                        if (Regex.IsMatch(keyValue.ValueSlack, searchTerm, RegexOptions.IgnoreCase))
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
+                    }
+                    else
+                    {
+                        if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            yield return new SearchHit(registryKey.Value, keyValue);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
