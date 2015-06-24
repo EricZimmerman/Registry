@@ -102,7 +102,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFind4HitsFor320033003200InValueDataSlack()
         {
-            var hits = TestSetup.UsrClass1.FindInValueDataSlack("32-00-33-00-32-00").ToList();
+            var hits = TestSetup.UsrClass1.FindInValueDataSlack("32-00-33-00-32-00",false,true).ToList();
 
             Check.That(hits.Count).IsEqualTo(6);
         }
