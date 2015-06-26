@@ -157,6 +157,10 @@ namespace Registry.Test
             var hits = TestSetup.UsrClass1.FindInValueData("43-74-53-83-24-55-30").ToList();
 
             Check.That(hits.Count).IsEqualTo(6);
+
+            hits = TestSetup.UsrClass1.FindInValueData("DeB").ToList();
+
+            Check.That(hits.Count).IsEqualTo(28);
         }
 
         [Test]

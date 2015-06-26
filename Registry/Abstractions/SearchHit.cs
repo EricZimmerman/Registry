@@ -11,13 +11,15 @@ namespace Registry.Abstractions
     {
         public RegistryKey Key { get; }
         public KeyValue Value { get; }
+        public String HitString { get; }
 
         public bool StripRootKeyName { get; set; }
 
-       public SearchHit(RegistryKey key, KeyValue value)
+       public SearchHit(RegistryKey key, KeyValue value, string hitstring)
        {
            Key = key;
            Value = value;
+           HitString = hitstring;
        }
 
         public override string ToString()
@@ -30,10 +32,10 @@ namespace Registry.Abstractions
 
            if (Value != null)
            {
-               return $"{kp} Value: {Value.ValueName}";
+               return $"{kp} Hit string: {HitString} Value: {Value.ValueName}";
            }
-           
-            return kp;
+
+            return $"{kp} Hit string: {HitString}";
         }
     }
 }

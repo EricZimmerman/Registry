@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1052,14 +1053,14 @@ namespace Registry
                 {
                     if (Regex.IsMatch(registryKey.Value.KeyName, searchTerm, RegexOptions.IgnoreCase))
                     {
-                        yield return new SearchHit(registryKey.Value, null);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm);
                     }
                 }
                 else
                 {
                     if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        yield return new SearchHit(registryKey.Value, null);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm);
                     }
                 }
             }
@@ -1073,21 +1074,21 @@ namespace Registry
                 {
                     if (start <= registryKey.Value.LastWriteTime && registryKey.Value.LastWriteTime <= end)
                     {
-                        yield return new SearchHit(registryKey.Value, null);
+                        yield return new SearchHit(registryKey.Value, null, null);
                     }
                 }
                 else if (end != null)
                 {
                     if (registryKey.Value.LastWriteTime < end)
                     {
-                        yield return new SearchHit(registryKey.Value, null);
+                        yield return new SearchHit(registryKey.Value, null, null);
                     }
                 }
                 else if (start != null)
                 {
                     if (registryKey.Value.LastWriteTime > start)
                     {
-                        yield return new SearchHit(registryKey.Value, null);
+                        yield return new SearchHit(registryKey.Value, null, null);
                     }
                 }
             }
@@ -1103,14 +1104,14 @@ namespace Registry
                     {
                         if (Regex.IsMatch(keyValue.ValueName, searchTerm, RegexOptions.IgnoreCase))
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                         }
                     }
                     else
                     {
                         if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                         }
                     }
                 }
@@ -1119,13 +1120,6 @@ namespace Registry
 
         public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false, bool literal = false)
         {
-            var hex = Encoding.ASCII.GetBytes(searchTerm);
-
-            var asAscii = BitConverter.ToString(hex);
-
-            hex = Encoding.Unicode.GetBytes(searchTerm);
-            var asUnicode = BitConverter.ToString(hex);
-
             foreach (var registryKey in KeyPathKeyMap)
             {
                 foreach (var keyValue in registryKey.Value.Values)
@@ -1134,28 +1128,69 @@ namespace Registry
                     {
                         if (Regex.IsMatch(keyValue.ValueData, searchTerm, RegexOptions.IgnoreCase))
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                         }
                     }
                     else
                     {
+                        //plaintext matching
                         if (keyValue.ValueData.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                         }
 
                         if (literal)
                         {
                             continue;
                         }
-                        if (keyValue.ValueData.IndexOf(asAscii, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            yield return new SearchHit(registryKey.Value, keyValue);
-                        }
 
-                        if (keyValue.ValueData.IndexOf(asUnicode, StringComparison.OrdinalIgnoreCase) >= 0)
+                        string asAscii = keyValue.ValueData;
+                        string asUnicode = keyValue.ValueData;
+
+                        if (keyValue.VKRecord.DataType == VKCellRecord.DataTypeEnum.RegBinary)
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            //this takes the raw bytes and converts it to a string, which we can then search
+                            //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
+                            //and match against the raw data
+                            asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueDataRaw);
+                            asUnicode = Encoding.Unicode.GetString(keyValue.ValueDataRaw);
+
+                            string hitString = string.Empty;
+                            try
+                            {
+                                hitString = Regex.Match(asAscii, searchTerm, RegexOptions.IgnoreCase).Value;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Syntax error in the regular expression
+                            }
+
+                            if (hitString.Length > 0)
+                            {
+                                var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
+                                
+                                            var asciiHit = BitConverter.ToString(asciihex);
+                                yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
+                            }
+
+                             hitString = string.Empty;
+                            try
+                            {
+                                hitString = Regex.Match(asUnicode, searchTerm, RegexOptions.IgnoreCase).Value;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Syntax error in the regular expression
+                            }
+
+                            if (hitString.Length <= 0)
+                            {
+                                continue;
+                            }
+                            var unicodehex = Encoding.Unicode.GetBytes(hitString);
+
+                            var unicodeHit = BitConverter.ToString(unicodehex);
+                            yield return new SearchHit(registryKey.Value, keyValue, unicodeHit);
                         }
                     }
                 }
@@ -1165,13 +1200,6 @@ namespace Registry
         public IEnumerable<SearchHit> FindInValueDataSlack(string searchTerm, bool useRegEx = false,
             bool literal = false)
         {
-            var hex = Encoding.ASCII.GetBytes(searchTerm);
-
-            var asAscii = BitConverter.ToString(hex);
-
-            hex = Encoding.Unicode.GetBytes(searchTerm);
-            var asUnicode = BitConverter.ToString(hex);
-
             foreach (var registryKey in KeyPathKeyMap)
             {
                 foreach (var keyValue in registryKey.Value.Values)
@@ -1180,7 +1208,7 @@ namespace Registry
                     {
                         if (Regex.IsMatch(keyValue.ValueSlack, searchTerm, RegexOptions.IgnoreCase))
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue);
+                            yield return new SearchHit(registryKey.Value, keyValue,searchTerm);
                         }
                     }
                     else
@@ -1189,20 +1217,53 @@ namespace Registry
                         {
                             if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                yield return new SearchHit(registryKey.Value, keyValue);
+                                yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                             }
                         }
                         else
                         {
-                            if (keyValue.ValueSlack.IndexOf(asAscii, StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                yield return new SearchHit(registryKey.Value, keyValue);
-                            }
+                                //this takes the raw bytes and converts it to a string, which we can then search
+                                //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
+                                //and match against the raw data
+                              var  asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueSlackRaw);
+                           var     asUnicode = Encoding.Unicode.GetString(keyValue.ValueSlackRaw);
 
-                            if (keyValue.ValueSlack.IndexOf(asUnicode, StringComparison.OrdinalIgnoreCase) >= 0)
+                                string hitString = string.Empty;
+                                try
+                                {
+                                    hitString = Regex.Match(asAscii, searchTerm, RegexOptions.IgnoreCase).Value;
+                                }
+                                catch (ArgumentException)
+                                {
+                                    // Syntax error in the regular expression
+                                }
+
+                                if (hitString.Length > 0)
+                                {
+                                    var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
+
+                                    var asciiHit = BitConverter.ToString(asciihex);
+                                    yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
+                                }
+
+                                hitString = string.Empty;
+                                try
+                                {
+                                    hitString = Regex.Match(asUnicode, searchTerm, RegexOptions.IgnoreCase).Value;
+                                }
+                                catch (ArgumentException)
+                                {
+                                    // Syntax error in the regular expression
+                                }
+
+                            if (hitString.Length <= 0)
                             {
-                                yield return new SearchHit(registryKey.Value, keyValue);
+                                continue;
                             }
+                            var unicodehex = Encoding.Unicode.GetBytes(hitString);
+
+                            var unicodeHit = BitConverter.ToString(unicodehex);
+                            yield return new SearchHit(registryKey.Value, keyValue, unicodeHit);
                         }
                     }
                 }
