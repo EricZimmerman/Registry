@@ -443,15 +443,26 @@ namespace Registry.Cells
         public byte[] ValueDataRaw {
             get
             {
+                
+
                 byte[] ret= new byte[0];
 
                 if (_dataLengthInternal + _internalDataOffset > DataBlockRaw.Length)
                 {
                     //we don't have enough data to copy, so take what we can get
+
                     if (DataBlockRaw.Length > 0)
                     {
-                        return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
+                        try
+                        {
+                            return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
                                     DataBlockRaw.Length - _internalDataOffset).ToArray();
+                        }
+                        catch (Exception)
+                        {
+                            //In case it goes real sideways
+                            return new byte[0];
+                        }
                     }
                 }
                 else
