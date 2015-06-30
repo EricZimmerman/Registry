@@ -316,7 +316,7 @@ namespace Registry.Other
                         //check what is before that to see if its 0x00 or 0xFF
                         if (remainingData[i - 2] == 0x00 || remainingData[i - 2] == 0xFF)
                         {
-                            //winner! since we initially hit on ZZ, substract 5 to get to the beginning of the record, XX XX XX XX YY ZZ
+                            //winner! since we initially hit on ZZ, subtract 5 to get to the beginning of the record, XX XX XX XX YY ZZ
                             offsetList2.Add(i - 5); 
                         }
                     }
