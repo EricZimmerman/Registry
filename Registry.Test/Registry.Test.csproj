@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Registry.Test</RootNamespace>
     <AssemblyName>Registry.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -63,12 +63,6 @@
     <Compile Include="TestVKCellRecord.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Registry\Registry.csproj">
-      <Project>{5c40be24-a89d-4973-b668-2d6e945cb047}</Project>
-      <Name>Registry</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Hives\Acronis_0x52_Usrclass.dat" />
     <None Include="Hives\BCD" />
     <None Include="Hives\DRIVERS" />
@@ -98,6 +92,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Registry\Registry.csproj">
+      <Project>{5c40be24-a89d-4973-b668-2d6e945cb047}</Project>
+      <Name>Registry</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
