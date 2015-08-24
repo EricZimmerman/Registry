@@ -58,6 +58,7 @@
     <Compile Include="TestRegistryHive.cs" />
     <Compile Include="TestRegistryHiveOnDemand.cs" />
     <Compile Include="TestRegistryOther.cs" />
+    <Compile Include="TestRegistrySkeleton.cs" />
     <Compile Include="TestSetup.cs" />
     <Compile Include="TestSKCellRecord.cs" />
     <Compile Include="TestVKCellRecord.cs" />

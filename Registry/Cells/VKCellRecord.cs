@@ -230,6 +230,8 @@ namespace Registry.Cells
             
             DataOffsets = new List<ulong>();
 
+            OffsetToData = BitConverter.ToUInt32(RawBytes, 0x0c);
+
             _dataLengthInternal = DataLength;
         
             //if the high bit is set, data lives in the field used to typically hold the OffsetToData Value
@@ -309,7 +311,7 @@ namespace Registry.Cells
         ///         determined by subtracting 0x80000000
         ///     </remarks>
         /// </summary>
-        public uint OffsetToData => BitConverter.ToUInt32(RawBytes, 0x0c);
+        public uint OffsetToData { get; internal set; }
 
         /// <summary>
         ///     The normalized Value of this value record. This is what is visible under the 'Data' column in RegEdit
