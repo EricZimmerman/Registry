@@ -32,14 +32,14 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E",true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E",true);
             
             var added= rs.AddEntry(sk);
 
             Check.That(added).IsTrue();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            sk = new SkeletonKey(@"path\does\not\exist",false);
+            sk = new SkeletonKeyRoot(@"path\does\not\exist",false);
 
             added = rs.AddEntry(sk);
 
@@ -52,7 +52,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"path\does\not\exist", false);
+            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
 
             var added = rs.RemoveEntry(sk);
 
@@ -65,21 +65,21 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
 
             var added = rs.AddEntry(sk);
 
             Check.That(added).IsTrue();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            sk = new SkeletonKey(@"path\does\not\exist", false);
+            sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
 
             added = rs.AddEntry(sk);
 
             Check.That(added).IsFalse();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            var sk1 = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk1 = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
 
             added = rs.AddEntry(sk1);
 
@@ -92,7 +92,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
 
             var added = rs.AddEntry(sk);
 
@@ -110,7 +110,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"path\does\not\exist", false);
+            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
 
             var added = rs.AddEntry(sk);
 
@@ -131,7 +131,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
 
             rs.AddEntry(sk);
 
@@ -146,7 +146,19 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKey(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true); 
+
+            rs.AddEntry(sk);
+            
+            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows", true);
+            
+            rs.AddEntry(sk);
+            
+            sk = new SkeletonKeyRoot(@"VirtualStore\MACHINE", true);
+            
+            rs.AddEntry(sk);
+
+            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true);
 
             rs.AddEntry(sk);
 
@@ -159,16 +171,20 @@ namespace Registry.Test
             var newReg = new RegistryHive(outPath);
             newReg.ParseHive();
 
-            var key = newReg.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
+            var key = newReg.GetKey(@"Local Settings\MuiCache\6"); 
 
             Check.That(key).IsNotNull();
             
-            Check.That(key.LastWriteTime.Value.Year).IsEqualTo(2015);
-            Check.That(key.LastWriteTime.Value.Month).IsEqualTo(2);
-            Check.That(key.LastWriteTime.Value.Day).IsEqualTo(1);
-            Check.That(key.LastWriteTime.Value.Hour).IsEqualTo(7);
-            Check.That(key.LastWriteTime.Value.Minute).IsEqualTo(15);
-            Check.That(key.LastWriteTime.Value.Second).IsEqualTo(5);
+            Check.That(key.LastWriteTime.Value.Year).IsEqualTo(2011);
+            Check.That(key.LastWriteTime.Value.Month).IsEqualTo(9);
+            Check.That(key.LastWriteTime.Value.Day).IsEqualTo(19);
+            Check.That(key.LastWriteTime.Value.Hour).IsEqualTo(19);
+            Check.That(key.LastWriteTime.Value.Minute).IsEqualTo(2);
+            Check.That(key.LastWriteTime.Value.Second).IsEqualTo(8);
+
+            key = newReg.GetKey(@"Local Settings\MuiCache\6\52C64B7E"); 
+
+            Check.That(key).IsNotNull();
 
             Check.That(key.Values.Count).IsEqualTo(163);
 

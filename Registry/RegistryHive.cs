@@ -206,11 +206,18 @@ namespace Registry
 
             _logger.Debug("Looking for sk record at relative offset 0x{0:X}", key.NKRecord.SecurityCellIndex);
 
-            var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
-            sk.IsReferenced = true;
+            if (CellRecords.ContainsKey(key.NKRecord.SecurityCellIndex))
+            {
+                var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
+                if (sk != null)
+                {
+                    sk.IsReferenced = true;
+                }
+            }
+
 
             //TODO THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
-            if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
+            if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false )
             {
                 return keys;
             }
