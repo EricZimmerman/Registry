@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NFluent;
 using Registry.Cells;
 using Registry.Lists;
 
@@ -13,9 +12,21 @@ namespace Registry
 {
     public class RegistrySkeleton
     {
+        private const int SecurityOffset = 0x30;
+        private const int SubkeyCountStableOffset = 0x18;
+        private const int SubkeyListStableCellIndex = 0x20;
+        private const int ValueListCellIndex = 0x2C;
+        private const int ParentCellIndex = 0x14;
+        private const int ValueDataOffset = 0x0C;
         private readonly RegistryHive _hive;
 
         private readonly List<SkeletonKeyRoot> _keys;
+
+        private byte[] _hbin = new byte[0];
+
+        private uint _relativeOffset;
+
+        private uint currentOffsetInHbin = 0x20;
 
         public RegistrySkeleton(RegistryHive hive)
         {
@@ -44,16 +55,18 @@ namespace Registry
                 return false;
             }
 
+            if (key.KeyPath.StartsWith(_hive.Root.KeyName) == false)
+            {
+                var newKeyPath = $"{_hive.Root.KeyName}\\{key.KeyPath}";
+                var tempKey = new SkeletonKeyRoot(newKeyPath, key.AddValues);
+                key = tempKey;
+            }
+
             var intKey = _keys.SingleOrDefault(t => t.KeyPath == key.KeyPath);
 
             if (intKey == null)
             {
-                if (key.KeyPath.StartsWith(_hive.Root.KeyName) == false)
-                {
-                    var newKeyPath = $"{_hive.Root.KeyName}\\{key.KeyPath}";
-                    var tempKey = new SkeletonKeyRoot(newKeyPath,key.AddValues);
-                    key = tempKey;
-                }
+               
 
                 _keys.Add(key);
             }
@@ -82,8 +95,6 @@ namespace Registry
             return true;
         }
 
-        private uint _relativeOffset = 0;
-
         private byte[] GetEmptyHbin(uint size)
         {
             var newHbin = new byte[size];
@@ -94,19 +105,15 @@ namespace Registry
             newHbin[2] = 0x69;
             newHbin[3] = 0x6E;
 
-            BitConverter.GetBytes(_relativeOffset).CopyTo(newHbin,0x4);
+            BitConverter.GetBytes(_relativeOffset).CopyTo(newHbin, 0x4);
             _relativeOffset += size;
 
-            BitConverter.GetBytes(size).CopyTo(newHbin,0x8); //size
+            BitConverter.GetBytes(size).CopyTo(newHbin, 0x8); //size
 
             BitConverter.GetBytes(DateTimeOffset.UtcNow.ToFileTime()).CopyTo(newHbin, 0x14); //last write
 
             return newHbin;
         }
-
-        uint currentOffsetInHbin = 0x20;
-
-        private byte[] _hbin = new byte[0];
 
         public bool Write(string outHive)
         {
@@ -115,25 +122,20 @@ namespace Registry
                 throw new InvalidOperationException("At least one SkeletonKey must be added before calling Write");
             }
 
-           // var b = new byte[] {0x01,0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02};
-
             if (File.Exists(outHive))
             {
                 File.Delete(outHive);
             }
 
             _hbin = _hbin.Concat(GetEmptyHbin(0x1000)).ToArray();
-            
+
 
             var treeKey = BuildKeyTree();
-            
-            ProcessSkeletonKey(treeKey,-1);
 
+            ProcessSkeletonKey(treeKey, -1);
 
-                        //mark remaining hbin as free
-                        BitConverter.GetBytes(_hbin.Length - currentOffsetInHbin).CopyTo(_hbin,currentOffsetInHbin);
-
-
+            //mark remaining hbin as free
+            BitConverter.GetBytes(_hbin.Length - currentOffsetInHbin).CopyTo(_hbin, currentOffsetInHbin);
 
             //work is done, get header, update rootcelloffset, adjust its length to match new hbin length, and write it out
 
@@ -143,28 +145,22 @@ namespace Registry
 
             var outBytes = headerBytes.Concat(_hbin).ToArray();
 
-            File.WriteAllBytes(outHive,outBytes);
+            File.WriteAllBytes(outHive, outBytes);
 
             return true;
         }
-
-        const int SecurityOffset = 0x30;
-        const int SubkeyCountStableOffset = 0x18;
-        const int SubkeyListStableCellIndex = 0x20;
-        const int ValueListCellIndex = 0x2C;
-        const int ParentCellIndex = 0x14;
-        const int ValueDataOffset = 0x0C;
 
         private void CheckhbinSize(int recordSize)
         {
             if (currentOffsetInHbin + recordSize > _hbin.Length)
             {
                 //we need to add another hbin
+
                 //set remaining space to free record
                 BitConverter.GetBytes(_hbin.Length - currentOffsetInHbin).CopyTo(_hbin, currentOffsetInHbin);
 
                 //go to end of current _hbin
-                currentOffsetInHbin = (uint)_hbin.Length;
+                currentOffsetInHbin = (uint) _hbin.Length;
 
 
                 //this is where to check for record size and adjust size below accordingly!!
@@ -183,7 +179,7 @@ namespace Registry
             //get nk record bytes
             var key = _hive.GetKey(treeKey.KeyPath);
 
-            
+
             //this is where we will be placing our record
             var nkOffset = currentOffsetInHbin;
 
@@ -195,14 +191,14 @@ namespace Registry
             if ((key.NKRecord.Flags & NKCellRecord.FlagEnum.HiveEntryRootKey) != NKCellRecord.FlagEnum.HiveEntryRootKey)
             {
                 //update parent offset
-                BitConverter.GetBytes(parentIndex).CopyTo(nkBytes,ParentCellIndex);
+                BitConverter.GetBytes(parentIndex).CopyTo(nkBytes, ParentCellIndex);
             }
 
             //For now, Update security cell index to 0x0
-            BitConverter.GetBytes(0).CopyTo(nkBytes,SecurityOffset);
+            BitConverter.GetBytes(0).CopyTo(nkBytes, SecurityOffset);
 
 
-            BitConverter.GetBytes(treeKey.Subkeys.Count).CopyTo(nkBytes,SubkeyCountStableOffset);
+            BitConverter.GetBytes(treeKey.Subkeys.Count).CopyTo(nkBytes, SubkeyCountStableOffset);
 
             var subkeyOffsets = new Dictionary<uint, string>();
 
@@ -218,7 +214,7 @@ namespace Registry
                 }
 
                 //generate list for key offsets
-                subkeyOffsets.Add(offset,hash);
+                subkeyOffsets.Add(offset, hash);
             }
 
             if (subkeyOffsets.Count > 0)
@@ -227,10 +223,10 @@ namespace Registry
                 var list = BuildlfList(subkeyOffsets, currentOffsetInHbin);
 
                 CheckhbinSize(list.RawBytes.Length);
-                list.RawBytes.CopyTo(_hbin,currentOffsetInHbin);
+                list.RawBytes.CopyTo(_hbin, currentOffsetInHbin);
 
                 //update SubkeyListStableCellIndex in nkrecord
-                BitConverter.GetBytes(currentOffsetInHbin).CopyTo(nkBytes,SubkeyListStableCellIndex);
+                BitConverter.GetBytes(currentOffsetInHbin).CopyTo(nkBytes, SubkeyListStableCellIndex);
 
                 currentOffsetInHbin += (uint) list.RawBytes.Length;
             }
@@ -248,38 +244,36 @@ namespace Registry
                 {
                     var vkBytes = keyValue.VKRecord.RawBytes;
 
-                    if (keyValue.VKRecord.ValueName == "@C:\\Windows\\system32\\themeui.dll,-2682")
-                    {
-                        Debug.WriteLine(1);
-                        
-                    }
+//                    if (keyValue.VKRecord.ValueName == "@C:\\Windows\\system32\\themeui.dll,-2682")
+//                    {
+//                        Debug.WriteLine("Debug trap");
+//                    }
 
                     if ((keyValue.VKRecord.DataLength & DWORD_SIGN_MASK) != DWORD_SIGN_MASK)
                     {
                         //non-resident data, so write out the data and update the vkrecords pointer to said data
 
                         var dataraw = keyValue.ValueDataRaw.Concat(keyValue.ValueSlackRaw).ToArray();
-                        
+
                         var datarawBytes = new byte[4 + dataraw.Length];
 
-                        BitConverter.GetBytes(-1 * datarawBytes.Length).CopyTo(datarawBytes,0);
-                        dataraw.CopyTo(datarawBytes,4);
+                        BitConverter.GetBytes(-1*datarawBytes.Length).CopyTo(datarawBytes, 0);
+                        dataraw.CopyTo(datarawBytes, 4);
 
-                       CheckhbinSize(datarawBytes.Length);
-                        datarawBytes.CopyTo(_hbin,currentOffsetInHbin);
+                        CheckhbinSize(datarawBytes.Length);
+                        datarawBytes.CopyTo(_hbin, currentOffsetInHbin);
 
                         BitConverter.GetBytes(currentOffsetInHbin).CopyTo(vkBytes, ValueDataOffset);
 
-                        currentOffsetInHbin +=(uint)datarawBytes.Length;
+                        currentOffsetInHbin += (uint) datarawBytes.Length;
                     }
 
                     CheckhbinSize(vkBytes.Length);
-                    vkBytes.CopyTo(_hbin, (int)currentOffsetInHbin);
+                    vkBytes.CopyTo(_hbin, (int) currentOffsetInHbin);
 
                     valueOffsets.Add(currentOffsetInHbin);
 
-                    currentOffsetInHbin += (uint)vkBytes.Length;
-                    
+                    currentOffsetInHbin += (uint) vkBytes.Length;
                 }
 
                 var valListSize = 4 + valueOffsets.Count*4;
@@ -290,23 +284,23 @@ namespace Registry
 
                 var offsetListBytes = new byte[valListSize];
 
-                BitConverter.GetBytes(-1 * valListSize).CopyTo(offsetListBytes,0);
+                BitConverter.GetBytes(-1*valListSize).CopyTo(offsetListBytes, 0);
 
                 var index = 4;
                 foreach (var valueOffset in valueOffsets)
                 {
-                    BitConverter.GetBytes(valueOffset).CopyTo(offsetListBytes,index);
+                    BitConverter.GetBytes(valueOffset).CopyTo(offsetListBytes, index);
                     index += 4;
                 }
 
                 CheckhbinSize(offsetListBytes.Length);
-                offsetListBytes.CopyTo(_hbin,currentOffsetInHbin);
+                offsetListBytes.CopyTo(_hbin, currentOffsetInHbin);
 
                 BitConverter.GetBytes(currentOffsetInHbin).CopyTo(nkBytes, ValueListCellIndex);
 
                 currentOffsetInHbin += (uint) offsetListBytes.Length;
 
-                Trace.Assert(offsetListBytes.Count() % 8 == 0);
+                Trace.Assert(offsetListBytes.Count()%8 == 0);
 
                 //foreach value in key.values
                 //get vk record
@@ -325,21 +319,19 @@ namespace Registry
             //commit our nk record to hbin
             CheckhbinSize(nkBytes.Length);
             nkBytes.CopyTo(_hbin, nkOffset);
-
-
+            
             return nkOffset;
-
         }
 
-        private LxListRecord BuildlfList(Dictionary<uint,string> subkeyInfo, long offset)
-        { 
-            var totalSize = 4 + 2 + 2 + subkeyInfo.Count * 8; //size + sig + num entries + bytes for list itself
+        private LxListRecord BuildlfList(Dictionary<uint, string> subkeyInfo, long offset)
+        {
+            var totalSize = 4 + 2 + 2 + subkeyInfo.Count*8; //size + sig + num entries + bytes for list itself
 
-            var listBytes = new byte[totalSize]; 
-            
-            BitConverter.GetBytes(-1 * totalSize).CopyTo(listBytes, 0);
+            var listBytes = new byte[totalSize];
+
+            BitConverter.GetBytes(-1*totalSize).CopyTo(listBytes, 0);
             Encoding.ASCII.GetBytes("lf").CopyTo(listBytes, 4);
-            BitConverter.GetBytes((short)subkeyInfo.Count).CopyTo(listBytes, 6);
+            BitConverter.GetBytes((short) subkeyInfo.Count).CopyTo(listBytes, 6);
 
             var index = 0x8;
 
@@ -360,7 +352,7 @@ namespace Registry
 
             foreach (var keyRoot in _keys)
             {
-                SkeletonKey current = root;
+                var current = root;
 
                 //need to make sure root key name is at beginning of each
 
@@ -376,7 +368,7 @@ namespace Registry
 
                     if (root == null)
                     {
-                        root = new SkeletonKey(seg,seg,withVals);
+                        root = new SkeletonKey(seg, seg, withVals);
                         current = root;
                         continue;
                     }
@@ -397,11 +389,9 @@ namespace Registry
                         withVals = keyRoot.AddValues;
                     }
 
-                    var sk = new SkeletonKey($"{current.KeyPath}\\{seg}", seg,withVals);
+                    var sk = new SkeletonKey($"{current.KeyPath}\\{seg}", seg, withVals);
                     current.Subkeys.Add(sk);
                     current = sk;
-
-                 
                 }
             }
 

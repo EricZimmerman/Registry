@@ -228,7 +228,7 @@ namespace Registry.Cells
 
             _rawBytesLength = recordSize;
             
-            DataOffsets = new List<ulong>();
+            DataOffsets = new HashSet<ulong>();
 
             OffsetToData = BitConverter.ToUInt32(RawBytes, 0x0c);
 
@@ -288,7 +288,7 @@ namespace Registry.Cells
         ///     A list of offsets to data records.
         ///     <remarks>This is used to mark each Data record's IsReferenced property to true</remarks>
         /// </summary>
-        public List<ulong> DataOffsets { get;  private set;}
+        public HashSet<ulong> DataOffsets { get;  private set;}
 
         // public properties...
         public uint DataLength => BitConverter.ToUInt32(RawBytes, 0x08);
