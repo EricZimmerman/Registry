@@ -167,6 +167,46 @@ namespace Registry.Test
 
             Check.That(val).IsNotNull();
             Check.That(val.ValueDataRaw.Length).IsEqualTo(52526);
+            Check.That(val.ValueSlackRaw.Length).IsEqualTo(13014);
+
+        }
+
+        [Test]
+        public void RecursiveCase()
+        {
+            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+
+            var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\Bags", true, true);
+
+            rs.AddEntry(sk);
+
+            var outPath = @"C:\temp\recursivetest.bin";
+
+            var write = rs.Write(outPath);
+
+            Check.That(write).IsTrue();
+
+            var newReg = new RegistryHive(outPath);
+          
+            newReg.ParseHive();
+
+            var key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\3\Shell\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
+
+            Check.That(key).IsNotNull();
+
+            var val = key.Values.Single(t => t.ValueName == "FFlags");
+
+            Check.That(val).IsNotNull();
+
+             key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
+
+            Check.That(key).IsNotNull();
+
+             val = key.Values.Single(t => t.ValueName == "ShowCmd");
+
+            Check.That(val).IsNotNull();
+            Check.That(val.ValueDataRaw.Length).IsEqualTo(4);
+
 
         }
 
