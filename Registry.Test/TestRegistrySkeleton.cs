@@ -32,14 +32,14 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E",true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E",true,false);
             
             var added= rs.AddEntry(sk);
 
             Check.That(added).IsTrue();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            sk = new SkeletonKeyRoot(@"path\does\not\exist",false);
+            sk = new SkeletonKeyRoot(@"path\does\not\exist",false, false);
 
             added = rs.AddEntry(sk);
 
@@ -52,7 +52,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
+            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
             var added = rs.RemoveEntry(sk);
 
@@ -65,21 +65,21 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
             var added = rs.AddEntry(sk);
 
             Check.That(added).IsTrue();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
+            sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
             added = rs.AddEntry(sk);
 
             Check.That(added).IsFalse();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            var sk1 = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk1 = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
             added = rs.AddEntry(sk1);
 
@@ -92,7 +92,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
             var added = rs.AddEntry(sk);
 
@@ -110,7 +110,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false);
+            var sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
             var added = rs.AddEntry(sk);
 
@@ -131,7 +131,7 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
             rs.AddEntry(sk);
 
@@ -146,19 +146,19 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true); 
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false); 
 
             rs.AddEntry(sk);
             
-            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows", true);
+            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows", true, false);
             
             rs.AddEntry(sk);
             
-            sk = new SkeletonKeyRoot(@"VirtualStore\MACHINE", true);
+            sk = new SkeletonKeyRoot(@"VirtualStore\MACHINE", true, false);
             
             rs.AddEntry(sk);
 
-            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true);
+            sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true, false);
 
             rs.AddEntry(sk);
 
