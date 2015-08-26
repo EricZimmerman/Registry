@@ -48,6 +48,13 @@ namespace Registry
 
             if (intKey == null)
             {
+                if (key.KeyPath.StartsWith(_hive.Root.KeyName) == false)
+                {
+                    var newKeyPath = $"{_hive.Root.KeyName}\\{key.KeyPath}";
+                    var tempKey = new SkeletonKeyRoot(newKeyPath,key.AddValues);
+                    key = tempKey;
+                }
+
                 _keys.Add(key);
             }
 
@@ -56,6 +63,13 @@ namespace Registry
 
         public bool RemoveEntry(SkeletonKeyRoot key)
         {
+            if (key.KeyPath.StartsWith(_hive.Root.KeyName) == false)
+            {
+                var newKeyPath = $"{_hive.Root.KeyName}\\{key.KeyPath}";
+                var tempKey = new SkeletonKeyRoot(newKeyPath, key.AddValues);
+                key = tempKey;
+            }
+
             var intKey = _keys.SingleOrDefault(t => t.KeyPath == key.KeyPath);
 
             if (intKey == null)
@@ -70,9 +84,9 @@ namespace Registry
 
         private uint _relativeOffset = 0;
 
-        private byte[] GetEmptyHbin()
+        private byte[] GetEmptyHbin(uint size)
         {
-            var newHbin = new byte[4096];
+            var newHbin = new byte[size];
 
             //signature 'hbin'
             newHbin[0] = 0x68;
@@ -81,9 +95,9 @@ namespace Registry
             newHbin[3] = 0x6E;
 
             BitConverter.GetBytes(_relativeOffset).CopyTo(newHbin,0x4);
-            _relativeOffset += 0x1000;
+            _relativeOffset += size;
 
-            BitConverter.GetBytes(0x1000).CopyTo(newHbin,0x8); //size
+            BitConverter.GetBytes(size).CopyTo(newHbin,0x8); //size
 
             BitConverter.GetBytes(DateTimeOffset.UtcNow.ToFileTime()).CopyTo(newHbin, 0x14); //last write
 
@@ -108,7 +122,7 @@ namespace Registry
                 File.Delete(outHive);
             }
 
-            _hbin = _hbin.Concat(GetEmptyHbin()).ToArray();
+            _hbin = _hbin.Concat(GetEmptyHbin(0x1000)).ToArray();
             
 
             var treeKey = BuildKeyTree();
@@ -116,35 +130,6 @@ namespace Registry
             ProcessSkeletonKey(treeKey,-1);
 
 
-
-            //it should return the offset to the list to replace Subkey list stable cell index (Offset 0x20)
-
-            //when done, update root nk record bytes and write out to 0x20;
-
-            //            //add treekey subkeys
-            //            foreach (var skeletonKey in treeKey.Subkeys)
-            //            {
-            //               // var key = _hive.GetKey("S-1-5-21-146151751-63468248-1215037915-1000_Classes");
-            //                //var key = _hive.GetKey(skeletonKey.KeyPath);
-            //
-            //                if (skeletonKey.AddValues)
-            //                {
-            //                    //dump vals
-            //                }
-            //
-            //                key.NKRecord.RawBytes.CopyTo(hbin,currentOffsetInHbin);
-            //
-            //
-            //
-            //                currentOffsetInHbin += key.NKRecord.RawBytes.Length;
-            //
-            //                //need to track in here when we are out of space in current hbin.
-            //                //must set hbin slack to free data record
-            //
-            //
-            //            }
-            //
-            //            //hack
                         //mark remaining hbin as free
                         BitConverter.GetBytes(_hbin.Length - currentOffsetInHbin).CopyTo(_hbin,currentOffsetInHbin);
 
@@ -181,8 +166,12 @@ namespace Registry
                 //go to end of current _hbin
                 currentOffsetInHbin = (uint)_hbin.Length;
 
+
+                //this is where to check for record size and adjust size below accordingly!!
+                //TODO FINISH THIS
+
                 //add more space
-                _hbin = _hbin.Concat(GetEmptyHbin()).ToArray();
+                _hbin = _hbin.Concat(GetEmptyHbin(0x1000)).ToArray();
 
                 //move pointer to next usable space
                 currentOffsetInHbin += 0x20;
@@ -367,40 +356,52 @@ namespace Registry
 
         private SkeletonKey BuildKeyTree()
         {
-            var root=new SkeletonKey(_hive.Root.KeyName, _hive.Root.KeyName, false);
+            SkeletonKey root = null;
 
             foreach (var keyRoot in _keys)
             {
+                SkeletonKey current = root;
+
+                //need to make sure root key name is at beginning of each
+
                 var segs = keyRoot.KeyPath.Split('\\');
 
-                var home = root;
-
-
-                var counter = 1;
+                var withVals = false;
                 foreach (var seg in segs)
                 {
-                  
-                    var withVals = false;
+                    if (seg == segs.Last())
+                    {
+                        withVals = keyRoot.AddValues;
+                    }
+
+                    if (root == null)
+                    {
+                        root = new SkeletonKey(seg,seg,withVals);
+                        current = root;
+                        continue;
+                    }
+
+                    if (current.KeyName == segs.First() && seg == segs.First())
+                    {
+                        continue;
+                    }
+
+                    if (current.Subkeys.Any(t => t.KeyName == seg))
+                    {
+                        current = current.Subkeys.Single(t => t.KeyName == seg);
+                        continue;
+                    }
 
                     if (seg == segs.Last())
                     {
                         withVals = keyRoot.AddValues;
                     }
 
-                    var sk = new SkeletonKey($"{_hive.Root.KeyName}\\{string.Join("\\", segs.Take(counter))}", seg, withVals);
+                    var sk = new SkeletonKey($"{current.KeyPath}\\{seg}", seg,withVals);
+                    current.Subkeys.Add(sk);
+                    current = sk;
 
-                    
-
-                    if (home.Subkeys.Any(t => t.KeyName == seg))
-                    {
-                        home = home.Subkeys.Single(t => t.KeyName == seg);
-                    }
-                    
-                    
-                    home.Subkeys.Add(sk);
-
-                    home = sk;
-                    counter += 1;
+                 
                 }
             }
 
