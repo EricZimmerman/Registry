@@ -142,6 +142,36 @@ namespace Registry.Test
         }
 
         [Test]
+        public void BigDataCase()
+        {
+            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+
+            var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify", true, false);
+
+            rs.AddEntry(sk);
+
+            var outPath = @"C:\temp\bigdatatest.bin";
+
+            var write = rs.Write(outPath);
+
+            Check.That(write).IsTrue();
+
+            var newReg = new RegistryHive(outPath);
+            newReg.ParseHive();
+
+            var key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
+
+            Check.That(key).IsNotNull();
+
+            var val = key.Values.Single(t => t.ValueName == "PastIconsStream");
+
+            Check.That(val).IsNotNull();
+            Check.That(val.ValueDataRaw.Length).IsEqualTo(52526);
+
+        }
+
+
+        [Test]
         public void WrittenHiveShouldContain163ValuesInMuiCacheSubkey()
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
@@ -162,7 +192,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"C:\temp\foo.bin";
+            var outPath = @"C:\temp\valuetest.bin";
             
             var write = rs.Write(outPath);
 

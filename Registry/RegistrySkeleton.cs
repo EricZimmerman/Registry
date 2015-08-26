@@ -173,11 +173,12 @@ namespace Registry
                 //go to end of current _hbin
                 currentOffsetInHbin = (uint) _hbin.Length;
 
-                //this is where to check for record size and adjust size below accordingly!!
-                //TODO FINISH THIS
+                //we have to make our hbin at least as big as the data that needs to go in it, so figure that out
+                var hbinBaseSize = (int) Math.Ceiling((double)recordSize/(double)4096);
+                var hbinSize = hbinBaseSize* 0x1000;
 
                 //add more space
-                _hbin = _hbin.Concat(GetEmptyHbin(0x1000)).ToArray();
+                _hbin = _hbin.Concat(GetEmptyHbin((uint) hbinSize)).ToArray();
 
                 //move pointer to next usable space
                 currentOffsetInHbin += 0x20;
@@ -291,6 +292,101 @@ namespace Registry
                         if (keyValue.VKRecord.DataLength > 16344)
                         {
                             //big data case
+                            //get data and slack
+                            //split into 16344 chunks
+                            //add 4 bytes of padding at the end of each chunk
+                            //this makes each chunk 16348 of data plus 4 bytes at front for size (16352 total)
+                            //write out data chunks, keeping a record of where they went
+                            //build db list
+                            //point vk record ValueDataOffset to this location
+
+                            var dataraw = keyValue.ValueDataRaw.Concat(keyValue.ValueSlackRaw).ToArray();
+
+                            var pos = 0;
+
+                            var chunks = new List<byte[]>();
+
+                            while (pos < dataraw.Length)
+                            {
+                                if (dataraw.Length - pos < 16344)
+                                {
+                                    //we are out of data
+                                    chunks.Add(dataraw.Skip(pos).Take(dataraw.Length - pos).ToArray());
+                                    pos = dataraw.Length;
+
+                                }
+
+                                chunks.Add(dataraw.Skip(pos).Take(16344).ToArray());
+                                pos += 16344;
+
+                            }
+
+                            var dbOffsets = new List<uint>();
+
+                            foreach (var chunk in chunks)
+                            {
+                                var rawChunk = chunk.Concat(new byte[4]).ToArray(); //add our extra 4 bytes at the end
+                                var toWrite = BitConverter.GetBytes(-1 * (rawChunk.Length + 4)).Concat(rawChunk).ToArray(); //add the size
+
+                                CheckhbinSize(toWrite.Length);
+                                toWrite.CopyTo(_hbin, currentOffsetInHbin);
+
+                                dbOffsets.Add(currentOffsetInHbin);
+
+                                currentOffsetInHbin += (uint)toWrite.Length;
+                            }
+
+                           
+
+                            //next is the list itself of offsets to the data chunks
+
+                            var offsetSize = 4 + (dbOffsets.Count*4); //size itself plus a slot for each offset
+
+                            if ( (4 + offsetSize) % 8 != 0)
+                            {
+                                offsetSize += 4;
+                            }
+
+                            var offsetList = BitConverter.GetBytes(-1 * offsetSize).Concat(new byte[(dbOffsets.Count * 4)]).ToArray();
+
+                            var i = 1;
+                            foreach (var dbo in dbOffsets)
+                            {
+                                BitConverter.GetBytes(dbo).CopyTo(offsetList,i * 4);
+                                i += 1;
+                            }
+
+                            //write offsetList to hbin
+                            CheckhbinSize(offsetList.Length);
+
+                            var offsetOffset = currentOffsetInHbin;
+
+                            offsetList.CopyTo(_hbin, offsetOffset);
+                            currentOffsetInHbin += (uint) offsetList.Length;
+
+
+                     
+
+                            //all the data is written, build a dblist to reference it
+                            //db list is just an offset to offsets
+                            //size db #entries offset
+
+                            var dbRaw =
+                                BitConverter.GetBytes(-16)
+                                    .Concat(Encoding.ASCII.GetBytes("db"))
+                                    .Concat(
+                                        BitConverter.GetBytes((short)dbOffsets.Count)
+                                            .Concat(BitConverter.GetBytes(offsetOffset))).Concat(new byte[4])
+                                            .ToArray();
+
+                            var dbOffset = currentOffsetInHbin;
+                            CheckhbinSize(dbRaw.Length);
+                            dbRaw.CopyTo(_hbin, dbOffset);
+
+                            currentOffsetInHbin += (uint)dbRaw.Length;
+
+                            BitConverter.GetBytes(dbOffset).CopyTo(vkBytes, ValueDataOffset);
+
                         }
                         else
                         {
@@ -318,8 +414,8 @@ namespace Registry
                     currentOffsetInHbin += (uint) vkBytes.Length;
                 }
 
-                var valListSize = 4 + valueOffsets.Count*4;
-                if (valListSize%8 != 0)
+                var valListSize = 4 + valueOffsets.Count * 4;
+                if (valListSize % 8 != 0)
                 {
                     valListSize += 4;
                 }
