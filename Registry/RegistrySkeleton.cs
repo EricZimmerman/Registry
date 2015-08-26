@@ -19,6 +19,7 @@ namespace Registry
         private const int ParentCellIndex = 0x14;
         private const int ValueDataOffset = 0x0C;
         private const int HeaderMinorVersion = 0x18;
+        private const int CheckSumOffset = 0x1fc;
 
         private readonly RegistryHive _hive;
 
@@ -149,6 +150,18 @@ namespace Registry
 
             BitConverter.GetBytes(_hbin.Length).CopyTo(headerBytes, 0x28);
             BitConverter.GetBytes(5).CopyTo(headerBytes,HeaderMinorVersion);
+
+            //update checksum
+            var index = 0;
+            var xsum = 0;
+            while (index <= 0x1fb)
+            {
+                xsum ^= BitConverter.ToInt32(headerBytes, index);
+                index += 0x04;
+            }
+            var newcs = xsum;
+
+            BitConverter.GetBytes(newcs).CopyTo(headerBytes, CheckSumOffset);
 
             var outBytes = headerBytes.Concat(_hbin).ToArray();
 
