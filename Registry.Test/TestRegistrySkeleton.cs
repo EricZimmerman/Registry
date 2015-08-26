@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using NFluent;
 using NUnit.Framework;
 
 namespace Registry.Test
 {
-    class TestRegistrySkeleton
+    internal class TestRegistrySkeleton
     {
-
         [Test]
         public void ShouldCreateRegistrySkeleton()
         {
@@ -32,14 +26,14 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E",true,false);
-            
-            var added= rs.AddEntry(sk);
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
+
+            var added = rs.AddEntry(sk);
 
             Check.That(added).IsTrue();
             Check.That(rs.Keys.Count).IsEqualTo(1);
 
-            sk = new SkeletonKeyRoot(@"path\does\not\exist",false, false);
+            sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
             added = rs.AddEntry(sk);
 
@@ -121,9 +115,11 @@ namespace Registry.Test
         [Test]
         public void ShouldThrowExceptionIfWriteCalledWithNoKeysAdded()
         {
-            Check.ThatCode(() => { var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
-                                     rs.Write(@"C:\temp\foo.bin");
-            }).Throws<InvalidOperationException>();//ncrunch: no coverage
+            Check.ThatCode(() =>
+            {
+                var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+                rs.Write(@"C:\temp\foo.bin");
+            }).Throws<InvalidOperationException>(); //ncrunch: no coverage
         }
 
         [Test]
@@ -138,7 +134,6 @@ namespace Registry.Test
             var write = rs.Write(@"C:\temp\foo.bin");
 
             Check.That(write).IsTrue();
-
         }
 
         [Test]
@@ -146,7 +141,8 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify", true, false);
+            var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify", true,
+                false);
 
             rs.AddEntry(sk);
 
@@ -168,7 +164,6 @@ namespace Registry.Test
             Check.That(val).IsNotNull();
             Check.That(val.ValueDataRaw.Length).IsEqualTo(52526);
             Check.That(val.ValueSlackRaw.Length).IsEqualTo(13014);
-
         }
 
         [Test]
@@ -187,10 +182,12 @@ namespace Registry.Test
             Check.That(write).IsTrue();
 
             var newReg = new RegistryHive(outPath);
-          
+
             newReg.ParseHive();
 
-            var key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\3\Shell\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
+            var key =
+                newReg.GetKey(
+                    @"Local Settings\Software\Microsoft\Windows\Shell\Bags\3\Shell\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
 
             Check.That(key).IsNotNull();
 
@@ -198,16 +195,14 @@ namespace Registry.Test
 
             Check.That(val).IsNotNull();
 
-             key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
+            key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
 
             Check.That(key).IsNotNull();
 
-             val = key.Values.Single(t => t.ValueName == "ShowCmd");
+            val = key.Values.Single(t => t.ValueName == "ShowCmd");
 
             Check.That(val).IsNotNull();
             Check.That(val.ValueDataRaw.Length).IsEqualTo(4);
-
-
         }
 
 
@@ -216,16 +211,16 @@ namespace Registry.Test
         {
             var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
 
-            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false); 
+            var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
             rs.AddEntry(sk);
-            
+
             sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows", true, false);
-            
+
             rs.AddEntry(sk);
-            
+
             sk = new SkeletonKeyRoot(@"VirtualStore\MACHINE", true, false);
-            
+
             rs.AddEntry(sk);
 
             sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true, false);
@@ -233,7 +228,7 @@ namespace Registry.Test
             rs.AddEntry(sk);
 
             var outPath = @"C:\temp\valuetest.bin";
-            
+
             var write = rs.Write(outPath);
 
             Check.That(write).IsTrue();
@@ -241,10 +236,10 @@ namespace Registry.Test
             var newReg = new RegistryHive(outPath);
             newReg.ParseHive();
 
-            var key = newReg.GetKey(@"Local Settings\MuiCache\6"); 
+            var key = newReg.GetKey(@"Local Settings\MuiCache\6");
 
             Check.That(key).IsNotNull();
-            
+
             Check.That(key.LastWriteTime.Value.Year).IsEqualTo(2011);
             Check.That(key.LastWriteTime.Value.Month).IsEqualTo(9);
             Check.That(key.LastWriteTime.Value.Day).IsEqualTo(19);
@@ -252,26 +247,26 @@ namespace Registry.Test
             Check.That(key.LastWriteTime.Value.Minute).IsEqualTo(2);
             Check.That(key.LastWriteTime.Value.Second).IsEqualTo(8);
 
-            key = newReg.GetKey(@"Local Settings\MuiCache\6\52C64B7E"); 
+            key = newReg.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
 
             Check.That(key).IsNotNull();
 
             Check.That(key.Values.Count).IsEqualTo(163);
-
         }
 
-        //        [Test]
-        //        public void ShouldGenerateValidRegMultiSzValue()
-        //        {
-        //            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
-        //            var key = TestSetup.UsrclassDeleted.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
-        //
-        //            var val = key.Values.Single(t => t.ValueName == "LanguageList");
+        //            Check.That(val.ValueData).IsEqualTo("en-US en");
+        //            Check.That(val.ValueName).IsEqualTo("LanguageList");
         //
         //            Check.That(val).IsNotNull();
         //
-        //            Check.That(val.ValueName).IsEqualTo("LanguageList");
-        //            Check.That(val.ValueData).IsEqualTo("en-US en");
+        //            var val = key.Values.Single(t => t.ValueName == "LanguageList");
+        //
+        //            var key = TestSetup.UsrclassDeleted.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
+        //            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
+        //        {
+        //        public void ShouldGenerateValidRegMultiSzValue()
+
+        //        [Test]
         //
         //            //This is what the record looks like from the hive itself
         //            var vkHash = GetSha256(val.VKRecord.RawBytes);
