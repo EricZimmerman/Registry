@@ -21,18 +21,18 @@ internal class Options
 
     [Option('a', DefaultValue = false, Required = false,
         HelpText = "If true, only recovered deleted keys/values will be exported")]
-
     public bool ExportDeletedOnly { get; set; }
 
     [Option('r', DefaultValue = false, Required = false,
-    HelpText = "If true, recover and process deleted Registry keys/values")]
+        HelpText = "If true, recover and process deleted Registry keys/values")]
     public bool RecoverDeleted { get; set; }
 
     [Option('v', DefaultValue = 0, Required = false,
-HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
+        HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
     public int VerboseLevel { get; set; }
 
-    [Option('y', DefaultValue = false, Required = false, HelpText = "If false, lists containing cell record and lists will be flushed at the end of parsing")]
+    [Option('y', DefaultValue = false, Required = false,
+        HelpText = "If false, lists containing cell record and lists will be flushed at the end of parsing")]
     public bool DontFlushLists { get; set; }
 
     public string GetUsage()

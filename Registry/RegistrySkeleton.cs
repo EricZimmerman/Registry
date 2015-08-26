@@ -26,11 +26,13 @@ namespace Registry
 
         private readonly List<SkeletonKeyRoot> _keys;
 
+        private uint _currentOffsetInHbin = 0x20;
+
         private byte[] _hbin = new byte[0];
 
         private uint _relativeOffset;
 
-        private uint _currentOffsetInHbin = 0x20;
+        private readonly Dictionary<long, uint> _skMap = new Dictionary<long, uint>();
 
         public RegistrySkeleton(RegistryHive hive)
         {
@@ -74,17 +76,15 @@ namespace Registry
 
                 if (key.Recursive)
                 {
-                // for each subkey in hivekey, create another skr and add it
+                    // for each subkey in hivekey, create another skr and add it
                     var subs = GetSubkeyNames(hiveKey);
 
                     foreach (var sub in subs)
                     {
-                        var subsk = new SkeletonKeyRoot(sub,true,false);
+                        var subsk = new SkeletonKeyRoot(sub, true, false);
                         _keys.Add(subsk);
                     }
                 }
-                
-                
             }
 
             return true;
@@ -176,7 +176,7 @@ namespace Registry
             var headerBytes = _hive.ReadBytesFromHive(0, 0x1000);
 
             BitConverter.GetBytes(_hbin.Length).CopyTo(headerBytes, 0x28);
-            BitConverter.GetBytes(5).CopyTo(headerBytes,HeaderMinorVersion);
+            BitConverter.GetBytes(5).CopyTo(headerBytes, HeaderMinorVersion);
 
             //update checksum
             var index = 0;
@@ -214,8 +214,8 @@ namespace Registry
                 _currentOffsetInHbin = (uint) _hbin.Length;
 
                 //we have to make our hbin at least as big as the data that needs to go in it, so figure that out
-                var hbinBaseSize = (int) Math.Ceiling((double)recordSize/(double)4096);
-                var hbinSize = hbinBaseSize* 0x1000;
+                var hbinBaseSize = (int) Math.Ceiling(recordSize/(double) 4096);
+                var hbinSize = hbinBaseSize*0x1000;
 
                 //add more space
                 _hbin = _hbin.Concat(GetEmptyHbin((uint) hbinSize)).ToArray();
@@ -224,8 +224,6 @@ namespace Registry
                 _currentOffsetInHbin += 0x20;
             }
         }
-
-        private Dictionary<long, uint> _skMap = new Dictionary<long, uint>();
 
         private uint ProcessSkeletonKey(SkeletonKey treeKey, long parentIndex)
         {
@@ -250,7 +248,7 @@ namespace Registry
             //Get Security record
             //BitConverter.GetBytes(0).CopyTo(nkBytes, SecurityOffset);
             var sk = _hive.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
-            
+
             if (_skMap.ContainsKey(sk.RelativeOffset))
             {
                 //sk is already in _hbin
@@ -264,11 +262,9 @@ namespace Registry
 
                 var skOffset = _currentOffsetInHbin;
                 _skMap.Add(sk.RelativeOffset, skOffset);
-                _currentOffsetInHbin += (uint)sk.RawBytes.Length;
+                _currentOffsetInHbin += (uint) sk.RawBytes.Length;
                 BitConverter.GetBytes(skOffset).CopyTo(nkBytes, SecurityOffset);
             }
-
-
 
 
             BitConverter.GetBytes(treeKey.Subkeys.Count).CopyTo(nkBytes, SubkeyCountStableOffset);
@@ -353,12 +349,10 @@ namespace Registry
                                     //we are out of data
                                     chunks.Add(dataraw.Skip(pos).Take(dataraw.Length - pos).ToArray());
                                     pos = dataraw.Length;
-
                                 }
 
                                 chunks.Add(dataraw.Skip(pos).Take(16344).ToArray());
                                 pos += 16344;
-
                             }
 
                             var dbOffsets = new List<uint>();
@@ -366,33 +360,34 @@ namespace Registry
                             foreach (var chunk in chunks)
                             {
                                 var rawChunk = chunk.Concat(new byte[4]).ToArray(); //add our extra 4 bytes at the end
-                                var toWrite = BitConverter.GetBytes(-1 * (rawChunk.Length + 4)).Concat(rawChunk).ToArray(); //add the size
+                                var toWrite = BitConverter.GetBytes(-1*(rawChunk.Length + 4)).Concat(rawChunk).ToArray();
+                                    //add the size
 
                                 CheckhbinSize(toWrite.Length);
                                 toWrite.CopyTo(_hbin, _currentOffsetInHbin);
 
                                 dbOffsets.Add(_currentOffsetInHbin);
 
-                                _currentOffsetInHbin += (uint)toWrite.Length;
+                                _currentOffsetInHbin += (uint) toWrite.Length;
                             }
 
-                           
 
                             //next is the list itself of offsets to the data chunks
 
                             var offsetSize = 4 + (dbOffsets.Count*4); //size itself plus a slot for each offset
 
-                            if ( (4 + offsetSize) % 8 != 0)
+                            if ((4 + offsetSize)%8 != 0)
                             {
                                 offsetSize += 4;
                             }
 
-                            var offsetList = BitConverter.GetBytes(-1 * offsetSize).Concat(new byte[(dbOffsets.Count * 4)]).ToArray();
+                            var offsetList =
+                                BitConverter.GetBytes(-1*offsetSize).Concat(new byte[(dbOffsets.Count*4)]).ToArray();
 
                             var i = 1;
                             foreach (var dbo in dbOffsets)
                             {
-                                BitConverter.GetBytes(dbo).CopyTo(offsetList,i * 4);
+                                BitConverter.GetBytes(dbo).CopyTo(offsetList, i*4);
                                 i += 1;
                             }
 
@@ -405,8 +400,6 @@ namespace Registry
                             _currentOffsetInHbin += (uint) offsetList.Length;
 
 
-                     
-
                             //all the data is written, build a dblist to reference it
                             //db list is just an offset to offsets
                             //size db #entries offset
@@ -415,18 +408,17 @@ namespace Registry
                                 BitConverter.GetBytes(-16)
                                     .Concat(Encoding.ASCII.GetBytes("db"))
                                     .Concat(
-                                        BitConverter.GetBytes((short)dbOffsets.Count)
+                                        BitConverter.GetBytes((short) dbOffsets.Count)
                                             .Concat(BitConverter.GetBytes(offsetOffset))).Concat(new byte[4])
-                                            .ToArray();
+                                    .ToArray();
 
                             var dbOffset = _currentOffsetInHbin;
                             CheckhbinSize(dbRaw.Length);
                             dbRaw.CopyTo(_hbin, dbOffset);
 
-                            _currentOffsetInHbin += (uint)dbRaw.Length;
+                            _currentOffsetInHbin += (uint) dbRaw.Length;
 
                             BitConverter.GetBytes(dbOffset).CopyTo(vkBytes, ValueDataOffset);
-
                         }
                         else
                         {
@@ -454,8 +446,8 @@ namespace Registry
                     _currentOffsetInHbin += (uint) vkBytes.Length;
                 }
 
-                var valListSize = 4 + valueOffsets.Count * 4;
-                if (valListSize % 8 != 0)
+                var valListSize = 4 + valueOffsets.Count*4;
+                if (valListSize%8 != 0)
                 {
                     valListSize += 4;
                 }
@@ -497,7 +489,7 @@ namespace Registry
             //commit our nk record to hbin
             CheckhbinSize(nkBytes.Length);
             nkBytes.CopyTo(_hbin, nkOffset);
-            
+
             return nkOffset;
         }
 

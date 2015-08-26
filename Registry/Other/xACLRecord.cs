@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NFluent;
 
 // namespaces...
 
@@ -43,8 +42,9 @@ namespace Registry.Other
                 for (var i = 0; i < AceCount; i++)
                 {
                     if (index > RawBytes.Length)
-                    {                   //ncrunch: no coverage
-                        break;          //ncrunch: no coverage
+                    {
+                        //ncrunch: no coverage
+                        break; //ncrunch: no coverage
                     }
                     var aceSize = RawBytes[index + 2];
                     var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
@@ -76,8 +76,8 @@ namespace Registry.Other
 
         public ushort AclSize => BitConverter.ToUInt16(RawBytes, 0x2);
 
-        public ACLTypeEnum ACLType { get;  private set;}
-        public byte[] RawBytes { get;  private set;}
+        public ACLTypeEnum ACLType { get; }
+        public byte[] RawBytes { get; }
 
         public byte Sbz1 => RawBytes[1];
 

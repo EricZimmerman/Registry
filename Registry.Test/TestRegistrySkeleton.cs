@@ -254,19 +254,19 @@ namespace Registry.Test
             Check.That(key.Values.Count).IsEqualTo(163);
         }
 
-        //            Check.That(val.ValueData).IsEqualTo("en-US en");
-        //            Check.That(val.ValueName).IsEqualTo("LanguageList");
-        //
-        //            Check.That(val).IsNotNull();
+        //        [Test]
+        //        public void ShouldGenerateValidRegMultiSzValue()
+        //        {
+        //            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
+        //            var key = TestSetup.UsrclassDeleted.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
         //
         //            var val = key.Values.Single(t => t.ValueName == "LanguageList");
         //
-        //            var key = TestSetup.UsrclassDeleted.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
-        //            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
-        //        {
-        //        public void ShouldGenerateValidRegMultiSzValue()
+        //            Check.That(val).IsNotNull();
+        //
+        //            Check.That(val.ValueName).IsEqualTo("LanguageList");
 
-        //        [Test]
+        //            Check.That(val.ValueData).IsEqualTo("en-US en");
         //
         //            //This is what the record looks like from the hive itself
         //            var vkHash = GetSha256(val.VKRecord.RawBytes);

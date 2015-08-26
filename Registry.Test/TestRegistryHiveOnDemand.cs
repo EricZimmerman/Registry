@@ -26,17 +26,6 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldProcessLiListRecord()
-        {
-            var key =
-                TestSetup.UsrClass1OnDemand.GetKey(
-                    @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\\ActivatableClasses\\Package\\Microsoft.BingSports_3.0.4.244_x64__8wekyb3d8bbwe\\ActivatableClassId");
-
-            Check.That(key).IsNotNull();
-            Check.That(key.NKRecord.SubkeyCountsStable).IsEqualTo((uint)0x224);
-        }
-
-        [Test]
         public void GetKeyShouldNotBeNullWithShortPath()
         {
             var key = TestSetup.SamOnDemand.GetKey(@"SAM\Domains\Account");
@@ -45,19 +34,22 @@ namespace Registry.Test
         }
 
         [Test]
-        public void TestFileNameConstructor()
-        {
-            var r = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-
-            Check.That(r.Header).IsNotNull();
-        }
-
-        [Test]
         public void GetKeyShouldNotBeNullWithShortPathMixedSpelling()
         {
             var key = TestSetup.SamOnDemand.GetKey(@"SAM\DomAins\AccoUnt");
 
             Check.That(key).IsNotNull();
+        }
+
+        [Test]
+        public void ShouldProcessLiListRecord()
+        {
+            var key =
+                TestSetup.UsrClass1OnDemand.GetKey(
+                    @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\\ActivatableClasses\\Package\\Microsoft.BingSports_3.0.4.244_x64__8wekyb3d8bbwe\\ActivatableClassId");
+
+            Check.That(key).IsNotNull();
+            Check.That(key.NKRecord.SubkeyCountsStable).IsEqualTo((uint) 0x224);
         }
 
         [Test]
@@ -78,6 +70,14 @@ namespace Registry.Test
             Check.That(r.Header).IsNotNull();
             Check.That(r.HivePath).IsEqualTo("None");
             Check.That(r.HiveType).IsEqualTo(HiveTypeEnum.Sam);
+        }
+
+        [Test]
+        public void TestFileNameConstructor()
+        {
+            var r = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+
+            Check.That(r.Header).IsNotNull();
         }
 
         [Test]

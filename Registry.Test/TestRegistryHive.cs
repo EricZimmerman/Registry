@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using NFluent;
 using NLog;
-using NLog.Config;
-using NLog.Targets;
 using NUnit.Framework;
 
 namespace Registry.Test
@@ -20,34 +18,58 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFindFiveValuesForSize4096()
+        public void CheckHardAndSoftParsingErrors()
         {
-            var keys = TestSetup.UsrClass1.FindByValueSize(4096).ToList();
-
-            Check.That(keys.Count).IsEqualTo(5);
+            Check.That(TestSetup.Sam.SoftParsingErrors).IsEqualTo(0);
+            Check.That(TestSetup.Sam.HardParsingErrors).IsEqualTo(0);
         }
 
         [Test]
-        public void ShouldFindTwoValuesForSize100000()
+        public void HBinSizeShouldMatchReadSize()
         {
-            var keys = TestSetup.UsrClass1.FindByValueSize(100000).ToList();
-
-            Check.That(keys.Count).IsEqualTo(2);
+            Check.That(TestSetup.Sam.Header.Length).IsEqualTo(TestSetup.Sam.HBinRecordTotalSize);
         }
 
         [Test]
-        public void ShouldHaveGoodRegMultiSz()
+        public void HBinSizeShouldNotMatchReadSize()
         {
-            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
-            var key = TestSetup.UsrclassDeleted.GetKey(@"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E");
+            var r = new RegistryHive(@"..\..\Hives\SAM_DUPENAME");
+            //if you don't call parse, it wont match
 
-            var val = key.Values.Single(t => t.ValueName == "LanguageList");
+            Check.That(r.Header.Length).IsNotEqualTo(r.HBinRecordTotalSize);
+        }
 
-            Check.That(val).IsNotNull();
 
-            Check.That(val.ValueName).IsEqualTo("LanguageList");
-            Check.That(val.ValueData).IsEqualTo("en-US en");
+        [Test]
+        public void RecoverDeletedShouldBeTrue()
+        {
+            TestSetup.Sam.RecoverDeleted = true;
 
+            Check.That(TestSetup.Sam.RecoverDeleted).IsEqualTo(true);
+            TestSetup.Sam.RecoverDeleted = false;
+        }
+
+
+        [Test]
+        public void ShouldExportFileAllRecords()
+        {
+            TestSetup.UsrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedNoDeletedStuff.txt", false);
+
+            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
+        }
+
+        [Test]
+        public void ShouldExportFileDeletedRecords()
+        {
+            TestSetup.UsrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedDeletedStuff.txt", true);
+
+            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
+        }
+
+        [Test]
+        public void ShouldExportHiveWithRootValues()
+        {
+            TestSetup.SamRootValue.ExportDataToCommonFormat(@"SamRootValueNoDeletedStuff.txt", false);
         }
 
         [Test]
@@ -64,30 +86,6 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFind32HitsForFoodInKeyName()
-        {
-            var hits = TestSetup.UsrClass1.FindInKeyName("food").ToList();
-
-            Check.That(hits.Count).IsEqualTo(32);
-        }
-
-        [Test]
-        public void ShouldFindThreeHitsForMuiCacheInKeyName()
-        {
-            var hits = TestSetup.UsrClass1.FindInKeyName("MuiCache").ToList();
-
-            Check.That(hits.Count).IsEqualTo(3);
-        }
-
-        [Test]
-        public void ShouldFindNoHitsForZimmermanInKeyName()
-        {
-            var hits = TestSetup.UsrClass1.FindInKeyName("Zimmerman").ToList();
-
-            Check.That(hits.Count).IsEqualTo(0);
-        }
-
-        [Test]
         public void ShouldFind100HitsForURLInKeyAndValueName()
         {
             var keyHits = TestSetup.UsrClass1.FindInKeyName("URL").ToList();
@@ -100,55 +98,37 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldFind1248AfterTimeStamp()
+        {
+            var dt = new DateTimeOffset(2014, 11, 13, 15, 51, 17, TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime(dt, null).ToList();
+
+            Check.That(hits.Count).IsEqualTo(14);
+        }
+
+        [Test]
+        public void ShouldFind1544eforeTimeStamp()
+        {
+            var dt = new DateTimeOffset(2014, 5, 20, 14, 19, 40, TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime(null, dt).ToList();
+
+            Check.That(hits.Count).IsEqualTo(21);
+        }
+
+        [Test]
+        public void ShouldFind32HitsForFoodInKeyName()
+        {
+            var hits = TestSetup.UsrClass1.FindInKeyName("food").ToList();
+
+            Check.That(hits.Count).IsEqualTo(32);
+        }
+
+        [Test]
         public void ShouldFind4HitsFor320033003200InValueDataSlack()
         {
-            var hits = TestSetup.UsrClass1.FindInValueDataSlack("32-00-33-00-32-00",false,true).ToList();
+            var hits = TestSetup.UsrClass1.FindInValueDataSlack("32-00-33-00-32-00", false, true).ToList();
 
             Check.That(hits.Count).IsEqualTo(6);
-        }
-
-        [Test]
-        public void ShouldFind4HitsForPostboxURLInValueData()
-        {
-            var hits = TestSetup.UsrClass1.FindInValueData("Postbox URL").ToList();
-
-            Check.That(hits.Count).IsEqualTo(4);
-        }
-
-        [Test]
-        public void ShouldFind4HitsForBingXInValueDataWithRegEx()
-        {
-            var hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhs]",true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(3);
-
-             hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhts]", true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(4);
-        }
-
-        [Test]
-        public void ShouldFind4HitsForBingXInKeyNamesWithRegEx()
-        {
-            var hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]", true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(44);
-
-            hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]o", true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(11);
-        }
-
-        [Test]
-        public void ShouldFindHitsValueNamesWithRegEx()
-        {
-            var hits = TestSetup.UsrClass1.FindInValueName("(App|Display)Name", true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(326);
-
-            hits = TestSetup.UsrClass1.FindInValueName("Capability(Co|Si)", true).ToList();
-
-            Check.That(hits.Count).IsEqualTo(66);
         }
 
         [Test]
@@ -188,93 +168,35 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFind1544eforeTimeStamp()
+        public void ShouldFind4HitsForBingXInKeyNamesWithRegEx()
         {
-            var dt = new DateTimeOffset(2014, 5, 20, 14, 19, 40, TimeSpan.FromSeconds(0));
-            var hits = TestSetup.UsrClass1.FindByLastWriteTime(null, dt).ToList();
+            var hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]", true).ToList();
 
-            Check.That(hits.Count).IsEqualTo(21);
+            Check.That(hits.Count).IsEqualTo(44);
+
+            hits = TestSetup.UsrClass1.FindInKeyName("Microsoft.Bing[FHW]o", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(11);
         }
 
         [Test]
-        public void ShouldFind1248AfterTimeStamp()
+        public void ShouldFind4HitsForBingXInValueDataWithRegEx()
         {
-            var dt = new DateTimeOffset(2014, 11, 13, 15, 51, 17, TimeSpan.FromSeconds(0));
-            var hits = TestSetup.UsrClass1.FindByLastWriteTime( dt, null).ToList();
+            var hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhs]", true).ToList();
 
-            Check.That(hits.Count).IsEqualTo(14);
+            Check.That(hits.Count).IsEqualTo(3);
+
+            hits = TestSetup.UsrClass1.FindInValueData("URL:bing[mhts]", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(4);
         }
 
         [Test]
-        public void ShouldFindTwoBetweenTimeStamp()
+        public void ShouldFind4HitsForPostboxURLInValueData()
         {
-            var start = new DateTimeOffset(2014, 5, 20, 19,00,00, TimeSpan.FromSeconds(0));
-            var end = new DateTimeOffset(2014, 5, 20, 23, 59, 59, TimeSpan.FromSeconds(0));
-            var hits = TestSetup.UsrClass1.FindByLastWriteTime(start, end).ToList();
+            var hits = TestSetup.UsrClass1.FindInValueData("Postbox URL").ToList();
 
-            Check.That(hits.Count).IsEqualTo(2);
-        }
-
-        [Test]
-        public void ShouldThrowExceptionWhenCallingParseHiveTwice()
-        {
-            Check.ThatCode(() => { var r = new RegistryHive(@"..\..\Hives\SAMBadHBinHeader"); r.ParseHive(); r.ParseHive(); }).Throws<Exception>();
-        }
-
-        [Test]
-        public void CheckHardAndSoftParsingErrors()
-        {
-            Check.That(TestSetup.Sam.SoftParsingErrors).IsEqualTo(0);
-            Check.That(TestSetup.Sam.HardParsingErrors).IsEqualTo(0);
-        }
-
-        [Test]
-        public void HBinSizeShouldMatchReadSize()
-        {
-            Check.That(TestSetup.Sam.Header.Length).IsEqualTo(TestSetup.Sam.HBinRecordTotalSize);
-        }
-
-        [Test]
-        public void HBinSizeShouldNotMatchReadSize()
-        {
-            var r = new RegistryHive(@"..\..\Hives\SAM_DUPENAME");
-            //if you don't call parse, it wont match
-
-            Check.That(r.Header.Length).IsNotEqualTo(r.HBinRecordTotalSize);
-        }
-
-       
-
-        [Test]
-        public void RecoverDeletedShouldBeTrue()
-        {
-            TestSetup.Sam.RecoverDeleted = true;
-
-            Check.That(TestSetup.Sam.RecoverDeleted).IsEqualTo(true);
-            TestSetup.Sam.RecoverDeleted = false;
-        }
-
-        [Test]
-        public void ShouldExportHiveWithRootValues()
-        {
-            TestSetup.SamRootValue.ExportDataToCommonFormat(@"SamRootValueNoDeletedStuff.txt", false);
-        }
-
-
-        [Test]
-        public void ShouldExportFileAllRecords()
-        {
-            TestSetup.UsrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedNoDeletedStuff.txt", false);
-
-            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
-        }
-
-        [Test]
-        public void ShouldExportFileDeletedRecords()
-        {
-            TestSetup.UsrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedDeletedStuff.txt", true);
-
-            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
+            Check.That(hits.Count).IsEqualTo(4);
         }
 
         [Test]
@@ -296,9 +218,23 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldHaveHeaderLengthEqualToReadDataSize()
+        public void ShouldFindFiveValuesForSize4096()
         {
-            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
+            var keys = TestSetup.UsrClass1.FindByValueSize(4096).ToList();
+
+            Check.That(keys.Count).IsEqualTo(5);
+        }
+
+        [Test]
+        public void ShouldFindHitsValueNamesWithRegEx()
+        {
+            var hits = TestSetup.UsrClass1.FindInValueName("(App|Display)Name", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(326);
+
+            hits = TestSetup.UsrClass1.FindInValueName("Capability(Co|Si)", true).ToList();
+
+            Check.That(hits.Count).IsEqualTo(66);
         }
 
         [Test]
@@ -320,10 +256,66 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ShouldFindNoHitsForZimmermanInKeyName()
+        {
+            var hits = TestSetup.UsrClass1.FindInKeyName("Zimmerman").ToList();
+
+            Check.That(hits.Count).IsEqualTo(0);
+        }
+
+        [Test]
+        public void ShouldFindThreeHitsForMuiCacheInKeyName()
+        {
+            var hits = TestSetup.UsrClass1.FindInKeyName("MuiCache").ToList();
+
+            Check.That(hits.Count).IsEqualTo(3);
+        }
+
+        [Test]
+        public void ShouldFindTwoBetweenTimeStamp()
+        {
+            var start = new DateTimeOffset(2014, 5, 20, 19, 00, 00, TimeSpan.FromSeconds(0));
+            var end = new DateTimeOffset(2014, 5, 20, 23, 59, 59, TimeSpan.FromSeconds(0));
+            var hits = TestSetup.UsrClass1.FindByLastWriteTime(start, end).ToList();
+
+            Check.That(hits.Count).IsEqualTo(2);
+        }
+
+        [Test]
+        public void ShouldFindTwoValuesForSize100000()
+        {
+            var keys = TestSetup.UsrClass1.FindByValueSize(100000).ToList();
+
+            Check.That(keys.Count).IsEqualTo(2);
+        }
+
+        [Test]
+        public void ShouldHaveGoodRegMultiSz()
+        {
+            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
+            var key =
+                TestSetup.UsrclassDeleted.GetKey(
+                    @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E");
+
+            var val = key.Values.Single(t => t.ValueName == "LanguageList");
+
+            Check.That(val).IsNotNull();
+
+            Check.That(val.ValueName).IsEqualTo("LanguageList");
+            Check.That(val.ValueData).IsEqualTo("en-US en");
+        }
+
+        [Test]
         public void ShouldHaveHardAndSoftParsingValuesOfZero()
         {
             Check.That(TestSetup.Sam.HardParsingErrors).IsEqualTo(0);
             Check.That(TestSetup.Sam.SoftParsingErrors).IsEqualTo(0);
+        }
+
+        [Test]
+        public void ShouldHaveHeaderLengthEqualToReadDataSize()
+        {
+            Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
         }
 
         [Test]
@@ -366,13 +358,32 @@ namespace Registry.Test
         [Test]
         public void ShouldThrowExceptionNoRootKey()
         {
-            Check.ThatCode(() =>{var r = new RegistryHive(@"..\..\Hives\SECURITYNoRoot");r.ParseHive();}).Throws<KeyNotFoundException>();
+            Check.ThatCode(() =>
+            {
+                var r = new RegistryHive(@"..\..\Hives\SECURITYNoRoot");
+                r.ParseHive();
+            }).Throws<KeyNotFoundException>();
+        }
+
+        [Test]
+        public void ShouldThrowExceptionWhenCallingParseHiveTwice()
+        {
+            Check.ThatCode(() =>
+            {
+                var r = new RegistryHive(@"..\..\Hives\SAMBadHBinHeader");
+                r.ParseHive();
+                r.ParseHive();
+            }).Throws<Exception>();
         }
 
         [Test]
         public void ShouldThrowExceptionWithBadHbinHeader()
         {
-            Check.ThatCode(() =>{var r = new RegistryHive(@"..\..\Hives\SAMBadHBinHeader");r.ParseHive();}).Throws<Exception>();
+            Check.ThatCode(() =>
+            {
+                var r = new RegistryHive(@"..\..\Hives\SAMBadHBinHeader");
+                r.ParseHive();
+            }).Throws<Exception>();
         }
 
         [Test]

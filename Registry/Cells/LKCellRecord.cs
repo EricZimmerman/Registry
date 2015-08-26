@@ -8,6 +8,7 @@ using Registry.Other;
 
 
 //ncrunch: no coverage start
+
 namespace Registry.Cells
 {
     // public classes...
@@ -137,7 +138,7 @@ namespace Registry.Cells
                 Array.Copy(rawBytes, paddingOffset, Padding, 0, paddingLength);
                 //Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
-            
+
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
             Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
         }
@@ -150,14 +151,14 @@ namespace Registry.Cells
         ///         slack slace in the data node when they hold classnames
         ///     </remarks>
         /// </summary>
-        public uint ClassCellIndex { get;  private set;}
+        public uint ClassCellIndex { get; }
 
         /// <summary>
         ///     The length of the classname in the data node referenced by ClassCellIndex.
         /// </summary>
-        public ushort ClassLength { get;  private set;}
+        public ushort ClassLength { get; }
 
-        public byte Debug { get;  private set;}
+        public byte Debug { get; }
 
         public FlagEnum Flags => (FlagEnum) BitConverter.ToUInt16(RawBytes, 6);
 
@@ -174,18 +175,18 @@ namespace Registry.Cells
             }
         }
 
-        public uint MaximumClassLength { get;  private set;}
-        public ushort MaximumNameLength { get;  private set;}
-        public uint MaximumValueDataLength { get;  private set;}
-        public uint MaximumValueNameLength { get;  private set;}
+        public uint MaximumClassLength { get; }
+        public ushort MaximumNameLength { get; }
+        public uint MaximumValueDataLength { get; }
+        public uint MaximumValueNameLength { get; }
 
         /// <summary>
         ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
         /// </summary>
-        public string Name { get;  private set;}
+        public string Name { get; }
 
-        public ushort NameLength { get;  private set;}
-        public byte[] Padding { get;  private set;}
+        public ushort NameLength { get; }
+        public byte[] Padding { get; }
 
         /// <summary>
         ///     The relative offset to the parent key for this record
@@ -195,7 +196,7 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the security record for this record
         /// </summary>
-        public uint SecurityCellIndex { get;  private set;}
+        public uint SecurityCellIndex { get; }
 
         /// <summary>
         ///     When true, this key has been deleted
@@ -216,12 +217,12 @@ namespace Registry.Cells
         /// <summary>
         ///     The relative offset to the root cell this record is linked to.
         /// </summary>
-        public uint RootCellIndex { get;  private set;}
+        public uint RootCellIndex { get; }
 
-        public uint HivePointer { get;  private set;}
-        public int UserFlags { get;  private set;}
-        public int VirtualControlFlags { get;  private set;}
-        public uint WorkVar { get;  private set;}
+        public uint HivePointer { get; }
+        public int UserFlags { get; }
+        public int VirtualControlFlags { get; }
+        public uint WorkVar { get; }
         // public properties...
         public long AbsoluteOffset
         {
@@ -232,8 +233,8 @@ namespace Registry.Cells
         public bool IsFree => _size > 0;
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get;  private set;}
-        public long RelativeOffset { get;  private set;}
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
 
         public string Signature
         {

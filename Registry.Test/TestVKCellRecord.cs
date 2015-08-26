@@ -40,9 +40,9 @@ namespace Registry.Test
             Check.That(val.VKRecord.Signature).IsEqualTo("vk");
             Check.That(val.VKRecord.IsFree).IsFalse();
             Check.That(val.VKRecord.DataLength).IsEqualTo(0x80000000);
-            Check.That(val.VKRecord.OffsetToData).IsEqualTo((uint)0);
-            Check.That(val.VKRecord.NameLength).IsEqualTo((ushort)0);
-            Check.That(val.VKRecord.NamePresentFlag).IsEqualTo((ushort)0);
+            Check.That(val.VKRecord.OffsetToData).IsEqualTo((uint) 0);
+            Check.That(val.VKRecord.NameLength).IsEqualTo((ushort) 0);
+            Check.That(val.VKRecord.NamePresentFlag).IsEqualTo((ushort) 0);
 
             //This key has slack
             key =
@@ -70,17 +70,19 @@ namespace Registry.Test
             Check.That(val.ToString()).IsNotEmpty();
 
             Check.That(val.ValueType).IsEqualTo("RegBinary");
-            Check.That(val.ValueData).IsEqualTo("02-00-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-FF-FF-FF-FF-FF-FF-FF-7F-00-00-00-00-00-00-00-00-F4-01-00-00-01-02-00-00-10-02-00-00-00-00-00-00-00-00-00-00-01-00-00-00-00-00-00-00-73-00-00-00");
+            Check.That(val.ValueData)
+                .IsEqualTo(
+                    "02-00-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-FF-FF-FF-FF-FF-FF-FF-7F-00-00-00-00-00-00-00-00-F4-01-00-00-01-02-00-00-10-02-00-00-00-00-00-00-00-00-00-00-01-00-00-00-00-00-00-00-73-00-00-00");
             Check.That(val.ValueSlack).IsEqualTo("1F-00-0F-00");
             Check.That(val.VKRecord.Size).IsEqualTo(-32);
             Check.That(val.VKRecord.RelativeOffset).IsEqualTo(0x39B8);
             Check.That(val.VKRecord.AbsoluteOffset).IsEqualTo(0x49B8);
             Check.That(val.VKRecord.Signature).IsEqualTo("vk");
             Check.That(val.VKRecord.IsFree).IsFalse();
-            Check.That(val.VKRecord.DataLength).IsEqualTo((uint)0x50);
-            Check.That(val.VKRecord.OffsetToData).IsEqualTo((uint)0x39D8);
-            Check.That(val.VKRecord.NameLength).IsEqualTo((ushort)0x1);
-            Check.That(val.VKRecord.NamePresentFlag).IsEqualTo((ushort)1);
+            Check.That(val.VKRecord.DataLength).IsEqualTo((uint) 0x50);
+            Check.That(val.VKRecord.OffsetToData).IsEqualTo((uint) 0x39D8);
+            Check.That(val.VKRecord.NameLength).IsEqualTo((ushort) 0x1);
+            Check.That(val.VKRecord.NamePresentFlag).IsEqualTo((ushort) 1);
             Check.That(val.VKRecord.Padding.Length).IsEqualTo(7);
         }
 
@@ -524,7 +526,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordBigData()
         {
-            var key = TestSetup.SoftwareOnDemand.GetKey(@"CMI-CreateHive{199DAFC2-6F16-4946-BF90-5A3FC3A60902}\\Microsoft\\SystemCertificates\\AuthRoot\\AutoUpdate");
+            var key =
+                TestSetup.SoftwareOnDemand.GetKey(
+                    @"CMI-CreateHive{199DAFC2-6F16-4946-BF90-5A3FC3A60902}\\Microsoft\\SystemCertificates\\AuthRoot\\AutoUpdate");
 
             Check.That(key).IsNotNull();
 

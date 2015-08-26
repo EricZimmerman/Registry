@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -220,7 +219,7 @@ namespace Registry
 
 
             //TODO THIS SHOULD ALSO CHECK THE # OF SUBKEYS == 0
-            if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false )
+            if (ListRecords.ContainsKey(key.NKRecord.SubkeyListsStableCellIndex) == false)
             {
                 return keys;
             }
@@ -1154,8 +1153,8 @@ namespace Registry
                             continue;
                         }
 
-                        string asAscii = keyValue.ValueData;
-                        string asUnicode = keyValue.ValueData;
+                        var asAscii = keyValue.ValueData;
+                        var asUnicode = keyValue.ValueData;
 
                         if (keyValue.VKRecord.DataType == VKCellRecord.DataTypeEnum.RegBinary)
                         {
@@ -1165,7 +1164,7 @@ namespace Registry
                             asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueDataRaw);
                             asUnicode = Encoding.Unicode.GetString(keyValue.ValueDataRaw);
 
-                            string hitString = string.Empty;
+                            var hitString = string.Empty;
                             try
                             {
                                 hitString = Regex.Match(asAscii, searchTerm, RegexOptions.IgnoreCase).Value;
@@ -1178,12 +1177,12 @@ namespace Registry
                             if (hitString.Length > 0)
                             {
                                 var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
-                                
-                                            var asciiHit = BitConverter.ToString(asciihex);
+
+                                var asciiHit = BitConverter.ToString(asciihex);
                                 yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
                             }
 
-                             hitString = string.Empty;
+                            hitString = string.Empty;
                             try
                             {
                                 hitString = Regex.Match(asUnicode, searchTerm, RegexOptions.IgnoreCase).Value;
@@ -1218,7 +1217,7 @@ namespace Registry
                     {
                         if (Regex.IsMatch(keyValue.ValueSlack, searchTerm, RegexOptions.IgnoreCase))
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue,searchTerm);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
                         }
                     }
                     else
@@ -1232,39 +1231,39 @@ namespace Registry
                         }
                         else
                         {
-                                //this takes the raw bytes and converts it to a string, which we can then search
-                                //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
-                                //and match against the raw data
-                              var  asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueSlackRaw);
-                           var     asUnicode = Encoding.Unicode.GetString(keyValue.ValueSlackRaw);
+                            //this takes the raw bytes and converts it to a string, which we can then search
+                            //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
+                            //and match against the raw data
+                            var asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueSlackRaw);
+                            var asUnicode = Encoding.Unicode.GetString(keyValue.ValueSlackRaw);
 
-                                string hitString = string.Empty;
-                                try
-                                {
-                                    hitString = Regex.Match(asAscii, searchTerm, RegexOptions.IgnoreCase).Value;
-                                }
-                                catch (ArgumentException)
-                                {
-                                    // Syntax error in the regular expression
-                                }
+                            var hitString = string.Empty;
+                            try
+                            {
+                                hitString = Regex.Match(asAscii, searchTerm, RegexOptions.IgnoreCase).Value;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Syntax error in the regular expression
+                            }
 
-                                if (hitString.Length > 0)
-                                {
-                                    var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
+                            if (hitString.Length > 0)
+                            {
+                                var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
 
-                                    var asciiHit = BitConverter.ToString(asciihex);
-                                    yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
-                                }
+                                var asciiHit = BitConverter.ToString(asciihex);
+                                yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
+                            }
 
-                                hitString = string.Empty;
-                                try
-                                {
-                                    hitString = Regex.Match(asUnicode, searchTerm, RegexOptions.IgnoreCase).Value;
-                                }
-                                catch (ArgumentException)
-                                {
-                                    // Syntax error in the regular expression
-                                }
+                            hitString = string.Empty;
+                            try
+                            {
+                                hitString = Regex.Match(asUnicode, searchTerm, RegexOptions.IgnoreCase).Value;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Syntax error in the regular expression
+                            }
 
                             if (hitString.Length <= 0)
                             {

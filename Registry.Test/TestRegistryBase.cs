@@ -2,8 +2,6 @@
 using System.IO;
 using NFluent;
 using NLog;
-using NLog.Config;
-using NLog.Targets;
 using NUnit.Framework;
 
 namespace Registry.Test
@@ -55,7 +53,7 @@ namespace Registry.Test
         {
             Check.ThatCode(() => { new RegistryBase(@"..\..\Hives\NotAHive"); }).Throws<Exception>();
         }
-        
+
 
         [Test]
         public void NtuserHiveShouldHaveNtuserHiveType()

@@ -87,17 +87,17 @@ namespace Registry.Abstractions
         /// <summary>
         ///     The underlying NKRecord for this Key. This allows access to all info about the NK Record
         /// </summary>
-        public NKCellRecord NKRecord { get; private set; }
+        public NKCellRecord NKRecord { get; }
 
         /// <summary>
         ///     A list of child keys that exist under this key
         /// </summary>
-        public List<RegistryKey> SubKeys { get; private set; }
+        public List<RegistryKey> SubKeys { get; }
 
         /// <summary>
         ///     A list of values that exists under this key
         /// </summary>
-        public List<KeyValue> Values { get; private set; }
+        public List<KeyValue> Values { get; }
 
         public string GetRegFormat(HiveTypeEnum hiveType)
         {
@@ -180,7 +180,8 @@ namespace Registry.Abstractions
                         var prefix = $"hex({(int) keyValue.VKRecord.DataType:x}):";
 
                         keyValueOut =
-                            $"{prefix}{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}".ToLowerInvariant();
+                            $"{prefix}{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}".ToLowerInvariant
+                                ();
 
                         if (keyValueOut.Length + prefix.Length + keyNameOut.Length > 76)
                         {
@@ -301,7 +302,7 @@ namespace Registry.Abstractions
                 i += 1;
             }
 
-         //   sb.AppendLine();
+            //   sb.AppendLine();
 
 
             return sb.ToString();

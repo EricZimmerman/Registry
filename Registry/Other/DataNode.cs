@@ -30,7 +30,7 @@ namespace Registry.Other
 
         public bool IsFree => _size > 0;
 
-        public byte[] RawBytes { get; private set; }
+        public byte[] RawBytes { get; }
 
         /// <summary>
         ///     Set to true when a record is referenced by another referenced record.
@@ -45,7 +45,7 @@ namespace Registry.Other
         ///     The offset as stored in other records to a given record
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        public long RelativeOffset { get; private set; }
+        public long RelativeOffset { get; }
 
         public int Size => Math.Abs(_size);
 

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 
-
 // namespaces...
 
 namespace Registry.Other
@@ -48,7 +47,7 @@ namespace Registry.Other
             sizeGroupSid = (uint) (rawBytes.Length - GroupOffset);
 
 
-            Padding = String.Empty; //TODO VERIFY ITS ALWAYS ZEROs
+            Padding = string.Empty; //TODO VERIFY ITS ALWAYS ZEROs
         }
 
         // public properties...
@@ -65,7 +64,6 @@ namespace Registry.Other
                 }
 
                 return null; //ncrunch: no coverage
-
             }
         }
 
@@ -81,6 +79,7 @@ namespace Registry.Other
                 return Helpers.ConvertHexStringToSidString(rawGroup);
             }
         }
+
         public Helpers.SidTypeEnum GroupSIDType => Helpers.GetSIDTypeFromSIDString(GroupSID);
 
         public uint OwnerOffset => BitConverter.ToUInt32(RawBytes, 0x04);
@@ -97,7 +96,7 @@ namespace Registry.Other
         public Helpers.SidTypeEnum OwnerSIDType => Helpers.GetSIDTypeFromSIDString(OwnerSID);
 
         public string Padding { get; private set; }
-        public byte[] RawBytes { get;  private set;}
+        public byte[] RawBytes { get; }
 
         public byte Revision => RawBytes[0];
 

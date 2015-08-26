@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NFluent;
 using Registry.Other;
-using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -46,9 +44,10 @@ namespace Registry.Lists
                     index += 4;
 
                     if (os == 0x0)
-                    {                   //ncrunch: no coverage
+                    {
+                        //ncrunch: no coverage
                         //there are cases where we run out of data before getting to NumberOfEntries. This stops an explosion
-                        break;          //ncrunch: no coverage
+                        break; //ncrunch: no coverage
                     }
 
                     offsets.Add(os);
@@ -64,12 +63,12 @@ namespace Registry.Lists
 
         public bool IsFree => _size > 0;
 
-        public bool IsReferenced { get;  set; }
+        public bool IsReferenced { get; set; }
 
         public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
-        public byte[] RawBytes { get;  private set;}
-        public long RelativeOffset { get;  private set;}
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
 
         public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 

@@ -7,7 +7,6 @@ namespace Registry.Test
     [TestFixture]
     internal class TestSKCellRecord
     {
-
         [Test]
         public void SKRecordxACLNoDataForAceRecordsInSacl()
         {
@@ -22,7 +21,7 @@ namespace Registry.Test
             Check.That(sk.SecurityDescriptor.DACL.ACERecords.ToString()).IsNotEmpty();
             Check.That(sk.SecurityDescriptor.SACL.ACERecords).IsNotNull();
             Check.That(sk.SecurityDescriptor.SACL.ACERecords.Count).IsEqualTo(0);
-                // this is a strange case where there is no data to build ace records
+            // this is a strange case where there is no data to build ace records
             Check.That(sk.SecurityDescriptor.SACL.ACERecords.ToString()).IsNotEmpty();
 
             Check.That(sk.ToString()).IsNotEmpty();

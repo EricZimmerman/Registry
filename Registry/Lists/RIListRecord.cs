@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NFluent;
 using Registry.Other;
-using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -43,9 +41,10 @@ namespace Registry.Lists
                 while (counter < NumberOfEntries)
                 {
                     if (index >= RawBytes.Length)
-                    {                               //ncrunch: no coverage
+                    {
+                        //ncrunch: no coverage
                         // i have seen cases where there isnt enough data, so get what we can
-                        break;                      //ncrunch: no coverage
+                        break; //ncrunch: no coverage
                     }
 
                     var os = BitConverter.ToUInt32(RawBytes, index);
@@ -62,12 +61,12 @@ namespace Registry.Lists
         // public properties...
         public bool IsFree => _size > 0;
 
-        public bool IsReferenced { get;  set; }
+        public bool IsReferenced { get; set; }
 
         public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
-        public byte[] RawBytes { get;  private set;}
-        public long RelativeOffset { get;  private set;}
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
 
         public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 

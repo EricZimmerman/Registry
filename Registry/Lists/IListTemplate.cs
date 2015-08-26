@@ -8,7 +8,7 @@ namespace Registry.Lists
         // properties...
 
         // properties...
-        bool IsFree { get;  }
+        bool IsFree { get; }
 
         /// <summary>
         ///     Set to true when a record is referenced by another referenced record.
@@ -17,26 +17,26 @@ namespace Registry.Lists
         ///         referenced by another record in a hive
         ///     </remarks>
         /// </summary>
-        bool IsReferenced { get;  }
+        bool IsReferenced { get; }
 
         /// <summary>
         ///     The total number of offsets to other records this list holds.
         /// </summary>
-        int NumberOfEntries { get;  }
+        int NumberOfEntries { get; }
 
         /// <summary>
         ///     The raw contents of this record
         /// </summary>
-        byte[] RawBytes { get;  }
+        byte[] RawBytes { get; }
 
         /// <summary>
         ///     The offset as stored in other records to a given record
         ///     <remarks>This value will be 4096 bytes (the size of the regf header) less than the AbsoluteOffset</remarks>
         /// </summary>
-        long RelativeOffset { get;  }
+        long RelativeOffset { get; }
 
         // properties...
-        string Signature { get;  }
+        string Signature { get; }
 
         /// <summary>
         ///     The size of the hive
@@ -45,6 +45,6 @@ namespace Registry.Lists
         ///         negative size)
         ///     </remarks>
         /// </summary>
-        int Size { get;  }
+        int Size { get; }
     }
 }

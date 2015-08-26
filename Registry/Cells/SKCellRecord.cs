@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using NFluent;
 using Registry.Other;
-using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -38,7 +37,7 @@ namespace Registry.Cells
             }
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-         //   Check.That(0x18 + (int) DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
+            //   Check.That(0x18 + (int) DescriptorLength + paddingLength).IsEqualTo(rawBytes.Length);
         }
 
         // public properties...
@@ -76,8 +75,8 @@ namespace Registry.Cells
                     // i have seen cases where there is no available security descriptor because the sk record doesn't contain the right data
                     return new SKSecurityDescriptor(rawDescriptor);
                 }
-              
-                return null;//ncrunch: no coverage
+
+                return null; //ncrunch: no coverage
             }
         }
 
@@ -87,8 +86,8 @@ namespace Registry.Cells
         public bool IsFree => _size > 0;
 
         public bool IsReferenced { get; internal set; }
-        public byte[] RawBytes { get;  private set;}
-        public long RelativeOffset { get;  private set;}
+        public byte[] RawBytes { get; }
+        public long RelativeOffset { get; }
 
         public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 

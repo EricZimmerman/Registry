@@ -101,14 +101,14 @@ namespace Registry.Other
                         return AceTypeEnum.SystemAlarmObjectAceType;
                     default:
                         return AceTypeEnum.Unknown;
-                        //ncrunch: no coverage end
+                    //ncrunch: no coverage end
                 }
             }
         }
 
         public MasksEnum Mask => (MasksEnum) BitConverter.ToUInt32(RawBytes, 4);
 
-        public byte[] RawBytes { get;  private set;}
+        public byte[] RawBytes { get; }
 
         public string SID
         {

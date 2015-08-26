@@ -27,7 +27,7 @@ namespace Registry.Abstractions
         /// <summary>
         ///     A unique value that can be used to find this key in a collection
         /// </summary>
-        public string InternalGUID { get;  }
+        public string InternalGUID { get; }
 
         /// <summary>
         ///     The normalized representation of the value's value.
@@ -38,7 +38,7 @@ namespace Registry.Abstractions
             {
                 if (VKRecord.ValueData is byte[])
                 {
-                    return BitConverter.ToString((byte[])VKRecord.ValueData);
+                    return BitConverter.ToString((byte[]) VKRecord.ValueData);
                 }
                 return VKRecord.ValueData.ToString();
             }

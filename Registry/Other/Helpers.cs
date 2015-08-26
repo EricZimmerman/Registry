@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,19 +12,6 @@ namespace Registry.Other
     // public classes...
     public static class Helpers
     {
-        public const short SkSignature = 0x6b73;
-        public const short VkSignature = 0x6b76;
-        public const short NkSignature = 0x6b6e;
-        public const short DbSignature = 0x6264;
-        public const short LiSignature = 0x696c;
-        public const short LkSignature = 0x6b6c;
-        public const short LhSignature = 0x686c;
-        public const short LfSignature = 0x666c;
-        public const short RiSignature = 0x6972;
-
-        public const int HbinSignature = 0x6E696268;
-        public const int RegfSignature = 0x66676572;
-
         // public enums...
         //http://msdn.microsoft.com/en-us/library/cc980032.aspx
         public enum SidTypeEnum
@@ -286,6 +272,19 @@ namespace Registry.Other
             [Description("S-1-18-2: A SID that means the client's identity is asserted by a service.")] ServiceAssertedIdentity
         }
 
+        public const short SkSignature = 0x6b73;
+        public const short VkSignature = 0x6b76;
+        public const short NkSignature = 0x6b6e;
+        public const short DbSignature = 0x6264;
+        public const short LiSignature = 0x696c;
+        public const short LkSignature = 0x6b6c;
+        public const short LhSignature = 0x686c;
+        public const short LfSignature = 0x666c;
+        public const short RiSignature = 0x6972;
+
+        public const int HbinSignature = 0x6E696268;
+        public const int RegfSignature = 0x66676572;
+
         // public methods...
 
 
@@ -310,9 +309,12 @@ namespace Registry.Other
         }
 
         /// <summary>
-        /// Exports a Registry key to .reg format
+        ///     Exports a Registry key to .reg format
         /// </summary>
-        /// <remarks>Do not use RegistryHiveOnDemand when exporting recursively or you will only get the key and its subkeys exported</remarks>
+        /// <remarks>
+        ///     Do not use RegistryHiveOnDemand when exporting recursively or you will only get the key and its subkeys
+        ///     exported
+        /// </remarks>
         /// <param name="filename"></param>
         /// <param name="key"></param>
         /// <param name="hiveType"></param>
@@ -340,11 +342,11 @@ namespace Registry.Other
                 sb.AppendLine();
             }
 
-                var s= GetRegFormatData(key, hiveType, recursive);
-            
+            var s = GetRegFormatData(key, hiveType, recursive);
+
             sb.AppendLine(s);
-            
-            using (var f = new StreamWriter(new FileStream(filename,FileMode.Create),Encoding.Unicode))
+
+            using (var f = new StreamWriter(new FileStream(filename, FileMode.Create), Encoding.Unicode))
             {
                 f.WriteLine(sb.ToString());
                 f.Flush();
@@ -355,8 +357,8 @@ namespace Registry.Other
 
         public static string StripRootKeyNameFromKeyPath(string keyPath)
         {
-                var pos = keyPath.IndexOf("\\", StringComparison.Ordinal);
-                return keyPath.Substring(pos + 1);
+            var pos = keyPath.IndexOf("\\", StringComparison.Ordinal);
+            return keyPath.Substring(pos + 1);
         }
 
         /// <summary>
@@ -880,5 +882,4 @@ namespace Registry.Other
 
         //ncrunch: no coverage end
     }
-
 }

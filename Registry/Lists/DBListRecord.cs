@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Text;
-using NFluent;
 using Registry.Other;
-using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -24,7 +22,6 @@ namespace Registry.Lists
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
             _size = BitConverter.ToInt32(rawBytes, 0);
-
         }
 
         /// <summary>
@@ -36,11 +33,11 @@ namespace Registry.Lists
 
         public bool IsFree => _size > 0;
 
-        public bool IsReferenced { get;  set; }
+        public bool IsReferenced { get; set; }
 
         public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
-        public byte[] RawBytes { get;  set; }
+        public byte[] RawBytes { get; set; }
         public long RelativeOffset { get; set; }
 
         public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);

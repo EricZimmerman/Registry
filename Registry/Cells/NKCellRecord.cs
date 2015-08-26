@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NFluent;
 using Registry.Other;
-using static Registry.Other.Helpers;
 
 // namespaces...
 
@@ -51,7 +49,7 @@ namespace Registry.Cells
             _registryHive = registryHive;
             _rawBytesLength = recordSize;
 
-                        ValueOffsets = new List<ulong>();
+            ValueOffsets = new List<ulong>();
         }
 
         /// <summary>
@@ -165,18 +163,18 @@ namespace Registry.Cells
                 {
                     return new byte[0];
                 }
-                
+
                 var paddingOffset = 0x50 + NameLength;
 
-                var paddingBlock = (int)Math.Ceiling((double)paddingOffset / 8);
+                var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
 
-                var actualPaddingOffset = paddingBlock * 8;
+                var actualPaddingOffset = paddingBlock*8;
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
-                
+
                 if (paddingLength > 0 && paddingOffset + paddingLength <= RawBytes.Length)
                 {
-                    return  new ArraySegment<byte>(RawBytes,paddingOffset,paddingLength).ToArray();
+                    return new ArraySegment<byte>(RawBytes, paddingOffset, paddingLength).ToArray();
                 }
 
                 return new byte[0];
@@ -291,6 +289,7 @@ namespace Registry.Cells
         public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
 
         public bool IsReferenced { get; internal set; }
+
         public byte[] RawBytes
         {
             get
@@ -299,7 +298,8 @@ namespace Registry.Cells
                 return raw;
             }
         }
-        public long RelativeOffset { get;  private set;}
+
+        public long RelativeOffset { get; }
 
         public string Signature => Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2);
 
