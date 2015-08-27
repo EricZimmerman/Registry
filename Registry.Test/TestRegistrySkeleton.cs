@@ -2,6 +2,7 @@
 using System.Linq;
 using NFluent;
 using NUnit.Framework;
+using Registry.Abstractions;
 
 namespace Registry.Test
 {
@@ -131,7 +132,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var write = rs.Write(@"C:\temp\foo.bin");
+            var write = rs.Write(@"C:\temp\onekeytest.bin");
 
             Check.That(write).IsTrue();
         }
@@ -205,6 +206,44 @@ namespace Registry.Test
             Check.That(val.ValueDataRaw.Length).IsEqualTo(4);
         }
 
+        [Test]
+        public void DeletedCase()
+        {
+            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+
+            var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true, true);
+
+            rs.AddEntry(sk);
+
+            var outPath = @"C:\temp\deletedTest.bin";
+
+            var write = rs.Write(outPath);
+
+            Check.That(write).IsTrue();
+
+            var newReg = new RegistryHive(outPath);
+            newReg.RecoverDeleted = true;
+            newReg.ParseHive();
+
+            var key =
+                newReg.GetKey(
+                    @"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\0\0");
+
+            Check.That(key).IsNotNull();
+
+            var val = key.Values.Single(t => t.ValueName == "MRUListEx");
+
+            Check.That(val).IsNotNull();
+
+            key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1\0\0");
+
+            Check.That(key).IsNotNull();
+
+            val = key.Values.Single(t => t.ValueName == "0");
+
+            Check.That(val).IsNotNull();
+            Check.That(val.ValueDataRaw.Length).IsEqualTo(281);
+        }
 
         [Test]
         public void WrittenHiveShouldContain163ValuesInMuiCacheSubkey()
@@ -254,65 +293,5 @@ namespace Registry.Test
             Check.That(key.Values.Count).IsEqualTo(163);
         }
 
-        //        [Test]
-        //        public void ShouldGenerateValidRegMultiSzValue()
-        //        {
-        //            //S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E
-        //            var key = TestSetup.UsrclassDeleted.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
-        //
-        //            var val = key.Values.Single(t => t.ValueName == "LanguageList");
-        //
-        //            Check.That(val).IsNotNull();
-        //
-        //            Check.That(val.ValueName).IsEqualTo("LanguageList");
-
-        //            Check.That(val.ValueData).IsEqualTo("en-US en");
-        //
-        //            //This is what the record looks like from the hive itself
-        //            var vkHash = GetSha256(val.VKRecord.RawBytes);
-        //            Check.That(vkHash).IsEqualTo("6EF8A18565ABD7B6AB7950B0ECD8CA1BFFADF28D4E276DCE237727B08184A887");
-        //
-        //            //this is what the value data (and slack) looks like from the hive itself
-        //            var valData = val.ValueDataRaw.Concat(val.ValueSlackRaw).ToArray();
-        //            var dataHash = GetSha256(valData);
-        //
-        //
-        //            Check.That(dataHash).IsEqualTo("654827CC02A024DF9FFFCFF57E51D132597749600FF1B93E3ECC7A39D1760B80");
-        //
-        //            var dataRecordSize = -1 * valData.Length - 4; //'add' 4 for the size prefix
-        //
-        //            var sizeB = new byte[] { 0xe8, 0xff, 0xff, 0xff };
-        //            Check.That(dataRecordSize).IsEqualTo(BitConverter.ToInt32(sizeB, 0));
-        //
-        //            byte[] intBytes = BitConverter.GetBytes(dataRecordSize);
-        //
-        //            Check.That(intBytes[0]).Equals((byte)0xe8);
-        //            Check.That(intBytes[1]).Equals((byte)0xFf);
-        //            Check.That(intBytes[2]).Equals((byte)0xFf);
-        //            Check.That(intBytes[3]).Equals((byte)0xFf);
-        //
-        //            //so when we get the bytes for the record and data, it should be the same
-        //
-        //
-        //
-        //        }
-
-
-        //        private string GetSha256(byte[] contents)
-        //        {
-        //            var hash = new StringBuilder();
-        //
-        //            using (var shaM = SHA256.Create())
-        //            {
-        //                var hashRaw = shaM.ComputeHash(contents);
-        //
-        //                foreach (var t in hashRaw)
-        //                {
-        //                    hash.Append(t.ToString("X2"));
-        //                }
-        //            }
-        //
-        //            return hash.ToString();
-        //        }
     }
 }

@@ -246,26 +246,27 @@ namespace Registry
             }
 
             //Get Security record
-            //BitConverter.GetBytes(0).CopyTo(nkBytes, SecurityOffset);
-            var sk = _hive.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
-
-            if (_skMap.ContainsKey(sk.RelativeOffset))
+            if (_hive.CellRecords.ContainsKey(key.NKRecord.SecurityCellIndex))
             {
-                //sk is already in _hbin
-                var skOffset = _skMap[sk.RelativeOffset];
-                BitConverter.GetBytes(skOffset).CopyTo(nkBytes, SecurityOffset);
-            }
-            else
-            {
-                CheckhbinSize(sk.RawBytes.Length);
-                sk.RawBytes.CopyTo(_hbin, _currentOffsetInHbin);
+                var sk = _hive.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
 
-                var skOffset = _currentOffsetInHbin;
-                _skMap.Add(sk.RelativeOffset, skOffset);
-                _currentOffsetInHbin += (uint) sk.RawBytes.Length;
-                BitConverter.GetBytes(skOffset).CopyTo(nkBytes, SecurityOffset);
-            }
+                if (_skMap.ContainsKey(sk.RelativeOffset))
+                {
+                    //sk is already in _hbin
+                    var skOffset = _skMap[sk.RelativeOffset];
+                    BitConverter.GetBytes(skOffset).CopyTo(nkBytes, SecurityOffset);
+                }
+                else
+                {
+                    CheckhbinSize(sk.RawBytes.Length);
+                    sk.RawBytes.CopyTo(_hbin, _currentOffsetInHbin);
 
+                    var skOffset = _currentOffsetInHbin;
+                    _skMap.Add(sk.RelativeOffset, skOffset);
+                    _currentOffsetInHbin += (uint) sk.RawBytes.Length;
+                    BitConverter.GetBytes(skOffset).CopyTo(nkBytes, SecurityOffset);
+                }
+            }
 
             BitConverter.GetBytes(treeKey.Subkeys.Count).CopyTo(nkBytes, SubkeyCountStableOffset);
 
