@@ -15,7 +15,7 @@ namespace Registry
     {
         private const int SecurityOffset = 0x30;
         private const int SubkeyCountStableOffset = 0x18;
-        private const int SubkeyListStableCellIndex = 0x20;
+        private const int SubkeyListsStableCellIndex = 0x20;
         private const int ValueListCellIndex = 0x2C;
         private const int ParentCellIndex = 0x14;
         private const int ValueDataOffset = 0x0C;
@@ -204,7 +204,7 @@ namespace Registry
                 //we need to add another hbin
 
                 //set remaining space to free record
-                var freeSize = _hbin.Length - _currentOffsetInHbin;
+                var freeSize = (int) (_hbin.Length - _currentOffsetInHbin);
                 if (freeSize > 0)
                 {
                     BitConverter.GetBytes(freeSize).CopyTo(_hbin, _currentOffsetInHbin);
@@ -230,8 +230,8 @@ namespace Registry
             //get nk record bytes
             var key = _hive.GetKey(treeKey.KeyPath);
 
-            if (treeKey.KeyPath.Contains(
-                @"ControlSet001\Control\DeviceClasses\{e6327cad-dcec-4949-ae8a-991e976a79d2}\##?#SWD#MMDEVAPI#{3.0.0.00000001}.{6C26BA7D-F0B2-4225-B422-8168C5261E45}#{e6327cad-dcec-4949-ae8a-991e976a79d2}\#\Properties\{1da5d803-d492-4edd-8c23-e0c0ffee7f0e}"))
+            if (treeKey.KeyPath.Equals(
+                @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Control\DeviceClasses\{e6327cad-dcec-4949-ae8a-991e976a79d2}\##?#SWD#MMDEVAPI#{3.0.0.00000001}.{6C26BA7D-F0B2-4225-B422-8168C5261E45}#{e6327cad-dcec-4949-ae8a-991e976a79d2}\#\Properties\{1da5d803-d492-4edd-8c23-e0c0ffee7f0e}"))
             {
                 Debug.WriteLine(1);
             }
@@ -240,6 +240,7 @@ namespace Registry
             var nkOffset = _currentOffsetInHbin;
 
             //move our pointer to the beginning of free space for any subsequent records
+            CheckhbinSize(key.NKRecord.RawBytes.Length);
             _currentOffsetInHbin += (uint) key.NKRecord.RawBytes.Length;
 
             var nkBytes = key.NKRecord.RawBytes;
@@ -292,6 +293,12 @@ namespace Registry
                 subkeyOffsets.Add(offset, hash);
             }
 
+            if (treeKey.KeyPath.Equals(
+               @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}"))
+            {
+                Debug.WriteLine(1);
+            }
+
             if (subkeyOffsets.Count > 0)
             {
                 //TODO this should generate an ri list pointing to lh lists when the number of subkeys > 500. each lh should be 500 in size
@@ -303,8 +310,8 @@ namespace Registry
                 CheckhbinSize(list.RawBytes.Length);
                 list.RawBytes.CopyTo(_hbin, _currentOffsetInHbin);
 
-                //update SubkeyListStableCellIndex in nkrecord
-                BitConverter.GetBytes(_currentOffsetInHbin).CopyTo(nkBytes, SubkeyListStableCellIndex);
+                //update SubkeyListsStableCellIndex in nkrecord
+                BitConverter.GetBytes(_currentOffsetInHbin).CopyTo(nkBytes, SubkeyListsStableCellIndex);
 
                 _currentOffsetInHbin += (uint) list.RawBytes.Length;
             }

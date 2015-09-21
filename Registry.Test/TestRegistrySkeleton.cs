@@ -155,6 +155,18 @@ namespace Registry.Test
             var write = rs.Write(@"bigrecursive.bin");
 
             Check.That(write).IsTrue();
+
+            var newReg = new RegistryHive(@"bigrecursive.bin");
+	    
+            newReg.ParseHive();
+
+	        var key = newReg.GetKey(@"ControlSet001\Control");
+
+	        Check.That(key).IsNotNull();
+
+            key = newReg.GetKey(@"Select");
+
+            Check.That(key).IsNotNull();
         }
 
         [Test]
