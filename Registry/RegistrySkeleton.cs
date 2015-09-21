@@ -26,7 +26,7 @@ namespace Registry
 
         private readonly List<SkeletonKeyRoot> _keys;
 
-        private uint _currentOffsetInHbin = 0x20;
+        private  uint _currentOffsetInHbin = 0x20;
 
         private byte[] _hbin = new byte[0];
 
@@ -230,6 +230,11 @@ namespace Registry
             //get nk record bytes
             var key = _hive.GetKey(treeKey.KeyPath);
 
+            if (treeKey.KeyPath.Contains(
+                @"ControlSet001\Control\DeviceClasses\{e6327cad-dcec-4949-ae8a-991e976a79d2}\##?#SWD#MMDEVAPI#{3.0.0.00000001}.{6C26BA7D-F0B2-4225-B422-8168C5261E45}#{e6327cad-dcec-4949-ae8a-991e976a79d2}\#\Properties\{1da5d803-d492-4edd-8c23-e0c0ffee7f0e}"))
+            {
+                Debug.WriteLine(1);
+            }
 
             //this is where we will be placing our record
             var nkOffset = _currentOffsetInHbin;
@@ -277,7 +282,7 @@ namespace Registry
                 //write out subkeys, keep record of offsets
                 var offset = ProcessSkeletonKey(skeletonKey, nkOffset);
 
-                var hash = skeletonKey.KeyName;
+              var hash = skeletonKey.KeyName;
                 if (skeletonKey.KeyName.Length >= 4)
                 {
                     hash = skeletonKey.KeyName.Substring(0, 4);

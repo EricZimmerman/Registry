@@ -100,6 +100,8 @@ namespace Registry.Test
             Check.That(rs.Keys.Count).IsEqualTo(0);
         }
 
+
+
         [Test]
         public void ShouldReturnFalseOnAddNonExistentSubkeyToSkeletonList()
         {
@@ -119,7 +121,7 @@ namespace Registry.Test
             Check.ThatCode(() =>
             {
                 var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
-                rs.Write(@"C:\temp\foo.bin");
+                rs.Write(@"foo.bin");
             }).Throws<InvalidOperationException>(); //ncrunch: no coverage
         }
 
@@ -132,7 +134,25 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var write = rs.Write(@"C:\temp\onekeytest.bin");
+            var write = rs.Write(@"onekeytest.bin");
+
+            Check.That(write).IsTrue();
+        }
+
+        [Test]
+        public void BigRecursiveWithRegUnknown()
+        {
+            var rs = new RegistrySkeleton(TestSetup.System);
+
+            var sk = new SkeletonKeyRoot(@"ControlSet001\Control", true, true);
+
+            rs.AddEntry(sk);
+
+            sk = new SkeletonKeyRoot(@"Select", true, true);
+
+            rs.AddEntry(sk);
+
+            var write = rs.Write(@"bigrecursive.bin");
 
             Check.That(write).IsTrue();
         }
@@ -147,7 +167,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"C:\temp\bigdatatest.bin";
+            var outPath = @"bigdatatest.bin";
 
             var write = rs.Write(outPath);
 
@@ -176,7 +196,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"C:\temp\recursivetest.bin";
+            var outPath = @"recursivetest.bin";
 
             var write = rs.Write(outPath);
 
@@ -215,7 +235,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"C:\temp\deletedTest.bin";
+            var outPath = @"deletedTest.bin";
 
             var write = rs.Write(outPath);
 
@@ -266,7 +286,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"C:\temp\valuetest.bin";
+            var outPath = @"valuetest.bin";
 
             var write = rs.Write(outPath);
 
