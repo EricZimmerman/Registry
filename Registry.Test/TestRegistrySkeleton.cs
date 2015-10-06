@@ -121,7 +121,7 @@ namespace Registry.Test
             Check.ThatCode(() =>
             {
                 var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
-                rs.Write(@"foo.bin");
+                rs.Write(@"foo.reg");
             }).Throws<InvalidOperationException>(); //ncrunch: no coverage
         }
 
@@ -134,17 +134,17 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var write = rs.Write(@"onekeytest.bin");
+            var write = rs.Write(@"onekeytest.hve");
 
             Check.That(write).IsTrue();
         }
 
-        [Test]
+        [Test,Timeout(360000)]
         public void BigRecursiveWithRegUnknown()
         {
             var rs = new RegistrySkeleton(TestSetup.System);
 
-            var sk = new SkeletonKeyRoot(@"ControlSet001\Control", true, true);
+            var sk = new SkeletonKeyRoot(@"Setup\AllowStart", true, true);
 
             rs.AddEntry(sk);
 
@@ -152,17 +152,17 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var write = rs.Write(@"bigrecursive.bin");
+            var write = rs.Write(@"bigrecursive.hve");
 
             Check.That(write).IsTrue();
 
-            var newReg = new RegistryHive(@"bigrecursive.bin");
-	    
+            var newReg = new RegistryHive(@"bigrecursive.hve");
+        
             newReg.ParseHive();
 
-	        var key = newReg.GetKey(@"ControlSet001\Control");
+            var key = newReg.GetKey(@"ControlSet001\Control");
 
-	        Check.That(key).IsNotNull();
+            Check.That(key).IsNotNull();
 
             key = newReg.GetKey(@"Select");
 
@@ -179,7 +179,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"bigdatatest.bin";
+            var outPath = @"bigdatatest.hve";
 
             var write = rs.Write(outPath);
 
@@ -208,7 +208,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"recursivetest.bin";
+            var outPath = @"recursivetest.hve";
 
             var write = rs.Write(outPath);
 
@@ -247,14 +247,16 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"deletedTest.bin";
+            var outPath = @"deletedTest.hve";
 
             var write = rs.Write(outPath);
 
             Check.That(write).IsTrue();
 
-            var newReg = new RegistryHive(outPath);
-            newReg.RecoverDeleted = true;
+            var newReg = new RegistryHive(outPath)
+            {
+                RecoverDeleted = true
+            };
             newReg.ParseHive();
 
             var key =
@@ -298,7 +300,7 @@ namespace Registry.Test
 
             rs.AddEntry(sk);
 
-            var outPath = @"valuetest.bin";
+            var outPath = @"valuetest.hve";
 
             var write = rs.Write(outPath);
 
