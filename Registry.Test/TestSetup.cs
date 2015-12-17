@@ -31,7 +31,7 @@ namespace Registry.Test
 
         //ncrunch: no coverage start
 
-        [SetUp]
+        [OneTimeSetUp]
         public void InitializeObjects()
         {
             Debug.WriteLine("Initializing hives...");
@@ -100,7 +100,7 @@ namespace Registry.Test
             UsrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             Debug.WriteLine("Unit testing complete. Tearing down...");

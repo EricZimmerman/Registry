@@ -11,7 +11,7 @@ namespace Registry.Test
     [TestFixture]
     internal class TestRegistryHive
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void PreTestSetup()
         {
             LogManager.Configuration = null;
