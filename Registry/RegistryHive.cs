@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NFluent;
+using NLog;
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -1129,10 +1130,16 @@ namespace Registry
 
         public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false, bool literal = false)
         {
+         //   var _logger = LogManager.GetLogger("FFFFFFF");
+
             foreach (var registryKey in KeyPathKeyMap)
             {
+             //   _logger.Debug($"Iterating key {registryKey.Value.KeyName} in path {registryKey.Value.KeyPath}. searchTerm: {searchTerm}, regex: {useRegEx}, literal: {literal}");
+
                 foreach (var keyValue in registryKey.Value.Values)
                 {
+                   // _logger.Debug($"Searching value {keyValue.ValueName}");
+
                     if (useRegEx)
                     {
                         if (Regex.IsMatch(keyValue.ValueData, searchTerm, RegexOptions.IgnoreCase))
@@ -1152,6 +1159,8 @@ namespace Registry
                         {
                             continue;
                         }
+
+                    //    _logger.Debug($"After literal match");
 
                         var asAscii = keyValue.ValueData;
                         var asUnicode = keyValue.ValueData;
@@ -1174,6 +1183,8 @@ namespace Registry
                                 // Syntax error in the regular expression
                             }
 
+                    //        _logger.Debug($"hitstring 1: {hitString}");
+
                             if (hitString.Length > 0)
                             {
                                 var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
@@ -1192,10 +1203,15 @@ namespace Registry
                                 // Syntax error in the regular expression
                             }
 
+                        //    _logger.Debug($"hitstring 2: {hitString}");
+
                             if (hitString.Length <= 0)
                             {
                                 continue;
                             }
+
+                       //     _logger.Debug($"before unicodehex");
+
                             var unicodehex = Encoding.Unicode.GetBytes(hitString);
 
                             var unicodeHit = BitConverter.ToString(unicodehex);

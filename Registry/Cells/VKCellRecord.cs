@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using NLog;
 using Registry.Lists;
 using Registry.Other;
 
@@ -317,14 +318,28 @@ namespace Registry.Cells
         {
             get
             {
+
+                //var _logger = LogManager.GetLogger("FFFFFFF");
+
+                
+
                 object val = DataBlockRaw;
                 var localDBL = DataBlockRaw;
+
+              //  _logger.Debug($"\r\n ValueName: {ValueName}   LocalDbl is null?: {localDBL == null}");
+
+              //  _logger.Debug($"Local dbt len is {localDBL.Length}, _internalDoffset: {_internalDataOffset}, _datalenInternal: {_dataLengthInternal}, LocalDblBytes: {BitConverter.ToString(localDBL)} ");
+
+
+              //  _logger.Debug($"Record is free: {IsFree}");
 
                 if (IsFree)
                 {
                     // since its free but the data length is less than what we have, take what we do have and live with it
                     if (localDBL.Length < _dataLengthInternal)
                     {
+               //         _logger.Debug("In top return");
+
                         val = localDBL;
                         return val;
                     }
@@ -333,6 +348,10 @@ namespace Registry.Cells
                 //this is a failsafe for when IsFree == true. a lot of time the data is there, but if not, stick what we do have in the value and call it a day
                 try
                 {
+             //       _logger.Debug($"In try loop. Data type is {DataType}");
+
+
+
                     switch (DataType)
                     {
                         case DataTypeEnum.RegFileTime:
@@ -420,8 +439,9 @@ namespace Registry.Cells
                     }
                 }
 
-                catch (Exception)
+                catch (Exception ex)
                 {
+                  //  _logger.Debug($"error happened {ex.Message} {ex.StackTrace} Will throw? :{IsFree == false}");
                     //if its a free record, errors are expected, but if not, throw so the issue can be addressed
                     if (IsFree)
                     {
@@ -429,7 +449,11 @@ namespace Registry.Cells
                     }
                     else
                     {
-                        throw;
+                        var logger = LogManager.GetCurrentClassLogger();
+                        logger.Error($"Error getting ValueData for {ValueName}. Error message: {ex.Message}, Stack: {ex.StackTrace}");
+                        val = localDBL;
+                        //throw;
+
                     }
                 }
 
