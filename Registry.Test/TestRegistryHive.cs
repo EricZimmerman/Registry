@@ -39,6 +39,15 @@ namespace Registry.Test
             Check.That(r.Header.Length).IsNotEqualTo(r.HBinRecordTotalSize);
         }
 
+        [Test]
+        public void OneOff()
+        {
+            
+            var r = new RegistryHive(@"C:\Users\e\Desktop\SYSTEMKeyNotFound");
+            
+            r.ParseHive();
+        }
+
 
         [Test]
         public void RecoverDeletedShouldBeTrue()

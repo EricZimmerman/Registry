@@ -655,7 +655,18 @@ namespace Registry
 
             if (rootNode == null)
             {
-                throw new KeyNotFoundException("Root nk record not found!");
+                _logger.Warn("Unable to find root key based on flag HiveEntryRootKey. Looking for root key via Header.RootCellOffset value...");
+                rootNode =
+                CellRecords.Values.OfType<NKCellRecord>()
+                    .SingleOrDefault(
+                        (f => f.RelativeOffset == (long) Header.RootCellOffset));
+
+                if (rootNode == null)
+                {
+                    throw new KeyNotFoundException("Root nk record not found!");
+                }
+
+                    
             }
 
             //validate what we found above via the flag method
