@@ -552,11 +552,18 @@ namespace Registry
             long offsetInHive = 4096;
 
             var hiveLength = Header.Length + 0x1000;
-
-            //keep reading the file until we reach the end
-            while (offsetInHive < hiveLength)
+            if (hiveLength < FileBytes.Length)
             {
-                var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
+                _logger.Warn($"Header length is smaller than the size of the file.");
+                hiveLength = (uint) FileBytes.Length;
+            }
+
+                //keep reading the file until we reach the end
+                while (offsetInHive < hiveLength)
+               {
+     
+
+                    var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
 
                 if (hbinSize == 0)
                 {
