@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -305,6 +306,11 @@ namespace Registry.Other
         private List<IRecordBase> ExtractRecordsFromSlack(byte[] remainingData, long relativeoffset)
         {
             var records = new List<IRecordBase>();
+
+            if (remainingData.Length == 4064 && _registryHive.HivePath.Contains("DeletedBags"))
+            {
+                Debug.WriteLine(1);
+            }
 
             var offsetList2 = new List<int>();
 

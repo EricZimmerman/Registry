@@ -577,7 +577,7 @@ namespace Registry
 
                 if (hbinSig != HbinSignature)
                 {
-                    _logger.Error("hbin header incorrect at absolute offset 0x{0:X}!!! Percent done: {1:P}",
+                    _logger.Warn("hbin header incorrect at absolute offset 0x{0:X}!!! Percent done: {1:P}",
                         offsetInHive,
                         (double) offsetInHive/hiveLength);
 
