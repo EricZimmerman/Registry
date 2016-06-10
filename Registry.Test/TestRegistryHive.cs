@@ -68,6 +68,23 @@ namespace Registry.Test
         }
 
         [Test]
+        public void DeletedFindTest()
+        {
+            var f = @"D:\Temp\win10ERZamcachepreso\NTUSER.DAT";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+            var ts = "4/25/2016 2:48:55 PM +00:00";
+
+          var t =   r.GetDeletedKey(@"SOFTWARE\Microsoft\Office\16.0\Common\ServicesManagerCache\ServicesCatalog\ONPREM_SHAREPOINT",ts);
+
+            Check.That(t).IsNotNull();
+            Check.That(t.NKRecord.IsDeleted).IsTrue();
+;        }
+
+
+        [Test]
         public void ShouldExportFileDeletedRecords()
         {
             TestSetup.UsrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedDeletedStuff.txt", true);
