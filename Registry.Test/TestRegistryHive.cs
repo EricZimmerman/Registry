@@ -75,9 +75,11 @@ namespace Registry.Test
             r.RecoverDeleted = true;
             r.ParseHive();
 
-            var ts = "4/25/2016 2:48:55 PM +00:00";
+            var ts = "2016-05-03 16:41:29 +00:00";
 
-          var t =   r.GetDeletedKey(@"SOFTWARE\Microsoft\Office\16.0\Common\ServicesManagerCache\ServicesCatalog\ONPREM_SHAREPOINT",ts);
+            var td = DateTimeOffset.Parse(ts);
+
+          var t =   r.GetDeletedKey(@"DocumentRecovery\1E05C541", td.ToString());
 
             Check.That(t).IsNotNull();
             Check.That(t.NKRecord.IsDeleted).IsTrue();
