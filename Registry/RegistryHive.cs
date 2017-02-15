@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -121,7 +122,7 @@ namespace Registry
                 DumpKeyCommonFormat(subkey, sw, ref keyCount, ref valueCount);
             }
         }
-
+         
         private DataNode GetDataNodeFromOffset(long relativeOffset)
         {
             var dataLenBytes = ReadBytesFromHive(relativeOffset + 4096, 4);
@@ -240,6 +241,7 @@ namespace Registry
                     foreach (var offset in lxRecord.Offsets)
                     {
                         _logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset.Key);
+
                         var cell = CellRecords[offset.Key];
 
                         var nk = cell as NKCellRecord;

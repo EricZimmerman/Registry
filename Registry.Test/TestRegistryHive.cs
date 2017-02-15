@@ -67,6 +67,7 @@ namespace Registry.Test
             Check.That(TestSetup.UsrclassDeleted.Header.Length).IsEqualTo(TestSetup.UsrclassDeleted.HBinRecordTotalSize);
         }
 
+
         [Test]
         public void DeletedFindTest()
         {
