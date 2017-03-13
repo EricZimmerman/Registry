@@ -210,6 +210,8 @@ namespace Registry.Cells
                     //datablockRaw now has our value AND slack space!
                     //value is dataLengthInternal long. rest is slack
 
+                    
+
                     //Some values are huge, so look for them and, if found, get the data into dataBlockRaw (but only for certain versions of hives)
                     if (_dataLengthInternal > 16344 && _minorVersion > 3)
                     {
@@ -222,7 +224,25 @@ namespace Registry.Cells
                         // db now contains a pointer to where we can get db.NumberOfEntries offsets to our data and reassemble it
 
                         datablockSizeRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets, 4);
-                        dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+
+
+
+
+                        try
+                        {
+                            dataBlockSize = BitConverter.ToInt32(datablockSizeRaw, 0);
+                        }
+                        catch (Exception e)
+                        {
+                            if (IsFree)
+                            {
+                                return new byte[0];
+                            }
+
+                            var l = LogManager.GetCurrentClassLogger();
+                            l.Error(e);
+                        }
+                        
 
                         _datablockRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets,
                             Math.Abs(dataBlockSize));
@@ -241,14 +261,33 @@ namespace Registry.Cells
                             DataOffsets.Add(os);
 
                             var tempDataBlockSizeRaw = _registryHive.ReadBytesFromHive(4096 + os, 4);
-                            var tempdataBlockSize = BitConverter.ToInt32(tempDataBlockSizeRaw, 0);
 
-                            //get our data block
-                            var tempDataRaw = _registryHive.ReadBytesFromHive(4096 + os, Math.Abs(tempdataBlockSize));
+                            try
+                            {
+                                var tempdataBlockSize = BitConverter.ToInt32(tempDataBlockSizeRaw, 0);
 
-                            // since the data is prefixed with its length (4 bytes), skip that so we do not include it in the final data 
-                            //we read 16344 bytes as the rest is padding and jacks things up if you use the whole range of bytes
-                            bigDataRaw.AddRange(tempDataRaw.Skip(4).Take(16344).ToArray());
+                                //get our data block
+                                var tempDataRaw = _registryHive.ReadBytesFromHive(4096 + os, Math.Abs(tempdataBlockSize));
+
+                                // since the data is prefixed with its length (4 bytes), skip that so we do not include it in the final data 
+                                //we read 16344 bytes as the rest is padding and jacks things up if you use the whole range of bytes
+                                bigDataRaw.AddRange(tempDataRaw.Skip(4).Take(16344).ToArray());
+
+                            }
+                            catch (Exception e)
+                            {
+                            
+
+                                if (IsFree)
+                                {
+                                    return new byte[0];
+                                }
+                                var l = LogManager.GetCurrentClassLogger();
+                                l.Error(e);
+
+                            }
+
+                          
                         }
 
                         _datablockRaw = (byte[]) bigDataRaw.ToArray(typeof(byte));
@@ -326,7 +365,7 @@ namespace Registry.Cells
             get
             {
                 object val;
-                byte[] localDBL = null;
+                byte[] localDBL = new byte[0];
 
                 //var _logger = LogManager.GetLogger("FFFFFFF");
                 try

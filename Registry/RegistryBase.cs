@@ -83,9 +83,22 @@ namespace Registry
 
         public byte[] ReadBytesFromHive(long offset, int length)
         {
-            var absLen = Math.Abs(length);
+            var readLength = Math.Abs(length);
 
-            var r = new ArraySegment<byte>(FileBytes, (int) offset, absLen);
+
+            var remaining = FileBytes.Length - offset;
+
+            if (remaining <= 0)
+            {
+                return new byte[0];
+            }
+
+            if (readLength > remaining)
+            {
+                readLength = (int) remaining;
+            }
+
+            var r = new ArraySegment<byte>(FileBytes, (int) offset, readLength);
 
             return r.ToArray();
         }
