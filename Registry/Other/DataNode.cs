@@ -12,6 +12,7 @@ namespace Registry.Other
     {
         // private fields...
         private readonly int _size;
+
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="DataNode" /> class.

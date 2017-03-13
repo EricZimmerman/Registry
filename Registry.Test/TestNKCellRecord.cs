@@ -10,7 +10,12 @@ namespace Registry.Test
         [Test]
         public void ShouldHavePaddingLengthOfZeroWhenRecordIsFree()
         {
-            var key = TestSetup.Bcd.GetKey(0x10e8);
+            var Bcd = new RegistryHive(@"..\..\Hives\BCD");
+            Bcd.FlushRecordListsAfterParse = false;
+            Bcd.RecoverDeleted = true;
+            Bcd.ParseHive();
+
+            var key = Bcd.GetKey(0x10e8);
 
             Check.That(key).IsNotNull();
             Check.That(key.NKRecord.Padding.Length).IsEqualTo(0);
@@ -19,7 +24,12 @@ namespace Registry.Test
         [Test]
         public void ShouldHaveUnableToDetermineName()
         {
-            var key = TestSetup.UsrClassBeef.CellRecords[0x783CD8] as NKCellRecord;
+            var UsrClassBeef = new RegistryHive(@"..\..\Hives\UsrClass BEEF000E.dat");
+            UsrClassBeef.RecoverDeleted = true;
+            UsrClassBeef.FlushRecordListsAfterParse = false;
+            UsrClassBeef.ParseHive();
+
+            var key = UsrClassBeef.CellRecords[0x783CD8] as NKCellRecord;
 
             Check.That(key).IsNotNull();
 
@@ -30,8 +40,12 @@ namespace Registry.Test
         [Test]
         public void ShouldVerifyNkRecordProperties()
         {
+            var Sam = new RegistryHive(@"..\..\Hives\SAM");
+            Sam.FlushRecordListsAfterParse = false;
+            Sam.ParseHive();
+
             var key =
-                TestSetup.Sam.GetKey(0x418);
+                Sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
 

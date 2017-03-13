@@ -42,6 +42,7 @@ namespace Registry.Cells
 
         // public fields...
         public List<ulong> ValueOffsets;
+
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
@@ -222,7 +223,9 @@ namespace Registry.Cells
         public uint HivePointer { get; }
         public int UserFlags { get; }
         public int VirtualControlFlags { get; }
+
         public uint WorkVar { get; }
+
         // public properties...
         public long AbsoluteOffset
         {

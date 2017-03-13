@@ -12,8 +12,12 @@ namespace Registry.Test
         [Test]
         public void ShouldFindKeyValueAndCheckProperties()
         {
+            var Sam = new RegistryHive(@"..\..\Hives\SAM");
+            Sam.FlushRecordListsAfterParse = false;
+            Sam.ParseHive();
+
             var key =
-                TestSetup.Sam.GetKey(0x418);
+                Sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
 
@@ -46,7 +50,7 @@ namespace Registry.Test
 
             //This key has slack
             key =
-                TestSetup.Sam.GetKey(
+                Sam.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Users\000001F4");
 
             Check.That(key).IsNotNull();
@@ -89,8 +93,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegBigEndianDWordValues()
         {
+            var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_hasBigEndianDWord");
             var key =
-                TestSetup.SamHasBigEndianOnDemand.GetKey(
+                SamHasBigEndianOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Aliases");
 
             Check.That(key).IsNotNull();
@@ -106,8 +111,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegBinaryValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\Appearance\Schemes");
 
             Check.That(key).IsNotNull();
@@ -120,8 +126,9 @@ namespace Registry.Test
             Check.That(val.ValueDataRaw.Length).IsEqualTo(712);
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
+
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\Desktop\WindowMetrics");
 
             Check.That(key).IsNotNull();
@@ -135,7 +142,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\Mouse");
 
             Check.That(key).IsNotNull();
@@ -150,7 +157,7 @@ namespace Registry.Test
 
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\PowerCfg\GlobalPowerPolicy");
 
             Check.That(key).IsNotNull();
@@ -164,7 +171,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\Input Method\Hot Keys\00000010");
 
             Check.That(key).IsNotNull();
@@ -181,8 +188,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegDWordValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Wisp\Pen\SysEventParameters");
 
             Check.That(key).IsNotNull();
@@ -195,7 +203,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows NT\CurrentVersion\Windows");
 
             Check.That(key).IsNotNull();
@@ -208,7 +216,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows NT\CurrentVersion\MsiCorruptedFileRecovery\RepairedProducts");
 
             Check.That(key).IsNotNull();
@@ -221,7 +229,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\Windows Error Reporting");
 
             Check.That(key).IsNotNull();
@@ -234,7 +242,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Console");
 
             Check.That(key).IsNotNull();
@@ -250,8 +258,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegExpandSzValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Environment");
 
             Check.That(key).IsNotNull();
@@ -264,7 +273,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(2);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\Cursors");
 
             Check.That(key).IsNotNull();
@@ -277,7 +286,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\AppEvents\Schemes\Apps\.Default\WindowsUAC\.Current");
 
             Check.That(key).IsNotNull();
@@ -290,7 +299,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\CurrentVersion\Themes");
 
             Check.That(key).IsNotNull();
@@ -303,7 +312,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(6);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\CurrentVersion\ThemeManager");
 
             Check.That(key).IsNotNull();
@@ -319,8 +328,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegMultiSzValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\International\User Profile");
 
             Check.That(key).IsNotNull();
@@ -332,8 +342,14 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueData).IsEqualTo("en-US");
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
+
+            var UsrclassAcronis = new RegistryHive(@"..\..\Hives\Acronis_0x52_Usrclass.dat");
+            UsrclassAcronis.RecoverDeleted = true;
+            UsrclassAcronis.FlushRecordListsAfterParse = false;
+            UsrclassAcronis.ParseHive();
+
             key =
-                TestSetup.UsrclassAcronis.GetKey(
+                UsrclassAcronis.GetKey(
                     @"S-1-5-21-3851833874-1800822990-1357392098-1000_Classes\Local Settings\MuiCache\12\52C64B7E");
 
             Check.That(key).IsNotNull();
@@ -345,8 +361,13 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueData).IsEqualTo("en-US en");
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
+            var Bcd = new RegistryHive(@"..\..\Hives\BCD");
+            Bcd.FlushRecordListsAfterParse = false;
+            Bcd.RecoverDeleted = true;
+            Bcd.ParseHive();
+
             key =
-                TestSetup.Bcd.GetKey(
+                Bcd.GetKey(
                     @"System\Objects\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\Elements\14000006");
 
             Check.That(key).IsNotNull();
@@ -360,7 +381,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(6);
 
             key =
-                TestSetup.Bcd.GetKey(
+                Bcd.GetKey(
                     @"System\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\14000006");
 
             Check.That(key).IsNotNull();
@@ -376,8 +397,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegQWordValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\Windows Error Reporting");
 
             Check.That(key).IsNotNull();
@@ -390,7 +412,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\CurrentVersion\Store\RefreshBannedAppList");
 
             Check.That(key).IsNotNull();
@@ -402,8 +424,13 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueData).IsEqualTo((ulong) 0);
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
+            var UsrclassAcronis = new RegistryHive(@"..\..\Hives\Acronis_0x52_Usrclass.dat");
+            UsrclassAcronis.RecoverDeleted = true;
+            UsrclassAcronis.FlushRecordListsAfterParse = false;
+            UsrclassAcronis.ParseHive();
+
             key =
-                TestSetup.UsrclassAcronis.GetKey(
+                UsrclassAcronis.GetKey(
                     @"S-1-5-21-3851833874-1800822990-1357392098-1000_Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
 
             Check.That(key).IsNotNull();
@@ -415,9 +442,12 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueData).IsEqualTo((ulong) 130294002389413697);
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
-
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
             key =
-                TestSetup.UsrclassDeleted.GetKey(
+                UsrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
 
             Check.That(key).IsNotNull();
@@ -429,8 +459,12 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueData).IsEqualTo((ulong) 130672934390152518);
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(4);
 
+            var NtUserSlack = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
+            NtUserSlack.FlushRecordListsAfterParse = false;
+            NtUserSlack.ParseHive();
+
             key =
-                TestSetup.NtUserSlack.GetKey(
+                NtUserSlack.GetKey(
                     @"$$$PROTO.HIV\Software\Microsoft\VisualStudio\7.0\External Tools");
 
             Check.That(key).IsNotNull();
@@ -446,8 +480,9 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRegSzValues()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\CTF\Assemblies\0x00000409\{34745C63-B2F0-4784-8B67-5E12C8701A31}");
 
             Check.That(key).IsNotNull();
@@ -460,7 +495,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(6);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\CTF\SortOrder\Language");
 
             Check.That(key).IsNotNull();
@@ -473,7 +508,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(2);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Speech\Preferences\AppCompatDisableDictation");
 
             Check.That(key).IsNotNull();
@@ -486,7 +521,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(0);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\EUDC\932");
 
             Check.That(key).IsNotNull();
@@ -499,7 +534,7 @@ namespace Registry.Test
             Check.That(val.VKRecord.ValueDataSlack.Length).IsEqualTo(2);
 
             key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Control Panel\PowerCfg\PowerPolicies\4");
 
             Check.That(key).IsNotNull();
@@ -516,7 +551,12 @@ namespace Registry.Test
         [Test]
         public void TestUnicodeNameWhereSupposedToBeASCII()
         {
-            var key = TestSetup.NtUserSlack.CellRecords[0x293490] as VKCellRecord;
+            var NtUserSlack = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
+            NtUserSlack.FlushRecordListsAfterParse = false;
+            NtUserSlack.ParseHive();
+
+
+            var key = NtUserSlack.CellRecords[0x293490] as VKCellRecord;
 
             Check.That(key).IsNotNull();
             Check.That(key.ValueName).IsNotEmpty();
@@ -526,8 +566,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordBigData()
         {
+            var SoftwareOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SOFTWARE");
             var key =
-                TestSetup.SoftwareOnDemand.GetKey(
+                SoftwareOnDemand.GetKey(
                     @"CMI-CreateHive{199DAFC2-6F16-4946-BF90-5A3FC3A60902}\\Microsoft\\SystemCertificates\\AuthRoot\\AutoUpdate");
 
             Check.That(key).IsNotNull();
@@ -542,8 +583,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordFileTimeRegType()
         {
+            var SystemOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SYSTEM");
             var key =
-                TestSetup.SystemOnDemand.GetKey(
+                SystemOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Control\DeviceContainers\{00000000-0000-0000-FFFF-FFFFFFFFFFFF}\Properties\{3464f7a4-2444-40b1-980a-e0903cb6d912}\0008");
 
             Check.That(key).IsNotNull();
@@ -574,7 +616,13 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordIsFreeDataBlockExceptions()
         {
-            var key = TestSetup.UsrClass1.CellRecords[0x406180] as VKCellRecord;
+            var UsrClass1 = new RegistryHive(@"..\..\Hives\UsrClass 1.dat");
+            UsrClass1.RecoverDeleted = true;
+            UsrClass1.FlushRecordListsAfterParse = false;
+            UsrClass1.ParseHive();
+
+
+            var key = UsrClass1.CellRecords[0x406180] as VKCellRecord;
 
             Check.That(key).IsNotNull();
             Check.That(key.ValueDataRaw.Length).IsEqualTo(0);
@@ -584,7 +632,12 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordIsFreeLessDataThanDataLength2()
         {
-            var val = TestSetup.UsrclassAcronis.CellRecords[0x3f78] as VKCellRecord;
+            var UsrclassAcronis = new RegistryHive(@"..\..\Hives\Acronis_0x52_Usrclass.dat");
+            UsrclassAcronis.RecoverDeleted = true;
+            UsrclassAcronis.FlushRecordListsAfterParse = false;
+            UsrclassAcronis.ParseHive();
+
+            var val = UsrclassAcronis.CellRecords[0x3f78] as VKCellRecord;
 
             Check.That(val).IsNotNull();
 
@@ -609,8 +662,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordQWordWithLengthOfZero()
         {
+            var SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_DUPENAME");
             var key =
-                TestSetup.SamDupeNameOnDemand.GetKey(
+                SamDupeNameOnDemand.GetKey(
                     @"SAM\SAM\Domains\Builtin\Aliases\Members\S-1-5-21-4271176276-4210259494-4108073714");
 
             Check.That(key).IsNotNull();
@@ -642,8 +696,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegBinary()
         {
+            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
             var key =
-                TestSetup.SamOnDemand.GetKey(
+                SamOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
@@ -673,8 +728,13 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegBinaryDeletedValue()
         {
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
             var key =
-                TestSetup.UsrclassDeleted.GetKey(
+                UsrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1");
 
             Check.That(key).IsNotNull();
@@ -704,8 +764,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegDWord()
         {
+            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
             var key =
-                TestSetup.SamOnDemand.GetKey(
+                SamOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\LastSkuUpgrade");
 
             Check.That(key).IsNotNull();
@@ -736,8 +797,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegMultiSz()
         {
+            var UsrClassDeletedBagsOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\UsrClassDeletedBags.dat");
             var key =
-                TestSetup.UsrClassDeletedBagsOnDemand.GetKey(
+                UsrClassDeletedBagsOnDemand.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\MuiCache\6\52C64B7E");
 
             Check.That(key).IsNotNull();
@@ -768,8 +830,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegNone()
         {
+            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
             var key =
-                TestSetup.SamOnDemand.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains");
+                SamOnDemand.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains");
 
             Check.That(key).IsNotNull();
 
@@ -798,8 +861,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegqWord()
         {
+            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
             var key =
-                TestSetup.NtUser1OnDemand.GetKey(
+                NtUser1OnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Software\Microsoft\Windows\CurrentVersion\Store\RefreshBannedAppList");
 
             Check.That(key).IsNotNull();
@@ -830,8 +894,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegSz()
         {
+            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
             var key =
-                TestSetup.SamOnDemand.GetKey(
+                SamOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Builtin\Aliases\Members\S-1-5-21-727398572-3617256236-2003601904\00000201");
 
             Check.That(key).IsNotNull();
@@ -861,8 +926,9 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordRegUnknown()
         {
+            var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_hasBigEndianDWord");
             var key =
-                TestSetup.SamHasBigEndianOnDemand.GetKey(
+                SamHasBigEndianOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account\Groups\Names\None");
 
             Check.That(key).IsNotNull();
@@ -893,7 +959,8 @@ namespace Registry.Test
         [Test]
         public void TestVKRecordUnknownRegType()
         {
-            var key = TestSetup.SamDupeNameOnDemand.GetKey(@"SAM\SAM\Domains\Account\Users");
+            var SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_DUPENAME");
+            var key = SamDupeNameOnDemand.GetKey(@"SAM\SAM\Domains\Account\Users");
 
             Check.That(key).IsNotNull();
 

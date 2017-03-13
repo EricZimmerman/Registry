@@ -45,7 +45,9 @@ namespace Registry.Test
         [Test]
         public void HivePathShouldReflectWhatIsPassedIn()
         {
-            Check.That(TestSetup.Security.HivePath).IsEqualTo(@"..\..\Hives\SECURITY");
+            var Security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
+
+            Check.That(Security.HivePath).IsEqualTo(@"..\..\Hives\SECURITY");
         }
 
         [Test]
@@ -130,7 +132,11 @@ namespace Registry.Test
             binaryReader.Close();
             fileStream.Close();
 
-            Check.ThatCode(() => { var rb = new RegistryBase(fileBytes); }).Throws<ArgumentException>();
+            Check.ThatCode(() =>
+                {
+                    var rb = new RegistryBase(fileBytes);
+                })
+                .Throws<ArgumentException>();
         }
 
         [Test]

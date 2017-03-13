@@ -240,7 +240,8 @@ namespace ExampleApp
                             $"Found {registryHive.CellRecords.Count:N0} Cell records (nk: {registryHive.CellRecords.Count(w => w.Value is NKCellRecord):N0}, vk: {registryHive.CellRecords.Count(w => w.Value is VKCellRecord):N0}, sk: {registryHive.CellRecords.Count(w => w.Value is SKCellRecord):N0}, lk: {registryHive.CellRecords.Count(w => w.Value is LKCellRecord):N0})");
                         sb.AppendLine($"Found {registryHive.ListRecords.Count:N0} List records");
                         sb.AppendLine();
-                        sb.AppendLine(string.Format($"Header CheckSums match: {registryHive.Header.ValidateCheckSum()}"));
+                        sb.AppendLine(
+                            string.Format($"Header CheckSums match: {registryHive.Header.ValidateCheckSum()}"));
                         sb.AppendLine(
                             string.Format(
                                 $"Header sequence 1: {registryHive.Header.Sequence1}, Header sequence 2: {registryHive.Header.Sequence2}"));
@@ -248,9 +249,9 @@ namespace ExampleApp
                         sb.AppendLine();
 
                         sb.AppendLine(
-                            $"There are {referencedCells.Count():N0} cell records marked as being referenced ({referencedCells.Count()/(double) registryHive.CellRecords.Count:P})");
+                            $"There are {referencedCells.Count():N0} cell records marked as being referenced ({referencedCells.Count() / (double) registryHive.CellRecords.Count:P})");
                         sb.AppendLine(
-                            $"There are {referencedList.Count():N0} list records marked as being referenced ({referencedList.Count()/(double) registryHive.ListRecords.Count:P})");
+                            $"There are {referencedList.Count():N0} list records marked as being referenced ({referencedList.Count() / (double) registryHive.ListRecords.Count:P})");
 
                         if (result.Value.RecoverDeleted)
                         {

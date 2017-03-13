@@ -10,7 +10,11 @@ namespace Registry.Test
         [Test]
         public void SKRecordxACLNoDataForAceRecordsInSacl()
         {
-            var sk = TestSetup.NtUserSlack.CellRecords[0x80] as SKCellRecord;
+            var NtUserSlack = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
+            NtUserSlack.FlushRecordListsAfterParse = false;
+            NtUserSlack.ParseHive();
+
+            var sk = NtUserSlack.CellRecords[0x80] as SKCellRecord;
 
             Check.That(sk).IsNotNull();
 
@@ -30,11 +34,15 @@ namespace Registry.Test
         [Test]
         public void VerifySKInfo()
         {
-            var key = TestSetup.Sam.GetKey(@"SAM\Domains\Account");
+            var Sam = new RegistryHive(@"..\..\Hives\SAM");
+            Sam.FlushRecordListsAfterParse = false;
+            Sam.ParseHive();
+
+            var key = Sam.GetKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
 
-            var sk = TestSetup.Sam.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
+            var sk = Sam.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
 
             Check.That(sk).IsNotNull();
             Check.That(sk.ToString()).IsNotEmpty();

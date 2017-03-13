@@ -38,6 +38,7 @@ namespace Registry.Cells
 
         // public fields...
         public List<ulong> ValueOffsets;
+
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
@@ -166,9 +167,9 @@ namespace Registry.Cells
 
                 var paddingOffset = 0x50 + NameLength;
 
-                var paddingBlock = (int) Math.Ceiling((double) paddingOffset/8);
+                var paddingBlock = (int) Math.Ceiling((double) paddingOffset / 8);
 
-                var actualPaddingOffset = paddingBlock*8;
+                var actualPaddingOffset = paddingBlock * 8;
 
                 var paddingLength = actualPaddingOffset - paddingOffset;
 

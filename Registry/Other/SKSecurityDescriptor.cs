@@ -32,7 +32,9 @@ namespace Registry.Other
         private readonly uint sizeDacl;
         private readonly uint sizeGroupSid;
         private readonly uint sizeOwnerSid;
+
         private readonly uint sizeSacl;
+
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="SKSecurityDescriptor" /> class.
@@ -95,7 +97,7 @@ namespace Registry.Other
 
         public Helpers.SidTypeEnum OwnerSIDType => Helpers.GetSIDTypeFromSIDString(OwnerSID);
 
-        public string Padding { get; private set; }
+        public string Padding { get; }
         public byte[] RawBytes { get; }
 
         public byte Revision => RawBytes[0];

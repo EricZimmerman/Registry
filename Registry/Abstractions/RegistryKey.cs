@@ -23,6 +23,7 @@ namespace Registry.Abstractions
         }
 
         private string _keyPath;
+
         // public constructors...
         public RegistryKey(NKCellRecord nk, RegistryKey parent)
         {
@@ -40,6 +41,7 @@ namespace Registry.Abstractions
 
         // public properties...
         public string ClassName { get; set; }
+
         public RegistryKey Parent { get; set; }
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace Registry.Abstractions
                 return $@"{Parent.KeyPath}\{KeyName}";
             }
 
-            set { _keyPath = value; }
+            set => _keyPath = value;
         }
 
         /// <summary>
@@ -176,19 +178,15 @@ namespace Registry.Abstractions
                     case VKCellRecord.DataTypeEnum.RegLink:
                     case VKCellRecord.DataTypeEnum.RegResourceRequirementsList:
                     case VKCellRecord.DataTypeEnum.RegExpandSz:
-
                         var prefix = $"hex({(int) keyValue.VKRecord.DataType:x}):";
-
                         keyValueOut =
                             $"{prefix}{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}".ToLowerInvariant
                                 ();
-
                         if (keyValueOut.Length + prefix.Length + keyNameOut.Length > 76)
                         {
                             keyValueOut =
                                 $"{prefix}{FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, prefix.Length)}";
                         }
-
                         break;
 
                     case VKCellRecord.DataTypeEnum.RegDword:
@@ -198,16 +196,13 @@ namespace Registry.Abstractions
                         break;
 
                     case VKCellRecord.DataTypeEnum.RegBinary:
-
                         keyValueOut =
                             $"hex:{BitConverter.ToString(keyValue.ValueDataRaw).Replace("-", ",")}"
                                 .ToLowerInvariant();
-
                         if (keyValueOut.Length + 5 + keyNameOut.Length > 76)
                         {
                             keyValueOut = $"hex:{FormatBinaryValueData(keyValue.ValueDataRaw, keyNameOut.Length, 5)}";
                         }
-
                         break;
                 }
 

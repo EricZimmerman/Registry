@@ -2,7 +2,6 @@
 using System.Linq;
 using NFluent;
 using NUnit.Framework;
-using Registry.Abstractions;
 
 namespace Registry.Test
 {
@@ -11,7 +10,12 @@ namespace Registry.Test
         [Test]
         public void ShouldCreateRegistrySkeleton()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             Check.That(rs).IsNotNull();
         }
@@ -19,13 +23,22 @@ namespace Registry.Test
         [Test]
         public void ShouldThrowNullRefExtensionOnNullHive()
         {
-            Check.ThatCode(() => { var rs = new RegistrySkeleton(null); }).Throws<NullReferenceException>();
+            Check.ThatCode(() =>
+                {
+                    var rs = new RegistrySkeleton(null);
+                })
+                .Throws<NullReferenceException>();
         }
 
         [Test]
         public void ShouldReturnTrueOnAddMuiCacheSubkeyToSkeletonList()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
@@ -45,7 +58,12 @@ namespace Registry.Test
         [Test]
         public void ShouldReturnFalseOnRemovingNonExistentKey()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
@@ -58,7 +76,12 @@ namespace Registry.Test
         [Test]
         public void ShouldntAddDuplicateSkeletonKeys()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
@@ -85,7 +108,12 @@ namespace Registry.Test
         [Test]
         public void KeysCountShouldBeZeroAfterAddRemove()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
@@ -101,11 +129,15 @@ namespace Registry.Test
         }
 
 
-
         [Test]
         public void ShouldReturnFalseOnAddNonExistentSubkeyToSkeletonList()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
@@ -119,16 +151,27 @@ namespace Registry.Test
         public void ShouldThrowExceptionIfWriteCalledWithNoKeysAdded()
         {
             Check.ThatCode(() =>
-            {
-                var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
-                rs.Write(@"foo.reg");
-            }).Throws<InvalidOperationException>(); //ncrunch: no coverage
+                {
+                    var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+                    UsrclassDeleted.RecoverDeleted = true;
+                    UsrclassDeleted.FlushRecordListsAfterParse = false;
+                    UsrclassDeleted.ParseHive();
+
+                    var rs = new RegistrySkeleton(UsrclassDeleted);
+                    rs.Write(@"foo.reg");
+                })
+                .Throws<InvalidOperationException>(); //ncrunch: no coverage
         }
 
         [Test]
         public void ShouldReturnTrueWhenWriteCalledWithKeyAdded()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
@@ -139,10 +182,15 @@ namespace Registry.Test
             Check.That(write).IsTrue();
         }
 
-        [Test,Timeout(360000)]
+        [Test]
+        [Timeout(360000)]
         public void BigRecursiveWithRegUnknown()
         {
-            var rs = new RegistrySkeleton(TestSetup.System);
+            var System = new RegistryHive(@"..\..\Hives\System");
+            System.FlushRecordListsAfterParse = false;
+            System.ParseHive();
+
+            var rs = new RegistrySkeleton(System);
 
             var sk = new SkeletonKeyRoot(@"Setup\AllowStart", true, true);
 
@@ -157,7 +205,7 @@ namespace Registry.Test
             Check.That(write).IsTrue();
 
             var newReg = new RegistryHive(@"bigrecursive.hve");
-        
+
             newReg.ParseHive();
 
             var key = newReg.GetKey(@"ControlSet001\Control");
@@ -172,7 +220,12 @@ namespace Registry.Test
         [Test]
         public void BigDataCase()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify", true,
                 false);
@@ -202,7 +255,12 @@ namespace Registry.Test
         [Test]
         public void RecursiveCase()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\Bags", true, true);
 
@@ -241,7 +299,12 @@ namespace Registry.Test
         [Test]
         public void DeletedCase()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU", true, true);
 
@@ -282,7 +345,12 @@ namespace Registry.Test
         [Test]
         public void WrittenHiveShouldContain163ValuesInMuiCacheSubkey()
         {
-            var rs = new RegistrySkeleton(TestSetup.UsrclassDeleted);
+            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            UsrclassDeleted.RecoverDeleted = true;
+            UsrclassDeleted.FlushRecordListsAfterParse = false;
+            UsrclassDeleted.ParseHive();
+
+            var rs = new RegistrySkeleton(UsrclassDeleted);
 
             var sk = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
@@ -326,6 +394,5 @@ namespace Registry.Test
 
             Check.That(key.Values.Count).IsEqualTo(163);
         }
-
     }
 }

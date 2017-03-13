@@ -10,6 +10,7 @@ namespace Registry.Other
     public class RegistryHeader
     {
         public int CalculatedChecksum;
+
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="RegistryHeader" /> class.
@@ -62,6 +63,7 @@ namespace Registry.Other
 
         // public properties...
         public uint BootRecover { get; }
+
         public uint BootType { get; }
         public int CheckSum { get; }
         public uint Cluster { get; }

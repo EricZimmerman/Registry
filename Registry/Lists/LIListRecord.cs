@@ -13,6 +13,7 @@ namespace Registry.Lists
         // private fields...
 
         private readonly int _size;
+
         // public constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="LIListRecord" />  class.

@@ -18,9 +18,9 @@ namespace Registry.Other
     {
         private readonly int _minorVersion;
         private readonly bool _recoverDeleted;
-        private byte[] _rawBytes;
 
         private readonly RegistryHive _registryHive;
+        private byte[] _rawBytes;
 
         // protected internal constructors...
         /// <summary>
@@ -47,7 +47,7 @@ namespace Registry.Other
             Check.That(sig).IsEqualTo(HbinSignature);
 
 
-            reg._logger.Debug("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
+            reg._logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -142,7 +142,7 @@ namespace Registry.Other
                 readSize = Math.Abs(readSize);
 
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
-                    //  new byte[readSize];
+                //  new byte[readSize];
 
                 _registryHive.TotalBytesRead += readSize;
 
@@ -159,15 +159,13 @@ namespace Registry.Other
                     //only process records with 2 letter signatures. this avoids crazy output for data cells
                     if (foundMatch)
                     {
-                        _registryHive._logger.Debug(
-                            "Processing {0} record at hbin relative offset 0x{1:X} (Absolute offset: 0x{2:X})",
-                            cellSignature, offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                        _registryHive._logger.Trace(
+                            $"Processing {cellSignature} record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                     else
                     {
-                        _registryHive._logger.Debug(
-                            "Processing data record at hbin relative offset 0x{0:X} (Absolute offset: 0x{1:X})",
-                            offsetInHbin, offsetInHbin + RelativeOffset + 0x1000);
+                        _registryHive._logger.Trace(
+                            $"Processing data record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                 }
                 //ncrunch: no coverage end
@@ -187,7 +185,6 @@ namespace Registry.Other
 
                         case LiSignature:
                             listRecord = new LIListRecord(rawRecord, offsetInHbin + RelativeOffset);
-
                             break;
 
                         case RiSignature:
@@ -208,14 +205,12 @@ namespace Registry.Other
                                 cellRecord = new NKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
                                     _registryHive);
                             }
-
                             break;
                         case SkSignature:
                             if (rawRecord.Length >= 0x14) // the minimum length for a recoverable record
                             {
                                 cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
-
                             break;
 
                         case VkSignature:
@@ -316,7 +311,7 @@ namespace Registry.Other
 
             byte[] raw = null;
 
-            _registryHive._logger.Debug("Looking for cell signatures at absolute offset 0x{0:X}",
+            _registryHive._logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
                 relativeoffset + 0x1000);
 
             for (var i = 0; i < remainingData.Length; i++)
@@ -354,8 +349,10 @@ namespace Registry.Other
                     raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs((int) size)).ToArray();
 
                     if (raw.Length < 6)
+                    {
                         continue;
-                            // since we need 4 bytes for the size and 2 for sig, if its smaller than 6, go to next one
+                    }
+                    // since we need 4 bytes for the size and 2 for sig, if its smaller than 6, go to next one
 
                     var sig2 = BitConverter.ToInt16(raw, 4);
 
@@ -366,15 +363,13 @@ namespace Registry.Other
                             {
                                 continue;
                             }
-
                             var nk = new NKCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                             if (nk.LastWriteTimestamp.Year > 1900)
                             {
-                                _registryHive._logger.Debug("Found nk record in slack at absolute offset 0x{0:X}",
+                                _registryHive._logger.Trace("Found nk record in slack at absolute offset 0x{0:X}",
                                     relativeoffset + actualStart + 0x1000);
                                 records.Add(nk);
                             }
-
                             break;
                         case VkSignature:
                             if (raw.Length < 0x18)
@@ -384,10 +379,9 @@ namespace Registry.Other
                             }
                             var vk = new VKCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion,
                                 _registryHive);
-                            _registryHive._logger.Debug("Found vk record in slack at absolute offset 0x{0:X}",
+                            _registryHive._logger.Trace("Found vk record in slack at absolute offset 0x{0:X}",
                                 relativeoffset + actualStart + 0x1000);
                             records.Add(vk);
-
                             break;
                     }
                 }

@@ -24,7 +24,7 @@ namespace Registry
         {
             var keys = new List<RegistryKey>();
 
-            _logger.Debug("Looking for list record at relative offset 0x{0:X}", subkeyListsStableCellIndex);
+            _logger.Trace("Looking for list record at relative offset 0x{0:X}", subkeyListsStableCellIndex);
 
             var rawList = GetRawRecord(subkeyListsStableCellIndex);
 
@@ -37,10 +37,9 @@ namespace Registry
                 case LfSignature:
                 case LhSignature:
                     var lxRecord = l as LxListRecord;
-
                     foreach (var offset in lxRecord.Offsets)
                     {
-                        _logger.Debug("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset);
+                        _logger.Trace("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset);
                         var rawCell = GetRawRecord(offset.Key);
                         var nk = new NKCellRecord(rawCell.Length, offset.Key, this);
 
@@ -55,10 +54,9 @@ namespace Registry
 
                 case RiSignature:
                     var riRecord = l as RIListRecord;
-
                     foreach (var offset in riRecord.Offsets)
                     {
-                        _logger.Debug("In ri, looking for list record at relative offset 0x{0:X}", offset);
+                        _logger.Trace("In ri, looking for list record at relative offset 0x{0:X}", offset);
                         rawList = GetRawRecord(offset);
 
                         var tempList = GetListFromRawBytes(rawList, offset);
@@ -71,7 +69,7 @@ namespace Registry
 
                             foreach (var offset1 in sk3.Offsets)
                             {
-                                _logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
+                                _logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
                                 var rawCell = GetRawRecord(offset1);
                                 var nk = new NKCellRecord(rawCell.Length, offset1, this);
 
@@ -86,7 +84,7 @@ namespace Registry
 
                             foreach (var offset3 in lxRecord_.Offsets)
                             {
-                                _logger.Debug("In ri/li, looking for nk record at relative offset 0x{0:X}", offset3);
+                                _logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}", offset3);
                                 var rawCell = GetRawRecord(offset3.Key);
                                 var nk = new NKCellRecord(rawCell.Length, offset3.Key, this);
 
@@ -96,14 +94,12 @@ namespace Registry
                             }
                         }
                     }
-
                     break;
 
                 //this is a safety net, but li's are typically only seen in RI lists. as such, don't use it in metrics
 
                 case LiSignature:
                     var liRecord = l as LIListRecord;
-
                     foreach (var offset in liRecord.Offsets)
                     {
                         _logger.Debug("In li, looking for nk record at relative offset 0x{0:X}", offset);
@@ -113,7 +109,6 @@ namespace Registry
                         var tempKey = new RegistryKey(nk, parent);
                         keys.Add(tempKey);
                     }
-
                     break;
                 default:
                     throw new Exception($"Unknown subkey list type {l.Signature}!");
@@ -130,7 +125,7 @@ namespace Registry
 
             if (valueListCellIndex > 0)
             {
-                _logger.Debug("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
+                _logger.Trace("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
                     valueListCellIndex, valueListCount);
 
                 var offsetList = GetDataNodeFromOffset(valueListCellIndex);
@@ -138,8 +133,8 @@ namespace Registry
                 for (var i = 0; i < valueListCount; i++)
                 {
                     //use i * 4 so we get 4, 8, 12, 16, etc
-                    var os = BitConverter.ToUInt32(offsetList.Data, i*4);
-                    _logger.Debug("Got value offset 0x{0:X}", os);
+                    var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
+                    _logger.Trace("Got value offset 0x{0:X}", os);
                     offsets.Add(os);
                 }
             }
@@ -155,12 +150,12 @@ namespace Registry
 
             foreach (var valueOffset in offsets)
             {
-                _logger.Debug("Looking for vk record at relative offset 0x{0:X}", valueOffset);
+                _logger.Trace("Looking for vk record at relative offset 0x{0:X}", valueOffset);
 
                 var rawVK = GetRawRecord(valueOffset);
                 var vk = new VKCellRecord(rawVK.Length, valueOffset, Header.MinorVersion, this);
 
-                _logger.Debug("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
+                _logger.Trace("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset, vk.ValueName);
                 var value = new KeyValue(vk);
                 values.Add(value);
             }
@@ -236,7 +231,8 @@ namespace Registry
             for (var i = 0; i < keyNames.Length; i++)
             {
                 finalKey =
-                    finalKey.SubKeys.SingleOrDefault(r => r.KeyName.ToLowerInvariant() == keyNames[i].ToLowerInvariant());
+                    finalKey.SubKeys.SingleOrDefault(
+                        r => r.KeyName.ToLowerInvariant() == keyNames[i].ToLowerInvariant());
 
                 if (finalKey == null)
                 {
@@ -249,11 +245,12 @@ namespace Registry
                 }
             }
 
-            finalKey.Values.AddRange(GetKeyValues(finalKey.NKRecord.ValueListCellIndex, finalKey.NKRecord.ValueListCount));
+            finalKey.Values.AddRange(GetKeyValues(finalKey.NKRecord.ValueListCellIndex,
+                finalKey.NKRecord.ValueListCount));
 
             if (finalKey.NKRecord.ClassCellIndex > 0)
             {
-                _logger.Debug("Getting Class cell information at relative offset 0x{0:X}",
+                _logger.Trace("Getting Class cell information at relative offset 0x{0:X}",
                     finalKey.NKRecord.ClassCellIndex);
                 var d = GetDataNodeFromOffset(finalKey.NKRecord.ClassCellIndex);
                 d.IsReferenced = true;

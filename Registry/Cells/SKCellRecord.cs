@@ -13,6 +13,7 @@ namespace Registry.Cells
     {
         // private fields...
         private readonly int _size;
+
         // protected internal constructors...
         /// <summary>
         ///     Initializes a new instance of the <see cref="SKCellRecord" /> class.

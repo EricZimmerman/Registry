@@ -9,6 +9,7 @@ namespace Registry.Other
 
         // public properties...
         public bool HasValidHeader { get; set; }
+
         public int NumberofHBins { get; set; }
     }
 }
