@@ -69,7 +69,7 @@ namespace Registry.Test
         [Test]
         public void OneOff()
         {
-            var r = new RegistryHive(@"C:\Users\eric\Desktop\SYSTEM_DevonBroken");
+            var r = new RegistryHive(@"C:\Users\eric\Desktop\UsrClassWorks.7Brokev9.dat");
             r.RecoverDeleted = true;
             r.ParseHive();
         }
@@ -215,6 +215,19 @@ namespace Registry.Test
             var hits = UsrClass1.FindInValueDataSlack("32-00-33-00-32-00", false, true).ToList();
 
             Check.That(hits.Count).IsEqualTo(6);
+        }
+
+        [Test]
+        public void ShouldFindBase64()
+        {
+            var UsrClass1 = new RegistryHive(@"..\..\Hives\UsrClass 1.dat");
+            UsrClass1.RecoverDeleted = true;
+            UsrClass1.FlushRecordListsAfterParse = false;
+            UsrClass1.ParseHive();
+
+            var hits = UsrClass1.FindBase64(20).ToList();
+
+            Check.That(hits.Count).IsEqualTo(137);
         }
 
         [Test]

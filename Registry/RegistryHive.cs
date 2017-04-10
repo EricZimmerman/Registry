@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -619,6 +620,11 @@ namespace Registry
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
 
+//                if (offsetInHive == 0x3ff000)
+//                {
+//                    Debug.WriteLine(1);
+//                }
+
                 try
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted, this);
@@ -1097,10 +1103,80 @@ namespace Registry
             }
         }
 
+
+
+        public IEnumerable<SearchHit> FindBase64(int minLength)
+        {
+            foreach (var registryKey in KeyPathKeyMap)
+            {
+                foreach (var keyValue in registryKey.Value.Values)
+                {
+                    if (keyValue.ValueData.Trim().Length < minLength)
+                    {
+                        continue;
+                    }
+
+                    if (IsBase64String2(keyValue.ValueData))
+                    {
+                        yield return new SearchHit(registryKey.Value, keyValue, keyValue.ValueData);
+                    }
+                }
+            }
+
+        }
+
+        private  bool IsBase64String2(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length % 4 != 0
+                || value.Contains(' ') || value.Contains('\t') || value.Contains('\r') || value.Contains('\n'))
+                return false;
+            var index = value.Length - 1;
+            if (value[index] == '=')
+                index--;
+            if (value[index] == '=')
+                index--;
+            for (var i = 0; i <= index; i++)
+                if (IsInvalid(value[i]))
+                    return false;
+            return true;
+        }
+        // Make it private as there is the name makes no sense for an outside caller
+        private  bool IsInvalid(char value)
+        {
+            var intValue = (int)value;
+            if (intValue >= 48 && intValue <= 57)
+                return false;
+            if (intValue >= 65 && intValue <= 90)
+                return false;
+            if (intValue >= 97 && intValue <= 122)
+                return false;
+            return intValue != 43 && intValue != 47;
+        }
+
+        public bool IsBase64String(string s)
+        {
+            s = s.Trim();
+
+            if (s.Length == 0)
+            {
+                return false;
+            }
+
+            return (s.Length % 4 == 0) && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
+
+        }
+
+
         public IEnumerable<SearchHit> FindInKeyName(string searchTerm, bool useRegEx = false)
         {
             foreach (var registryKey in KeyPathKeyMap)
             {
+//                if (registryKey.Value.KeyFlags.HasFlag(RegistryKey.KeyFlagsEnum.Deleted))
+//                {
+//                    _logger.Warn("Deleted");
+//                }
+
+
                 if (useRegEx)
                 {
                     if (Regex.IsMatch(registryKey.Value.KeyName, searchTerm, RegexOptions.IgnoreCase))
@@ -1169,6 +1245,8 @@ namespace Registry
                 }
             }
         }
+
+
 
         public IEnumerable<SearchHit> FindInValueData(string searchTerm, bool useRegEx = false, bool literal = false)
         {
