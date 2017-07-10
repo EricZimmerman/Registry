@@ -78,7 +78,10 @@ namespace Registry.Abstractions
                 return $@"{Parent.KeyPath}\{KeyName}";
             }
 
-            set => _keyPath = value;
+            set
+            {
+                _keyPath = value;
+            }
         }
 
         /// <summary>
