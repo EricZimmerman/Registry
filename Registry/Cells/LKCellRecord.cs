@@ -12,7 +12,7 @@ using Registry.Other;
 namespace Registry.Cells
 {
     // public classes...
-    public class LKCellRecord : ICellTemplate, IRecordBase
+    public class LkCellRecord : ICellTemplate, IRecordBase
     {
         // public enums...
         [Flags]
@@ -45,10 +45,10 @@ namespace Registry.Cells
 
         // protected internal constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
+        ///     Initializes a new instance of the <see cref="NkCellRecord" /> class.
         ///     <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal LKCellRecord(byte[] rawBytes, long relativeOffset)
+        protected internal LkCellRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
@@ -229,7 +229,7 @@ namespace Registry.Cells
         // public properties...
         public long AbsoluteOffset
         {
-            get { return RelativeOffset + 4096; }
+            get => RelativeOffset + 4096;
             set { }
         }
 
@@ -241,7 +241,7 @@ namespace Registry.Cells
 
         public string Signature
         {
-            get { return Encoding.ASCII.GetString(RawBytes, 4, 2); }
+            get => Encoding.ASCII.GetString(RawBytes, 4, 2);
             set { }
         }
 

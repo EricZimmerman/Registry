@@ -10,8 +10,8 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldBeNullWithNonExistentPath()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var key = SamOnDemand.GetKey(@"SAM\Domains\Account\This\Does\Not\Exist");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var key = samOnDemand.GetKey(@"SAM\Domains\Account\This\Does\Not\Exist");
 
             Check.That(key).IsNull();
         }
@@ -19,9 +19,9 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithFullPath()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
             var key =
-                SamOnDemand.GetKey(
+                samOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
@@ -30,8 +30,8 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithShortPath()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var key = SamOnDemand.GetKey(@"SAM\Domains\Account");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
         }
@@ -39,8 +39,8 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithShortPathMixedSpelling()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var key = SamOnDemand.GetKey(@"SAM\DomAins\AccoUnt");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var key = samOnDemand.GetKey(@"SAM\DomAins\AccoUnt");
 
             Check.That(key).IsNotNull();
         }
@@ -48,14 +48,14 @@ namespace Registry.Test
         [Test]
         public void ShouldProcessLiListRecord()
         {
-            var UsrClass1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass 1.dat");
+            var usrClass1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass 1.dat");
 
             var key =
-                UsrClass1OnDemand.GetKey(
+                usrClass1OnDemand.GetKey(
                     @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\\ActivatableClasses\\Package\\Microsoft.BingSports_3.0.4.244_x64__8wekyb3d8bbwe\\ActivatableClassId");
 
             Check.That(key).IsNotNull();
-            Check.That(key.NKRecord.SubkeyCountsStable).IsEqualTo((uint) 0x224);
+            Check.That(key.NkRecord.SubkeyCountsStable).IsEqualTo(0x224);
         }
 
         [Test]
@@ -89,10 +89,10 @@ namespace Registry.Test
         [Test]
         public void TestsListRecords()
         {
-            var DriversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
+            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
 
             var key =
-                DriversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}\DriverDatabase\DeviceIds");
+                driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}\DriverDatabase\DeviceIds");
 
             Check.That(key).IsNotNull();
             Check.That(key.SubKeys.Count).IsEqualTo(3878);
@@ -101,10 +101,10 @@ namespace Registry.Test
         [Test]
         public void TestsListRecordsContinued()
         {
-            var DriversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
+            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
 
 
-            var key = DriversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}");
+            var key = driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}");
 
             Check.That(key).IsNotNull();
             Check.That(key.SubKeys.Count).IsEqualTo(1);
@@ -113,10 +113,10 @@ namespace Registry.Test
         [Test]
         public void TestsListRecordsContinued3()
         {
-            var UsrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
+            var usrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
 
             var key =
-                UsrClassFtp.GetKey(
+                usrClassFtp.GetKey(
                     @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\ActivatableClasses\CLSID");
 
             Check.That(key).IsNotNull();

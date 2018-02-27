@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -46,8 +45,7 @@ namespace Registry.Other
 
             Check.That(sig).IsEqualTo(HbinSignature);
 
-
-            reg._logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
+            reg.Logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -141,16 +139,10 @@ namespace Registry.Other
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
                 readSize = Math.Abs(readSize);
 
-                _registryHive._logger.Debug(
+                _registryHive.Logger.Debug(
                     $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
 
-//                Debug.WriteLine(
-//                    $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
-
-                //  the issue is reading BEYOND how much data is left in UsrClassWorks.7Brokev9.dat
-
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
-                //  new byte[readSize];
 
                 _registryHive.TotalBytesRead += readSize;
 
@@ -158,7 +150,7 @@ namespace Registry.Other
                 var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
 
                 //ncrunch: no coverage start
-                if (_registryHive._logger.IsDebugEnabled)
+                if (_registryHive.Logger.IsDebugEnabled)
                 {
                     var foundMatch = false;
 
@@ -167,12 +159,12 @@ namespace Registry.Other
                     //only process records with 2 letter signatures. this avoids crazy output for data cells
                     if (foundMatch)
                     {
-                        _registryHive._logger.Trace(
+                        _registryHive.Logger.Trace(
                             $"Processing {cellSignature} record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                     else
                     {
-                        _registryHive._logger.Trace(
+                        _registryHive.Logger.Trace(
                             $"Processing data record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                 }
@@ -192,41 +184,44 @@ namespace Registry.Other
                             break;
 
                         case LiSignature:
-                            listRecord = new LIListRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            listRecord = new LiListRecord(rawRecord, offsetInHbin + RelativeOffset);
                             break;
 
                         case RiSignature:
-                            listRecord = new RIListRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            listRecord = new RiListRecord(rawRecord, offsetInHbin + RelativeOffset);
                             break;
 
                         case DbSignature:
-                            listRecord = new DBListRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            listRecord = new DbListRecord(rawRecord, offsetInHbin + RelativeOffset);
                             break;
 
                         case LkSignature:
-                            cellRecord = new LKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                            cellRecord = new LkCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             break; //ncrunch: no coverage
 
                         case NkSignature:
                             if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
                             {
-                                cellRecord = new NKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
+                                cellRecord = new NkCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
                                     _registryHive);
                             }
+
                             break;
                         case SkSignature:
                             if (rawRecord.Length >= 0x14) // the minimum length for a recoverable record
                             {
-                                cellRecord = new SKCellRecord(rawRecord, offsetInHbin + RelativeOffset);
+                                cellRecord = new SkCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             }
+
                             break;
 
                         case VkSignature:
                             if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
                             {
-                                cellRecord = new VKCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
+                                cellRecord = new VkCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
                                     _minorVersion, _registryHive);
                             }
+
                             break;
 
                         default:
@@ -238,15 +233,14 @@ namespace Registry.Other
                 {
                     //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else?
 
-
                     var size = BitConverter.ToInt32(rawRecord, 0);
 
                     if (size < 0)
                     {
                         //ncrunch: no coverage
-                        RegistryHive._hardParsingErrors += 1; //ncrunch: no coverage
+                        RegistryHive.HardParsingErrorsInternal += 1; //ncrunch: no coverage
 
-                        _registryHive._logger.Error( //ncrunch: no coverage     
+                        _registryHive.Logger.Error( //ncrunch: no coverage     
                             ex,
                             $"Hard error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}");
 
@@ -254,11 +248,11 @@ namespace Registry.Other
                     } //ncrunch: no coverage                     
                     else
                     {
-                        _registryHive._logger.Warn(
+                        _registryHive.Logger.Warn(
                             ex,
                             $"Soft error processing record with cell signature {cellSignature} at Absolute Offset: 0x{offsetInHbin + RelativeOffset + 4096:X} with raw data: {BitConverter.ToString(rawRecord)}");
                         //This record is marked 'Free' so its not as important of an error
-                        RegistryHive._softParsingErrors += 1;
+                        RegistryHive.SoftParsingErrorsInternal += 1;
                     }
                 }
 
@@ -310,16 +304,16 @@ namespace Registry.Other
         {
             var records = new List<IRecordBase>();
 
-            if (remainingData.Length == 4064 && _registryHive.HivePath.Contains("DeletedBags"))
-            {
-                Debug.WriteLine(1);
-            }
+//            if (remainingData.Length == 4064 && _registryHive.HivePath.Contains("DeletedBags"))
+//            {
+//                Debug.WriteLine(1);
+//            }
 
             var offsetList2 = new List<int>();
 
             byte[] raw = null;
 
-            _registryHive._logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
+            _registryHive.Logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
                 relativeoffset + 0x1000);
 
             for (var i = 0; i < remainingData.Length; i++)
@@ -350,7 +344,7 @@ namespace Registry.Other
 
                     if (size <= 3 || remainingData.Length - actualStart < size)
                     {
-                        //if its empty or the size is beyond the data that is left, bail
+                        //if its empty or the size is beyond the data that is left, move on
                         continue;
                     }
 
@@ -371,13 +365,15 @@ namespace Registry.Other
                             {
                                 continue;
                             }
-                            var nk = new NKCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
+
+                            var nk = new NkCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                             if (nk.LastWriteTimestamp.Year > 1900)
                             {
-                                _registryHive._logger.Trace("Found nk record in slack at absolute offset 0x{0:X}",
+                                _registryHive.Logger.Trace("Found nk record in slack at absolute offset 0x{0:X}",
                                     relativeoffset + actualStart + 0x1000);
                                 records.Add(nk);
                             }
+
                             break;
                         case VkSignature:
                             if (raw.Length < 0x18)
@@ -385,9 +381,10 @@ namespace Registry.Other
                                 //cant have a record shorter than this, even when no name is present
                                 continue;
                             }
-                            var vk = new VKCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion,
+
+                            var vk = new VkCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion,
                                 _registryHive);
-                            _registryHive._logger.Trace("Found vk record in slack at absolute offset 0x{0:X}",
+                            _registryHive.Logger.Trace("Found vk record in slack at absolute offset 0x{0:X}",
                                 relativeoffset + actualStart + 0x1000);
                             records.Add(vk);
                             break;
@@ -397,11 +394,11 @@ namespace Registry.Other
                 {
                     //ncrunch: no coverage
                     // this is a corrupted/unusable record
-                    _registryHive._logger.Warn( //ncrunch: no coverage
+                    _registryHive.Logger.Warn( //ncrunch: no coverage
                         ex,
-                        $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw.Length:x}");
+                        $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw?.Length:x}");
 
-                    RegistryHive._softParsingErrors += 1; //ncrunch: no coverage
+                    RegistryHive.SoftParsingErrorsInternal += 1; //ncrunch: no coverage
                 } //ncrunch: no coverage
             }
 

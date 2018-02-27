@@ -189,3 +189,7 @@ _Pvt_Extensions/
 ModelManifest.xml
 *.ncrunchproject
 *.DotSettings
+*.lock
+*.ide
+*.ide-shm
+*.ide-wal

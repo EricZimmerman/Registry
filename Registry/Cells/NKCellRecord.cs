@@ -9,8 +9,15 @@ using Registry.Other;
 namespace Registry.Cells
 {
     // public classes...
-    public class NKCellRecord : ICellTemplate, IRecordBase
+    public class NkCellRecord : ICellTemplate, IRecordBase
     {
+        [Flags]
+        public enum AccessFlag
+        {
+            PreInitAccess = 0x01,
+            PostInitAccess = 0x02
+        }
+
         // public enums...
         [Flags]
         public enum FlagEnum
@@ -33,6 +40,25 @@ namespace Registry.Cells
             VirtualStore = 0x0200
         }
 
+        [Flags]
+        public enum UserFlag
+        {
+            None = 0x0,
+            Is32BitKey = 0x01,
+            ReflectionCreated = 0x02,
+            DisableReflection = 0x04,
+            LegacyVista = 0x08
+        }
+
+        [Flags]
+        public enum VirtualizationControlFlag
+        {
+            None = 0x0,
+            DoNotVirtualize = 0x02,
+            DoNotSilentFail = 0x04,
+            Recursive = 0x08
+        }
+
         private readonly int _rawBytesLength;
         private readonly IRegistry _registryHive;
 
@@ -41,10 +67,10 @@ namespace Registry.Cells
 
         // protected internal constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="NKCellRecord" /> class.
+        ///     Initializes a new instance of the <see cref="NkCellRecord" /> class.
         ///     <remarks>Represents a Key Node Record</remarks>
         /// </summary>
-        protected internal NKCellRecord(int recordSize, long relativeOffset, IRegistry registryHive)
+        protected internal NkCellRecord(int recordSize, long relativeOffset, IRegistry registryHive)
         {
             RelativeOffset = relativeOffset;
             _registryHive = registryHive;
@@ -70,6 +96,7 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
+
                 return num;
             }
         }
@@ -79,7 +106,13 @@ namespace Registry.Cells
         /// </summary>
         public ushort ClassLength => BitConverter.ToUInt16(RawBytes, 0x4e);
 
+        /// <summary>
+        ///     This is a Flags based enum, but is disabled in retail versions of Windows, so the flags are not broken down here.
+        /// </summary>
         public byte Debug => RawBytes[0x3b];
+
+        //TODO Layer semantics?
+        public AccessFlag Access => (AccessFlag) BitConverter.ToInt32(RawBytes, 0x10);
 
         public FlagEnum Flags => (FlagEnum) BitConverter.ToUInt16(RawBytes, 6);
 
@@ -111,7 +144,7 @@ namespace Registry.Cells
         {
             get
             {
-                string _name;
+                string name;
 
                 if ((Flags & FlagEnum.CompressedName) == FlagEnum.CompressedName)
                 {
@@ -119,16 +152,16 @@ namespace Registry.Cells
                     {
                         if (RawBytes.Length >= 0x50 + NameLength)
                         {
-                            _name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                            name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                         }
                         else
                         {
-                            _name = "(Unable to determine name)";
+                            name = "(Unable to determine name)";
                         }
                     }
                     else
                     {
-                        _name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                        name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                     }
                 }
                 else
@@ -137,20 +170,20 @@ namespace Registry.Cells
                     {
                         if (RawBytes.Length >= 0x50 + NameLength)
                         {
-                            _name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
+                            name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
                         }
                         else
                         {
-                            _name = "(Unable to determine name)";
+                            name = "(Unable to determine name)";
                         }
                     }
                     else
                     {
-                        _name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
+                        name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
                     }
                 }
 
-                return _name;
+                return name;
             }
         }
 
@@ -222,6 +255,7 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
+
                 return num;
             }
         }
@@ -236,17 +270,18 @@ namespace Registry.Cells
                 {
                     num = 0;
                 }
+
                 return num;
             }
         }
 
-        public int UserFlags
+        public UserFlag UserFlags
         {
             get
             {
                 var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
 
-                return Convert.ToInt32(rawFlags.Substring(0, 4));
+                return (UserFlag) Convert.ToInt32(rawFlags.Substring(0, 4));
             }
         }
 
@@ -263,6 +298,7 @@ namespace Registry.Cells
                 {
                     return 0;
                 }
+
                 return num;
             }
         }
@@ -272,16 +308,19 @@ namespace Registry.Cells
         /// </summary>
         public uint ValueListCount => BitConverter.ToUInt32(RawBytes, 0x28);
 
-        public int VirtualControlFlags
+        public VirtualizationControlFlag VirtualControlFlags
         {
             get
             {
                 var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
 
-                return Convert.ToInt32(rawFlags.Substring(4, 4));
+                return (VirtualizationControlFlag) Convert.ToInt32(rawFlags.Substring(4, 4));
             }
         }
 
+        /// <summary>
+        ///     Unused starting with Windows XP
+        /// </summary>
         public uint WorkVar => BitConverter.ToUInt32(RawBytes, 0x48);
 
         // public properties...

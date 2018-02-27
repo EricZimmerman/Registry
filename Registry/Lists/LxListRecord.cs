@@ -49,6 +49,7 @@ namespace Registry.Lists
                         // i have seen cases where there isnt enough data, so get what we can
                         break; //ncrunch: no coverage
                     }
+
                     var os = BitConverter.ToUInt32(RawBytes, index);
                     index += 4;
 
@@ -71,6 +72,7 @@ namespace Registry.Lists
 
                     counter += 1;
                 }
+
                 return offsets;
             }
         }
@@ -118,6 +120,7 @@ namespace Registry.Lists
                 sb.AppendLine($"Offset: 0x{offset.Key:X}, Hash: {offset.Value}");
                 i += 1;
             }
+
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();

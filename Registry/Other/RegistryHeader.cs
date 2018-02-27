@@ -6,6 +6,14 @@ using NFluent;
 
 namespace Registry.Other
 {
+    [Flags]
+    public enum KtmFlag
+    {
+        Unset = 0x0,
+        KtmLocked = 0x1,
+        Defragmented = 0x2
+    }
+
     // public classes...
     public class RegistryHeader
     {
@@ -46,6 +54,32 @@ namespace Registry.Other
                 .Replace("\0", string.Empty)
                 .Replace("\\??\\", string.Empty);
 
+
+            //in windows 10, some extra things are added in reserved area, starting at offset 0x70
+
+            var gbuff = new byte[16];
+            Buffer.BlockCopy(rawBytes, 0x70, gbuff, 0, 16);
+
+            ResourceManagerGuid = new Guid(gbuff);
+
+            gbuff = new byte[16];
+            Buffer.BlockCopy(rawBytes, 0x80, gbuff, 0, 16);
+
+            LogFilenameGuid = new Guid(gbuff);
+
+            KtmFlags = (KtmFlag) BitConverter.ToInt32(rawBytes, 0x90);
+
+            gbuff = new byte[16];
+            Buffer.BlockCopy(rawBytes, 0x94, gbuff, 0, 16);
+
+            TransactionManagerGuid = new Guid(gbuff);
+
+            ts = BitConverter.ToInt64(rawBytes, 0xa8);
+
+            LastReorganizedTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+
+            //End new
+
             CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc);
 
             var index = 0;
@@ -55,11 +89,18 @@ namespace Registry.Other
                 xsum ^= BitConverter.ToInt32(rawBytes, index);
                 index += 0x04;
             }
+
             CalculatedChecksum = xsum;
 
             BootType = BitConverter.ToUInt32(rawBytes, 0xff8);
             BootRecover = BitConverter.ToUInt32(rawBytes, 0xffc);
         }
+
+        public Guid ResourceManagerGuid { get; }
+        public Guid TransactionManagerGuid { get; }
+        public Guid LogFilenameGuid { get; }
+
+        public KtmFlag KtmFlags { get; }
 
         // public properties...
         public uint BootRecover { get; }
@@ -79,6 +120,11 @@ namespace Registry.Other
         ///     The last write timestamp of the registry hive
         /// </summary>
         public DateTimeOffset LastWriteTimestamp { get; }
+
+        /// <summary>
+        ///     The last write timestamp of the registry hive
+        /// </summary>
+        public DateTimeOffset? LastReorganizedTimestamp { get; }
 
         /// <summary>
         ///     The total number of bytes used by this hive

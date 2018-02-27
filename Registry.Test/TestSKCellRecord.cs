@@ -5,51 +5,51 @@ using Registry.Cells;
 namespace Registry.Test
 {
     [TestFixture]
-    internal class TestSKCellRecord
+    internal class TestSkCellRecord
     {
         [Test]
-        public void SKRecordxACLNoDataForAceRecordsInSacl()
+        public void SkRecordxAclNoDataForAceRecordsInSacl()
         {
-            var NtUserSlack = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
-            NtUserSlack.FlushRecordListsAfterParse = false;
-            NtUserSlack.ParseHive();
+            var ntUserSlack = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
+            ntUserSlack.FlushRecordListsAfterParse = false;
+            ntUserSlack.ParseHive();
 
-            var sk = NtUserSlack.CellRecords[0x80] as SKCellRecord;
+            var sk = ntUserSlack.CellRecords[0x80] as SkCellRecord;
 
             Check.That(sk).IsNotNull();
 
-            Check.That(sk.SecurityDescriptor.DACL).IsNotNull();
-            Check.That(sk.SecurityDescriptor.SACL).IsNotNull();
-            Check.That(sk.SecurityDescriptor.DACL.ACERecords).IsNotNull();
-            Check.That(sk.SecurityDescriptor.DACL.ACERecords.Count).IsEqualTo(sk.SecurityDescriptor.DACL.AceCount);
-            Check.That(sk.SecurityDescriptor.DACL.ACERecords.ToString()).IsNotEmpty();
-            Check.That(sk.SecurityDescriptor.SACL.ACERecords).IsNotNull();
-            Check.That(sk.SecurityDescriptor.SACL.ACERecords.Count).IsEqualTo(0);
+            Check.That(sk.SecurityDescriptor.Dacl).IsNotNull();
+            Check.That(sk.SecurityDescriptor.Sacl).IsNotNull();
+            Check.That(sk.SecurityDescriptor.Dacl.AceRecords).IsNotNull();
+            Check.That(sk.SecurityDescriptor.Dacl.AceRecords.Count).IsEqualTo(sk.SecurityDescriptor.Dacl.AceCount);
+            Check.That(sk.SecurityDescriptor.Dacl.AceRecords.ToString()).IsNotEmpty();
+            Check.That(sk.SecurityDescriptor.Sacl.AceRecords).IsNotNull();
+            Check.That(sk.SecurityDescriptor.Sacl.AceRecords.Count).IsEqualTo(0);
             // this is a strange case where there is no data to build ace records
-            Check.That(sk.SecurityDescriptor.SACL.ACERecords.ToString()).IsNotEmpty();
+            Check.That(sk.SecurityDescriptor.Sacl.AceRecords.ToString()).IsNotEmpty();
 
             Check.That(sk.ToString()).IsNotEmpty();
         }
 
         [Test]
-        public void VerifySKInfo()
+        public void VerifySkInfo()
         {
-            var Sam = new RegistryHive(@"..\..\Hives\SAM");
-            Sam.FlushRecordListsAfterParse = false;
-            Sam.ParseHive();
+            var sam = new RegistryHive(@"..\..\Hives\SAM");
+            sam.FlushRecordListsAfterParse = false;
+            sam.ParseHive();
 
-            var key = Sam.GetKey(@"SAM\Domains\Account");
+            var key = sam.GetKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
 
-            var sk = Sam.CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
+            var sk = sam.CellRecords[key.NkRecord.SecurityCellIndex] as SkCellRecord;
 
             Check.That(sk).IsNotNull();
             Check.That(sk.ToString()).IsNotEmpty();
-            Check.That(sk.Size).IsGreaterThan(0);
+            Check.That(sk.Size).IsStrictlyGreaterThan(0);
             Check.That(sk.Reserved).IsInstanceOf<ushort>();
 
-            Check.That(sk.DescriptorLength).IsGreaterThan(0);
+            Check.That(sk.DescriptorLength).IsStrictlyGreaterThan(0);
         }
     }
 }

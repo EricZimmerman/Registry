@@ -3,6 +3,7 @@ using System.IO;
 using NFluent;
 using NLog;
 using NUnit.Framework;
+using Registry.Other;
 
 namespace Registry.Test
 {
@@ -45,9 +46,9 @@ namespace Registry.Test
         [Test]
         public void HivePathShouldReflectWhatIsPassedIn()
         {
-            var Security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
+            var security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
 
-            Check.That(Security.HivePath).IsEqualTo(@"..\..\Hives\SECURITY");
+            Check.That(security.HivePath).IsEqualTo(@"..\..\Hives\SECURITY");
         }
 
         [Test]
@@ -158,6 +159,14 @@ namespace Registry.Test
         {
             var r = new RegistryBase(@"..\..\Hives\UsrClass 1.dat");
             Check.That(HiveTypeEnum.UsrClass).IsEqualTo(r.HiveType);
+        }
+
+        [Test]
+        public void Windows10ExtraData()
+        {
+            var r = new RegistryBase(@"D:\SynologyDrive\RegistryHives\SOFTWARE_win10");
+            Check.That(r.Header.KtmFlags).IsEqualTo(KtmFlag.Unset);
+            Check.That(r.Header.LastReorganizedTimestamp.HasValue).IsTrue();
         }
     }
 }

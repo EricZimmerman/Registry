@@ -19,8 +19,8 @@ namespace Registry.Test
         [Test]
         public void ExportToRegFormatRecursive()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var key = SamOnDemand.GetKey(@"SAM\Domains\Account");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             var exported = Helpers.ExportToReg(@"exportTest.reg", key, HiveTypeEnum.Sam, true);
 
@@ -30,58 +30,58 @@ namespace Registry.Test
         [Test]
         public void ExportToRegFormatSingleKey()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var key = SamOnDemand.GetKey(@"SAM\Domains\Account");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             var exported = Helpers.ExportToReg(@"exportSamTest.reg", key, HiveTypeEnum.Sam, false);
 
             Check.That(exported).IsTrue();
 
-            var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
-            key = NtUser1OnDemand.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Console");
+            var ntUser1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\NTUSER1.DAT");
+            key = ntUser1OnDemand.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Console");
 
             exported = Helpers.ExportToReg(@"exportntuser1Test.reg", key, HiveTypeEnum.NtUser, false);
 
             Check.That(exported).IsTrue();
 
-            var Security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
+            var security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
             key =
-                Security.GetKey(
+                security.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Policy\Accounts\S-1-5-9");
 
             exported = Helpers.ExportToReg(@"exportsecTest.reg", key, HiveTypeEnum.Security, false);
 
             Check.That(exported).IsTrue();
 
-            var SystemOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SYSTEM");
+            var systemOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SYSTEM");
             key =
-                SystemOnDemand.GetKey(
+                systemOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Enum\ACPI\PNP0C02\1");
 
             exported = Helpers.ExportToReg(@"exportsysTest.reg", key, HiveTypeEnum.System, false);
 
             Check.That(exported).IsTrue();
 
-            var UsrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
-            key = UsrClassFtp.GetKey(@"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\.3g2");
+            var usrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
+            key = usrClassFtp.GetKey(@"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\.3g2");
 
             exported = Helpers.ExportToReg(@"exportusrTest.reg", key, HiveTypeEnum.UsrClass, false);
 
             Check.That(exported).IsTrue();
 
-            var SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_DUPENAME");
-            key = SamDupeNameOnDemand.GetKey(@"SAM\SAM\Domains\Account\Aliases\000003E9");
+            var samDupeNameOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM_DUPENAME");
+            key = samDupeNameOnDemand.GetKey(@"SAM\SAM\Domains\Account\Aliases\000003E9");
 
             exported = Helpers.ExportToReg(@"exportotherTest.reg", key, HiveTypeEnum.Other, false);
 
             Check.That(exported).IsTrue();
 
-            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
-            UsrclassDeleted.RecoverDeleted = true;
-            UsrclassDeleted.FlushRecordListsAfterParse = false;
-            UsrclassDeleted.ParseHive();
+            var usrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            usrclassDeleted.RecoverDeleted = true;
+            usrclassDeleted.FlushRecordListsAfterParse = false;
+            usrclassDeleted.ParseHive();
             key =
-                UsrclassDeleted.GetKey(
+                usrclassDeleted.GetKey(
                     @"S-1-5-21-146151751-63468248-1215037915-1000_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1");
 
             exported = Helpers.ExportToReg(@"exportDeletedTest.reg", key, HiveTypeEnum.UsrClass, false);
@@ -92,25 +92,25 @@ namespace Registry.Test
         [Test]
         public void ExportUsrClassToCommonFormatWithDeleted()
         {
-            var UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
-            UsrclassDeleted.RecoverDeleted = true;
-            UsrclassDeleted.FlushRecordListsAfterParse = false;
-            UsrclassDeleted.ParseHive();
+            var usrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            usrclassDeleted.RecoverDeleted = true;
+            usrclassDeleted.FlushRecordListsAfterParse = false;
+            usrclassDeleted.ParseHive();
 
-            UsrclassDeleted.ExportDataToCommonFormat("UsrClassDeletedExport.txt", true);
+            usrclassDeleted.ExportDataToCommonFormat("UsrClassDeletedExport.txt", true);
 
-            UsrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
-            UsrclassDeleted.FlushRecordListsAfterParse = true;
-            UsrclassDeleted.ParseHive();
+            usrclassDeleted = new RegistryHive(@"..\..\Hives\UsrClassDeletedBags.dat");
+            usrclassDeleted.FlushRecordListsAfterParse = true;
+            usrclassDeleted.ParseHive();
 
-            UsrclassDeleted.ExportDataToCommonFormat("UsrClassDeletedWithFlushExport.txt", true);
+            usrclassDeleted.ExportDataToCommonFormat("UsrClassDeletedWithFlushExport.txt", true);
         }
 
         [Test]
         public void GetEnumFromDescriptionAndViceVersa()
         {
-            var SamOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
-            var desc = Helpers.GetDescriptionFromEnumValue(SamOnDemand.HiveType);
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var desc = Helpers.GetDescriptionFromEnumValue(samOnDemand.HiveType);
 
             var en = Helpers.GetEnumValueFromDescription<HiveTypeEnum>(desc);
 
@@ -127,7 +127,7 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldCatchNKRecordThatsTooSmallFromSlackSpace()
+        public void ShouldCatchNkRecordThatsTooSmallFromSlackSpace()
         {
             var usrclass = new RegistryHive(@"..\..\Hives\ERZ_Win81_UsrClass.dat");
             usrclass.RecoverDeleted = true;
@@ -143,7 +143,7 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldCatchVKRecordThatsTooSmallFromSlackSpace()
+        public void ShouldCatchVkRecordThatsTooSmallFromSlackSpace()
         {
             var usrclass = new RegistryHive(@"..\..\Hives\NTUSER slack.DAT");
             usrclass.RecoverDeleted = true;
@@ -151,7 +151,7 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFindADBRecordWhileParsing()
+        public void ShouldFindAdbRecordWhileParsing()
         {
             var usrclass = new RegistryHive(@"..\..\Hives\SYSTEM");
             usrclass.ParseHive();
@@ -160,12 +160,12 @@ namespace Registry.Test
         [Test]
         public void ShouldFindDataNode()
         {
-            var Bcd = new RegistryHive(@"..\..\Hives\BCD");
-            Bcd.FlushRecordListsAfterParse = false;
-            Bcd.RecoverDeleted = true;
-            Bcd.ParseHive();
+            var bcd = new RegistryHive(@"..\..\Hives\BCD");
+            bcd.FlushRecordListsAfterParse = false;
+            bcd.RecoverDeleted = true;
+            bcd.ParseHive();
 
-            var dnraw = Bcd.ReadBytesFromHive(0x0000000000001100, 8);
+            var dnraw = bcd.ReadBytesFromHive(0x0000000000001100, 8);
             var dn = new DataNode(dnraw, 0x0000000000000100);
 
             Check.That(dn).IsNotNull();
@@ -174,13 +174,13 @@ namespace Registry.Test
         }
 
         [Test]
-        public void ShouldFindDBRecord()
+        public void ShouldFindDbRecord()
         {
-            var System = new RegistryHive(@"..\..\Hives\System");
-            System.FlushRecordListsAfterParse = false;
-            System.ParseHive();
+            var system = new RegistryHive(@"..\..\Hives\System");
+            system.FlushRecordListsAfterParse = false;
+            system.ParseHive();
 
-            var record = System.ListRecords[0x78f20] as DBListRecord;
+            var record = system.ListRecords[0x78f20] as DbListRecord;
 
             Check.That(record).IsNotNull();
             Check.That(record.ToString()).IsNotEmpty();
@@ -188,74 +188,74 @@ namespace Registry.Test
 
             Check.That(record.IsReferenced).IsTrue();
             Check.That(record.NumberOfEntries).IsEqualTo(2);
-            Check.That(record.OffsetToOffsets).IsEqualTo((uint) 0x78F30);
+            Check.That(record.OffsetToOffsets).IsEqualTo(0x78F30);
         }
 
 
         [Test]
-        public void ShouldFindLFListRecord()
+        public void ShouldFindLfListRecord()
         {
-            var Bcd = new RegistryHive(@"..\..\Hives\BCD");
-            Bcd.FlushRecordListsAfterParse = false;
-            Bcd.RecoverDeleted = true;
-            Bcd.ParseHive();
+            var bcd = new RegistryHive(@"..\..\Hives\BCD");
+            bcd.FlushRecordListsAfterParse = false;
+            bcd.RecoverDeleted = true;
+            bcd.ParseHive();
 
-            var record = Bcd.ListRecords[0xd0] as LxListRecord;
+            var record = bcd.ListRecords[0xd0] as LxListRecord;
 
             Check.That(record).IsNotNull();
             Check.That(record.ToString()).IsNotEmpty();
         }
 
         [Test]
-        public void ShouldFindLHListRecord()
+        public void ShouldFindLhListRecord()
         {
-            var Drivers = new RegistryHive(@"..\..\Hives\DRIVERS");
-            Drivers.FlushRecordListsAfterParse = false;
-            Drivers.RecoverDeleted = true;
-            Drivers.ParseHive();
+            var drivers = new RegistryHive(@"..\..\Hives\DRIVERS");
+            drivers.FlushRecordListsAfterParse = false;
+            drivers.RecoverDeleted = true;
+            drivers.ParseHive();
 
-            var record = Drivers.ListRecords[0x270] as LxListRecord;
+            var record = drivers.ListRecords[0x270] as LxListRecord;
 
             Check.That(record).IsNotNull();
             Check.That(record.ToString()).IsNotEmpty();
         }
 
         [Test]
-        public void ShouldFindLIRecord()
+        public void ShouldFindLiRecord()
         {
-            var UsrClass1 = new RegistryHive(@"..\..\Hives\UsrClass 1.dat");
-            UsrClass1.RecoverDeleted = true;
-            UsrClass1.FlushRecordListsAfterParse = false;
-            UsrClass1.ParseHive();
+            var usrClass1 = new RegistryHive(@"..\..\Hives\UsrClass 1.dat");
+            usrClass1.RecoverDeleted = true;
+            usrClass1.FlushRecordListsAfterParse = false;
+            usrClass1.ParseHive();
 
 
-            var record = UsrClass1.ListRecords[0x000000000015f020] as LIListRecord;
+            var record = usrClass1.ListRecords[0x000000000015f020] as LiListRecord;
 
             Check.That(record).IsNotNull();
             record.IsReferenced = true;
             Check.That(record.IsReferenced).IsTrue();
             Check.That(record.NumberOfEntries).IsEqualTo(696);
             Check.That(record.Size).IsEqualTo(0x00001630);
-            Check.That(record.Offsets[0]).IsEqualTo((uint) 0x103078);
-            Check.That(record.Offsets[1]).IsEqualTo((uint) 0x103EE0);
+            Check.That(record.Offsets[0]).IsEqualTo(0x103078);
+            Check.That(record.Offsets[1]).IsEqualTo(0x103EE0);
             Check.That(record.ToString()).IsNotEmpty();
         }
 
         [Test]
-        public void ShouldFindRIRecord()
+        public void ShouldFindRiRecord()
         {
-            var System = new RegistryHive(@"..\..\Hives\System");
-            System.FlushRecordListsAfterParse = false;
-            System.ParseHive();
+            var system = new RegistryHive(@"..\..\Hives\System");
+            system.FlushRecordListsAfterParse = false;
+            system.ParseHive();
 
-            var record = System.ListRecords[0x7141D0] as RIListRecord;
+            var record = system.ListRecords[0x7141D0] as RiListRecord;
 
             Check.That(record).IsNotNull();
             record.IsReferenced = true;
             Check.That(record.IsReferenced).IsTrue();
             Check.That(record.NumberOfEntries).IsEqualTo(2);
-            Check.That(record.Offsets[0]).IsEqualTo((uint) 0x717020);
-            Check.That(record.Offsets[1]).IsEqualTo((uint) 0x72F020);
+            Check.That(record.Offsets[0]).IsEqualTo(0x717020);
+            Check.That(record.Offsets[1]).IsEqualTo(0x72F020);
             Check.That(record.ToString()).IsNotEmpty();
         }
 
@@ -273,17 +273,17 @@ namespace Registry.Test
         }
 
         [Test]
-        public void TestGetSIDTypeFromSIDString()
+        public void TestGetSidTypeFromSidString()
         {
             var sid = "S-1-5-5-111111";
 
-            var desc = Helpers.GetSIDTypeFromSIDString(sid);
+            var desc = Helpers.GetSidTypeFromSidString(sid);
 
             Check.That(desc).IsInstanceOf<Helpers.SidTypeEnum>();
 
             sid = "S-1-2-0";
 
-            desc = Helpers.GetSIDTypeFromSIDString(sid);
+            desc = Helpers.GetSidTypeFromSidString(sid);
 
             Check.That(desc).IsEqualTo(Helpers.SidTypeEnum.Local);
         }
@@ -291,20 +291,20 @@ namespace Registry.Test
         [Test]
         public void VerifyHeaderInfo()
         {
-            var Sam = new RegistryHive(@"..\..\Hives\SAM");
-            Sam.FlushRecordListsAfterParse = false;
-            Sam.ParseHive();
+            var sam = new RegistryHive(@"..\..\Hives\SAM");
+            sam.FlushRecordListsAfterParse = false;
+            sam.ParseHive();
 
-            Check.That(Sam.Header).IsNotNull();
-            Check.That(Sam.Header.FileName).IsNotNull();
-            Check.That(Sam.Header.FileName).IsNotEmpty();
-            Check.That(Sam.Header.Length).IsGreaterThan(0);
-            Check.That(Sam.Header.MajorVersion).IsGreaterThan(0);
-            Check.That(Sam.Header.MinorVersion).IsGreaterThan(0);
-            Check.That(Sam.Header.RootCellOffset).IsGreaterThan(0);
-            Check.That(Sam.Header.CalculatedChecksum).Equals(Sam.Header.CheckSum);
-            Check.That(Sam.Header.ValidateCheckSum()).Equals(true);
-            Check.That(Sam.Header.ToString()).IsNotEmpty();
+            Check.That(sam.Header).IsNotNull();
+            Check.That(sam.Header.FileName).IsNotNull();
+            Check.That(sam.Header.FileName).IsNotEmpty();
+            Check.That(sam.Header.Length).IsGreaterThan(0);
+            Check.That(sam.Header.MajorVersion).IsGreaterThan(0);
+            Check.That(sam.Header.MinorVersion).IsGreaterThan(0);
+            Check.That(sam.Header.RootCellOffset).IsGreaterThan(0);
+            Check.That(sam.Header.CalculatedChecksum).Equals(sam.Header.CheckSum);
+            Check.That(sam.Header.ValidateCheckSum()).Equals(true);
+            Check.That(sam.Header.ToString()).IsNotEmpty();
         }
     }
 }

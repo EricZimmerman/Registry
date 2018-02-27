@@ -44,6 +44,7 @@ namespace Registry
             {
                 throw new NullReferenceException();
             }
+
             _hive = hive;
             _keys = new List<SkeletonKeyRoot>();
         }
@@ -191,6 +192,7 @@ namespace Registry
                 xsum ^= BitConverter.ToInt32(headerBytes, index);
                 index += 0x04;
             }
+
             var newcs = xsum;
 
             BitConverter.GetBytes(newcs).CopyTo(headerBytes, CheckSumOffset);
@@ -230,14 +232,14 @@ namespace Registry
             }
         }
 
-        private int ProcessSKRecord(uint skIndex)
+        private int ProcessSkRecord(uint skIndex)
         {
             if (!_hive.CellRecords.ContainsKey(skIndex))
             {
                 return 0;
             }
 
-            var sk = _hive.CellRecords[skIndex] as SKCellRecord;
+            var sk = _hive.CellRecords[skIndex] as SkCellRecord;
 
             if (_skMap.ContainsKey(sk.RelativeOffset))
             {
@@ -284,13 +286,13 @@ namespace Registry
         {
             const uint dwordSignMask = 0x80000000;
 
-            var vkBytes = value.VKRecord.RawBytes;
+            var vkBytes = value.VkRecord.RawBytes;
 
-            if ((value.VKRecord.DataLength & dwordSignMask) != dwordSignMask)
+            if ((value.VkRecord.DataLength & dwordSignMask) != dwordSignMask)
             {
                 //non-resident data, so write out the data and update the vkrecords pointer to said data
 
-                if (value.VKRecord.DataLength > 16344)
+                if (value.VkRecord.DataLength > 16344)
                 {
                     //big data baby!
 
@@ -425,21 +427,21 @@ namespace Registry
 
         private int ProcessKey(RegistryKey key, int parentCellIndex, bool addValues, bool addSubkeys)
         {
-            var skOffset = ProcessSKRecord(key.NKRecord.SecurityCellIndex);
+            var skOffset = ProcessSkRecord(key.NkRecord.SecurityCellIndex);
 
-            var classOffset = ProcessClassCell(key.NKRecord.ClassCellIndex);
+            var classOffset = ProcessClassCell(key.NkRecord.ClassCellIndex);
 
             //do we have enough room left to place our NK?
-            CheckhbinSize(key.NKRecord.RawBytes.Length);
+            CheckhbinSize(key.NkRecord.RawBytes.Length);
 
             //this is where we will be placing our record
             var nkOffset = _currentOffsetInHbin;
 
             //move our pointer to the beginning of free space for any subsequent records
-            CheckhbinSize(key.NKRecord.RawBytes.Length);
-            _currentOffsetInHbin += key.NKRecord.RawBytes.Length;
+            CheckhbinSize(key.NkRecord.RawBytes.Length);
+            _currentOffsetInHbin += key.NkRecord.RawBytes.Length;
 
-            var nkBytes = key.NKRecord.RawBytes;
+            var nkBytes = key.NkRecord.RawBytes;
 
             //processValues
 
@@ -515,7 +517,7 @@ namespace Registry
 
             //update nkBytes
 
-            if ((key.NKRecord.Flags & NKCellRecord.FlagEnum.HiveEntryRootKey) != NKCellRecord.FlagEnum.HiveEntryRootKey)
+            if ((key.NkRecord.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) != NkCellRecord.FlagEnum.HiveEntryRootKey)
             {
                 //update parent offset since this isnt the root cell
                 BitConverter.GetBytes(parentCellIndex).CopyTo(nkBytes, ParentCellIndex);

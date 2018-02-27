@@ -9,17 +9,17 @@ using Registry.Other;
 namespace Registry.Cells
 {
     // public classes...
-    public class SKCellRecord : ICellTemplate, IRecordBase
+    public class SkCellRecord : ICellTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;
 
         // protected internal constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="SKCellRecord" /> class.
+        ///     Initializes a new instance of the <see cref="SkCellRecord" /> class.
         ///     <remarks>Represents a Key Security Record</remarks>
         /// </summary>
-        protected internal SKCellRecord(byte[] rawBytes, long relativeOffset)
+        protected internal SkCellRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
@@ -65,7 +65,7 @@ namespace Registry.Cells
         /// <summary>
         ///     The security descriptor object for this record
         /// </summary>
-        public SKSecurityDescriptor SecurityDescriptor
+        public SkSecurityDescriptor SecurityDescriptor
         {
             get
             {
@@ -74,7 +74,7 @@ namespace Registry.Cells
                 if (rawDescriptor.Length > 0)
                 {
                     // i have seen cases where there is no available security descriptor because the sk record doesn't contain the right data
-                    return new SKSecurityDescriptor(rawDescriptor);
+                    return new SkSecurityDescriptor(rawDescriptor);
                 }
 
                 return null; //ncrunch: no coverage

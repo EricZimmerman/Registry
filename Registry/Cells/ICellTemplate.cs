@@ -1,6 +1,6 @@
 ﻿// namespaces...
 
-namespace Registry
+namespace Registry.Cells
 {
     // public interfaces...
     public interface ICellTemplate

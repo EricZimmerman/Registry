@@ -8,7 +8,7 @@ using Registry.Other;
 namespace Registry.Lists
 {
     // internal classes...
-    public class LIListRecord : IListTemplate, IRecordBase
+    public class LiListRecord : IListTemplate, IRecordBase
     {
         // private fields...
 
@@ -16,11 +16,11 @@ namespace Registry.Lists
 
         // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="LIListRecord" />  class.
+        ///     Initializes a new instance of the <see cref="LiListRecord" />  class.
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
-        public LIListRecord(byte[] rawBytes, long relativeOffset)
+        public LiListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
@@ -105,6 +105,7 @@ namespace Registry.Lists
                 sb.AppendLine($"Offset: 0x{offset:X}");
                 i += 1;
             }
+
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();

@@ -8,10 +8,10 @@ using System.Text;
 namespace Registry.Other
 {
     // public classes...
-    public class xACLRecord
+    public class XAclRecord
     {
         // public enums...
-        public enum ACLTypeEnum
+        public enum AclTypeEnum
         {
             Security,
             Discretionary
@@ -19,19 +19,19 @@ namespace Registry.Other
 
         // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="xACLRecord" /> class.
+        ///     Initializes a new instance of the <see cref="XAclRecord" /> class.
         /// </summary>
-        public xACLRecord(byte[] rawBytes, ACLTypeEnum aclTypetype)
+        public XAclRecord(byte[] rawBytes, AclTypeEnum aclTypetype)
         {
             RawBytes = rawBytes;
 
-            ACLType = aclTypetype;
+            AclType = aclTypetype;
         }
 
         // public properties...
         public ushort AceCount => BitConverter.ToUInt16(RawBytes, 0x4);
 
-        public List<ACERecord> ACERecords
+        public List<AceRecord> AceRecords
         {
             get
             {
@@ -46,6 +46,7 @@ namespace Registry.Other
                         //ncrunch: no coverage
                         break; //ncrunch: no coverage
                     }
+
                     var aceSize = RawBytes[index + 2];
                     var rawAce = RawBytes.Skip(index).Take(aceSize).ToArray();
 
@@ -54,7 +55,7 @@ namespace Registry.Other
                     index += aceSize;
                 }
 
-                var records = new List<ACERecord>();
+                var records = new List<AceRecord>();
 
                 foreach (var chunk in chunks)
                 {
@@ -63,7 +64,7 @@ namespace Registry.Other
                         continue;
                     }
 
-                    var ace = new ACERecord(chunk);
+                    var ace = new AceRecord(chunk);
 
                     records.Add(ace);
                 }
@@ -76,7 +77,7 @@ namespace Registry.Other
 
         public ushort AclSize => BitConverter.ToUInt16(RawBytes, 0x2);
 
-        public ACLTypeEnum ACLType { get; }
+        public AclTypeEnum AclType { get; }
         public byte[] RawBytes { get; }
 
         public byte Sbz1 => RawBytes[1];
@@ -90,7 +91,7 @@ namespace Registry.Other
 
             sb.AppendLine($"ACL Revision: 0x{AclRevision:X}");
             sb.AppendLine($"ACL Size: 0x{AclSize:X}");
-            sb.AppendLine($"ACL Type: {ACLType}");
+            sb.AppendLine($"ACL Type: {AclType}");
             sb.AppendLine($"Sbz1: 0x{Sbz1:X}");
             sb.AppendLine($"Sbz2: 0x{Sbz2:X}");
 
@@ -99,7 +100,7 @@ namespace Registry.Other
             sb.AppendLine();
 
             var i = 0;
-            foreach (var aceRecord in ACERecords)
+            foreach (var aceRecord in AceRecords)
             {
                 sb.AppendLine($"------------ Ace record #{i} ------------");
                 sb.AppendLine(aceRecord.ToString());

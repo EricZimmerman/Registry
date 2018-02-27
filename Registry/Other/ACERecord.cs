@@ -7,7 +7,7 @@ using System.Text;
 namespace Registry.Other
 {
     // public classes...
-    public class ACERecord
+    public class AceRecord
     {
         // public enums...
         [Flags]
@@ -49,25 +49,25 @@ namespace Registry.Other
             QueryValue = 0x00000001,
             ReadControl = 0x00020000,
             SetValue = 0x00000002,
-            WriteDAC = 0x00040000,
+            WriteDac = 0x00040000,
             WriteOwner = 0x00080000
         }
 
         // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ACERecord" /> class.
+        ///     Initializes a new instance of the <see cref="AceRecord" /> class.
         /// </summary>
-        public ACERecord(byte[] rawBytes)
+        public AceRecord(byte[] rawBytes)
         {
             RawBytes = rawBytes;
         }
 
         // public properties...
-        public AceFlagsEnum ACEFlags => (AceFlagsEnum) RawBytes[1];
+        public AceFlagsEnum AceFlags => (AceFlagsEnum) RawBytes[1];
 
-        public ushort ACESize => BitConverter.ToUInt16(RawBytes, 2);
+        public ushort AceSize => BitConverter.ToUInt16(RawBytes, 2);
 
-        public AceTypeEnum ACEType
+        public AceTypeEnum AceType
         {
             get
             {
@@ -110,35 +110,35 @@ namespace Registry.Other
 
         public byte[] RawBytes { get; }
 
-        public string SID
+        public string Sid
         {
             get
             {
-                var rawSid = RawBytes.Skip(0x8).Take(ACESize - 0x8).ToArray();
+                var rawSid = RawBytes.Skip(0x8).Take(AceSize - 0x8).ToArray();
 
                 return Helpers.ConvertHexStringToSidString(rawSid);
             }
         }
 
-        public Helpers.SidTypeEnum SIDType => Helpers.GetSIDTypeFromSIDString(SID);
+        public Helpers.SidTypeEnum SidType => Helpers.GetSidTypeFromSidString(Sid);
 
         // public methods...
         public override string ToString()
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"ACE Size: 0x{ACESize:X}");
+            sb.AppendLine($"ACE Size: 0x{AceSize:X}");
 
-            sb.AppendLine($"ACE Type: {ACEType}");
+            sb.AppendLine($"ACE Type: {AceType}");
 
-            sb.AppendLine($"ACE Flags: {ACEFlags}");
+            sb.AppendLine($"ACE Flags: {AceFlags}");
 
             sb.AppendLine($"Mask: {Mask}");
 
-            sb.AppendLine($"SID: {SID}");
-            sb.AppendLine($"SID Type: {SIDType}");
+            sb.AppendLine($"SID: {Sid}");
+            sb.AppendLine($"SID Type: {SidType}");
 
-            sb.AppendLine($"SID Type Description: {Helpers.GetDescriptionFromEnumValue(SIDType)}");
+            sb.AppendLine($"SID Type Description: {Helpers.GetDescriptionFromEnumValue(SidType)}");
 
             return sb.ToString();
         }

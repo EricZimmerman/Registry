@@ -160,6 +160,7 @@ namespace ExampleApp
             {
                 verboseLevel = 0;
             }
+
             if (verboseLevel > 2)
             {
                 verboseLevel = 2;
@@ -212,10 +213,10 @@ namespace ExampleApp
                     var freeCells = registryHive.CellRecords.Where(t => t.Value.IsFree);
                     var referencedCells = registryHive.CellRecords.Where(t => t.Value.IsReferenced);
 
-                    var nkFree = freeCells.Count(t => t.Value is NKCellRecord);
-                    var vkFree = freeCells.Count(t => t.Value is VKCellRecord);
-                    var skFree = freeCells.Count(t => t.Value is SKCellRecord);
-                    var lkFree = freeCells.Count(t => t.Value is LKCellRecord);
+                    var nkFree = freeCells.Count(t => t.Value is NkCellRecord);
+                    var vkFree = freeCells.Count(t => t.Value is VkCellRecord);
+                    var skFree = freeCells.Count(t => t.Value is SkCellRecord);
+                    var lkFree = freeCells.Count(t => t.Value is LkCellRecord);
 
                     var freeLists = registryHive.ListRecords.Where(t => t.Value.IsFree);
                     var referencedList = registryHive.ListRecords.Where(t => t.Value.IsReferenced);
@@ -237,7 +238,7 @@ namespace ExampleApp
                     if (registryHive.FlushRecordListsAfterParse == false)
                     {
                         sb.AppendLine(
-                            $"Found {registryHive.CellRecords.Count:N0} Cell records (nk: {registryHive.CellRecords.Count(w => w.Value is NKCellRecord):N0}, vk: {registryHive.CellRecords.Count(w => w.Value is VKCellRecord):N0}, sk: {registryHive.CellRecords.Count(w => w.Value is SKCellRecord):N0}, lk: {registryHive.CellRecords.Count(w => w.Value is LKCellRecord):N0})");
+                            $"Found {registryHive.CellRecords.Count:N0} Cell records (nk: {registryHive.CellRecords.Count(w => w.Value is NkCellRecord):N0}, vk: {registryHive.CellRecords.Count(w => w.Value is VkCellRecord):N0}, sk: {registryHive.CellRecords.Count(w => w.Value is SkCellRecord):N0}, lk: {registryHive.CellRecords.Count(w => w.Value is LkCellRecord):N0})");
                         sb.AppendLine($"Found {registryHive.ListRecords.Count:N0} List records");
                         sb.AppendLine();
                         sb.AppendLine(

@@ -9,7 +9,7 @@ namespace Registry
 {
     public class RegistryBase : IRegistry
     {
-        internal readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        internal readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public RegistryBase()
         {
@@ -21,11 +21,11 @@ namespace Registry
             FileBytes = rawBytes;
             HivePath = "None";
 
-            _logger = LogManager.GetLogger("rawBytes");
+            Logger = LogManager.GetLogger("rawBytes");
 
             if (!HasValidSignature())
             {
-                _logger.Error("Data in byte array is not a Registry hive (bad signature)");
+                Logger.Error("Data in byte array is not a Registry hive (bad signature)");
 
                 throw new ArgumentException("Data in byte array is not a Registry hive (bad signature)");
             }
@@ -55,18 +55,18 @@ namespace Registry
             binaryReader.Close();
             fileStream.Close();
 
-            _logger = LogManager.GetLogger(hivePath);
+            Logger = LogManager.GetLogger(hivePath);
 
             if (!HasValidSignature())
             {
-                _logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
+                Logger.Error("'{0}' is not a Registry hive (bad signature)", hivePath);
 
                 throw new Exception($"'{hivePath}' is not a Registry hive (bad signature)");
             }
 
             HivePath = hivePath;
 
-            _logger.Debug("Set HivePath to {0}", hivePath);
+            Logger.Debug("Set HivePath to {0}", hivePath);
 
             Initialize();
         }
@@ -107,11 +107,11 @@ namespace Registry
         {
             var header = ReadBytesFromHive(0, 4096);
 
-            _logger.Debug("Getting header");
+            Logger.Debug("Getting header");
 
             Header = new RegistryHeader(header);
 
-            _logger.Debug("Got header. Embedded file name {0}", Header.FileName);
+            Logger.Debug("Got header. Embedded file name {0}", Header.FileName);
 
             var fNameBase = Path.GetFileName(Header.FileName).ToLower();
 
@@ -148,11 +148,12 @@ namespace Registry
                     HiveType = HiveTypeEnum.Other;
                     break;
             }
-            _logger.Debug("Hive is a {0} hive", HiveType);
+
+            Logger.Debug("Hive is a {0} hive", HiveType);
 
             var version = $"{Header.MajorVersion}.{Header.MinorVersion}";
 
-            _logger.Debug("Hive version is {0}", version);
+            Logger.Debug("Hive version is {0}", version);
         }
 
         public bool HasValidSignature()

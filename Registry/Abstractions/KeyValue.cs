@@ -17,17 +17,17 @@ namespace Registry.Abstractions
         /// <summary>
         ///     Initializes a new instance of the <see cref="KeyValue" /> class.
         /// </summary>
-        public KeyValue(VKCellRecord vk)
+        public KeyValue(VkCellRecord vk)
         {
-            VKRecord = vk;
-            InternalGUID = Guid.NewGuid().ToString();
+            VkRecord = vk;
+            InternalGuid = Guid.NewGuid().ToString();
         }
 
         // public properties...
         /// <summary>
         ///     A unique value that can be used to find this key in a collection
         /// </summary>
-        public string InternalGUID { get; }
+        public string InternalGuid { get; }
 
         /// <summary>
         ///     The normalized representation of the value's value.
@@ -36,40 +36,41 @@ namespace Registry.Abstractions
         {
             get
             {
-                if (VKRecord.ValueData is byte[])
+                if (VkRecord.ValueData is byte[])
                 {
-                    return BitConverter.ToString((byte[]) VKRecord.ValueData);
+                    return BitConverter.ToString((byte[]) VkRecord.ValueData);
                 }
-                return VKRecord.ValueData.ToString();
+
+                return VkRecord.ValueData.ToString();
             }
         }
 
         /// <summary>
         ///     The value as stored in the hive as a series of bytes
         /// </summary>
-        public byte[] ValueDataRaw => VKRecord.ValueDataRaw;
+        public byte[] ValueDataRaw => VkRecord.ValueDataRaw;
 
-        public string ValueName => VKRecord.ValueName;
+        public string ValueName => VkRecord.ValueName;
 
         /// <summary>
         ///     If present, the value slack as a string of bytes delimited by hyphens
         /// </summary>
-        public string ValueSlack => BitConverter.ToString(VKRecord.ValueDataSlack);
+        public string ValueSlack => BitConverter.ToString(VkRecord.ValueDataSlack);
 
         /// <summary>
         ///     The value slack as stored in the hive as a series of bytes
         /// </summary>
-        public byte[] ValueSlackRaw => VKRecord.ValueDataSlack;
+        public byte[] ValueSlackRaw => VkRecord.ValueDataSlack;
 
         /// <summary>
         ///     The values type (VKCellRecord.DataTypeEnum)
         /// </summary>
-        public string ValueType => VKRecord.DataType.ToString();
+        public string ValueType => VkRecord.DataType.ToString();
 
         /// <summary>
         ///     The underlying VKRecord for this Key. This allows access to all info about the VK Record
         /// </summary>
-        public VKCellRecord VKRecord { get; }
+        public VkCellRecord VkRecord { get; }
 
         // public methods...
         public override string ToString()
@@ -86,7 +87,7 @@ namespace Registry.Abstractions
 //            sb.AppendLine(string.Format("Internal GUID: {0}", InternalGUID));
 //            sb.AppendLine();
 
-            sb.AppendLine($"VK Record: {VKRecord}");
+            sb.AppendLine($"VK Record: {VkRecord}");
 
             return sb.ToString();
         }

@@ -7,18 +7,18 @@ using Registry.Other;
 namespace Registry.Lists
 {
     // internal classes...
-    public class DBListRecord : IListTemplate, IRecordBase
+    public class DbListRecord : IListTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;
 
         // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="DBListRecord" />  class.
+        ///     Initializes a new instance of the <see cref="DbListRecord" />  class.
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
-        public DBListRecord(byte[] rawBytes, long relativeOffset)
+        public DbListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;

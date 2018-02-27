@@ -8,18 +8,18 @@ using Registry.Other;
 namespace Registry.Lists
 {
     // internal classes...
-    public class RIListRecord : IListTemplate, IRecordBase
+    public class RiListRecord : IListTemplate, IRecordBase
     {
         // private fields...
         private readonly int _size;
 
         // public constructors...
         /// <summary>
-        ///     Initializes a new instance of the <see cref="RIListRecord" />  class.
+        ///     Initializes a new instance of the <see cref="RiListRecord" />  class.
         /// </summary>
         /// <param name="rawBytes"></param>
         /// <param name="relativeOffset"></param>
-        public RIListRecord(byte[] rawBytes, long relativeOffset)
+        public RiListRecord(byte[] rawBytes, long relativeOffset)
         {
             RelativeOffset = relativeOffset;
 
@@ -55,6 +55,7 @@ namespace Registry.Lists
 
                     counter += 1;
                 }
+
                 return offsets;
             }
         }
@@ -103,6 +104,7 @@ namespace Registry.Lists
                 sb.AppendLine($"Offset: 0x{offset:X}");
                 i += 1;
             }
+
             sb.AppendLine();
             sb.AppendLine("------------ End of offsets ------------");
             sb.AppendLine();

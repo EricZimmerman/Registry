@@ -5,31 +5,31 @@ using Registry.Cells;
 namespace Registry.Test
 {
     [TestFixture]
-    internal class TestNKCellRecord
+    internal class TestNkCellRecord
     {
         [Test]
         public void ShouldHavePaddingLengthOfZeroWhenRecordIsFree()
         {
-            var Bcd = new RegistryHive(@"..\..\Hives\BCD");
-            Bcd.FlushRecordListsAfterParse = false;
-            Bcd.RecoverDeleted = true;
-            Bcd.ParseHive();
+            var bcd = new RegistryHive(@"..\..\Hives\BCD");
+            bcd.FlushRecordListsAfterParse = false;
+            bcd.RecoverDeleted = true;
+            bcd.ParseHive();
 
-            var key = Bcd.GetKey(0x10e8);
+            var key = bcd.GetKey(0x10e8);
 
             Check.That(key).IsNotNull();
-            Check.That(key.NKRecord.Padding.Length).IsEqualTo(0);
+            Check.That(key.NkRecord.Padding.Length).IsEqualTo(0);
         }
 
         [Test]
         public void ShouldHaveUnableToDetermineName()
         {
-            var UsrClassBeef = new RegistryHive(@"..\..\Hives\UsrClass BEEF000E.dat");
-            UsrClassBeef.RecoverDeleted = true;
-            UsrClassBeef.FlushRecordListsAfterParse = false;
-            UsrClassBeef.ParseHive();
+            var usrClassBeef = new RegistryHive(@"..\..\Hives\UsrClass BEEF000E.dat");
+            usrClassBeef.RecoverDeleted = true;
+            usrClassBeef.FlushRecordListsAfterParse = false;
+            usrClassBeef.ParseHive();
 
-            var key = UsrClassBeef.CellRecords[0x783CD8] as NKCellRecord;
+            var key = usrClassBeef.CellRecords[0x783CD8] as NkCellRecord;
 
             Check.That(key).IsNotNull();
 
@@ -40,47 +40,48 @@ namespace Registry.Test
         [Test]
         public void ShouldVerifyNkRecordProperties()
         {
-            var Sam = new RegistryHive(@"..\..\Hives\SAM");
-            Sam.FlushRecordListsAfterParse = false;
-            Sam.ParseHive();
+            var sam = new RegistryHive(@"..\..\Hives\SAM");
+            sam.FlushRecordListsAfterParse = false;
+            sam.ParseHive();
 
             var key =
-                Sam.GetKey(0x418);
+                sam.GetKey(0x418);
 
             Check.That(key).IsNotNull();
 
-            Check.That(key.NKRecord.Padding.Length).IsGreaterThan(0);
-            Check.That(key.NKRecord.ToString()).IsNotEmpty();
-            Check.That(key.NKRecord.SecurityCellIndex).IsGreaterThan(0);
-            Check.That(key.NKRecord.SubkeyListsVolatileCellIndex).IsEqualTo((uint) 0);
+            Check.That(key.NkRecord.Padding.Length).IsStrictlyGreaterThan(0);
+            Check.That(key.NkRecord.ToString()).IsNotEmpty();
+            Check.That(key.NkRecord.SecurityCellIndex).IsStrictlyGreaterThan(0);
+            Check.That(key.NkRecord.SubkeyListsVolatileCellIndex).IsEqualTo(0);
 
             Check.That(key.KeyName).IsEqualTo("Domains");
             Check.That(key.KeyPath).IsEqualTo(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains");
             Check.That(key.LastWriteTime.ToString()).IsEqualTo("7/3/2014 6:05:37 PM +00:00");
-            Check.That(key.NKRecord.Size).IsEqualTo(0x58);
-            Check.That(key.NKRecord.RelativeOffset).IsEqualTo(0x418);
-            Check.That(key.NKRecord.AbsoluteOffset).IsEqualTo(0x1418);
-            Check.That(key.NKRecord.Signature).IsEqualTo("nk");
-            Check.That(key.NKRecord.IsFree).IsFalse();
-            Check.That(key.NKRecord.Debug).IsEqualTo((byte) 0);
-            Check.That(key.NKRecord.MaximumClassLength).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.ClassCellIndex).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.ClassLength).IsEqualTo((ushort) 0);
-            Check.That(key.NKRecord.MaximumValueDataLength).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.MaximumValueNameLength).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.NameLength).IsEqualTo((ushort) 7);
-            Check.That(key.NKRecord.MaximumNameLength).IsEqualTo((ushort) 0xE);
-            Check.That(key.NKRecord.ParentCellIndex).IsEqualTo((uint) 0xB0);
-            Check.That(key.NKRecord.SecurityCellIndex).IsEqualTo((uint) 0x108);
-            Check.That(key.NKRecord.SubkeyCountsStable).IsEqualTo((uint) 0x2);
-            Check.That(key.NKRecord.SubkeyListsStableCellIndex).IsEqualTo((uint) 0x4580);
-            Check.That(key.NKRecord.SubkeyCountsVolatile).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.UserFlags).IsEqualTo(0);
-            Check.That(key.NKRecord.VirtualControlFlags).IsEqualTo(0);
-            Check.That(key.NKRecord.WorkVar).IsEqualTo((uint) 0);
-            Check.That(key.NKRecord.ValueListCount).IsEqualTo((uint) 1);
-            Check.That(key.NKRecord.ValueListCellIndex).IsEqualTo((uint) 0x1f0);
-            Check.That(key.NKRecord.Padding.Length).IsEqualTo(1);
+            Check.That(key.NkRecord.Size).IsEqualTo(0x58);
+            Check.That(key.NkRecord.RelativeOffset).IsEqualTo(0x418);
+            Check.That(key.NkRecord.AbsoluteOffset).IsEqualTo(0x1418);
+            Check.That(key.NkRecord.Signature).IsEqualTo("nk");
+            Check.That(key.NkRecord.IsFree).IsFalse();
+            Check.That(key.NkRecord.Debug).IsEqualTo(0);
+            Check.That(key.NkRecord.MaximumClassLength).IsEqualTo(0);
+            Check.That(key.NkRecord.ClassCellIndex).IsEqualTo(0);
+            Check.That(key.NkRecord.ClassLength).IsEqualTo(0);
+            Check.That(key.NkRecord.MaximumValueDataLength).IsEqualTo(0);
+            Check.That(key.NkRecord.MaximumValueNameLength).IsEqualTo(0);
+            Check.That(key.NkRecord.NameLength).IsEqualTo(7);
+            Check.That(key.NkRecord.MaximumNameLength).IsEqualTo(0xE);
+            Check.That(key.NkRecord.ParentCellIndex).IsEqualTo(0xB0);
+            Check.That(key.NkRecord.SecurityCellIndex).IsEqualTo(0x108);
+            Check.That(key.NkRecord.SubkeyCountsStable).IsEqualTo(0x2);
+            Check.That(key.NkRecord.SubkeyListsStableCellIndex).IsEqualTo(0x4580);
+            Check.That(key.NkRecord.SubkeyCountsVolatile).IsEqualTo(0);
+            Check.That(key.NkRecord.UserFlags).IsEqualTo(NkCellRecord.UserFlag.None);
+            Check.That(key.NkRecord.VirtualControlFlags).IsEqualTo(NkCellRecord.VirtualizationControlFlag.None);
+            Check.That(key.NkRecord.Access).IsEqualTo(NkCellRecord.AccessFlag.PreInitAccess);
+            Check.That(key.NkRecord.WorkVar).IsEqualTo(0);
+            Check.That(key.NkRecord.ValueListCount).IsEqualTo(1);
+            Check.That(key.NkRecord.ValueListCellIndex).IsEqualTo(0x1f0);
+            Check.That(key.NkRecord.Padding.Length).IsEqualTo(1);
 
             //Key flags: HasActiveParent
             //
