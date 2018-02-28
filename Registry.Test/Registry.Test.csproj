@@ -58,6 +58,7 @@
     <Compile Include="TestRegistrySkeleton.cs" />
     <Compile Include="TestSetup.cs" />
     <Compile Include="TestSKCellRecord.cs" />
+    <Compile Include="TestTransactionLogs.cs" />
     <Compile Include="TestVKCellRecord.cs" />
   </ItemGroup>
   <ItemGroup>

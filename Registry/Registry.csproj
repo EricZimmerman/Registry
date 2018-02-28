@@ -79,6 +79,8 @@
     <Compile Include="Other\RegistryHeader.cs" />
     <Compile Include="RegistryHiveOnDemand.cs" />
     <Compile Include="RegistrySkeleton.cs" />
+    <Compile Include="TransactionLog.cs" />
+    <Compile Include="TransactionLogEntry.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="!_TODO.txt" />
