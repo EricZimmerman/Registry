@@ -191,7 +191,7 @@ namespace ExampleApp
                         logger.Warn("CheckSum mismatch!");
                     }
 
-                    if (registryHive.Header.Sequence1 != registryHive.Header.Sequence2)
+                    if (registryHive.Header.PrimarySequenceNumber != registryHive.Header.SecondarySequenceNumber)
                     {
                         logger.Warn("Sequence mismatch!");
                     }
@@ -245,7 +245,7 @@ namespace ExampleApp
                             string.Format($"Header CheckSums match: {registryHive.Header.ValidateCheckSum()}"));
                         sb.AppendLine(
                             string.Format(
-                                $"Header sequence 1: {registryHive.Header.Sequence1}, Header sequence 2: {registryHive.Header.Sequence2}"));
+                                $"Header sequence 1: {registryHive.Header.PrimarySequenceNumber}, Header sequence 2: {registryHive.Header.SecondarySequenceNumber}"));
 
                         sb.AppendLine();
 

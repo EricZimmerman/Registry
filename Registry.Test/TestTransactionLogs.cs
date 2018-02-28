@@ -25,7 +25,7 @@ namespace Registry.Test
             var hive = new RegistryHive(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
 
 
-          var newHiveBytes =   r.UpdateHiveBytes(hiveBytes,(int) hive.Header.Sequence2);
+          var newHiveBytes =   r.UpdateHiveBytes(hiveBytes,(int) hive.Header.SecondarySequenceNumber);
 
             
 
@@ -34,7 +34,7 @@ namespace Registry.Test
 
             r1.ParseLog();
 
-            r1.UpdateHiveBytes(hiveBytes,(int) hive.Header.Sequence2);
+            r1.UpdateHiveBytes(hiveBytes,(int) hive.Header.SecondarySequenceNumber);
 
             File.WriteAllBytes(@"C:\temp\newSYSTEM",newHiveBytes);
 

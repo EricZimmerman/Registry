@@ -30,8 +30,8 @@ namespace Registry.Other
 
             Check.That(Signature).IsEqualTo("regf");
 
-            Sequence1 = BitConverter.ToUInt32(rawBytes, 0x4);
-            Sequence2 = BitConverter.ToUInt32(rawBytes, 0x8);
+            PrimarySequenceNumber = BitConverter.ToUInt32(rawBytes, 0x4);
+            SecondarySequenceNumber = BitConverter.ToUInt32(rawBytes, 0x8);
 
             var ts = BitConverter.ToInt64(rawBytes, 0xc);
 
@@ -139,8 +139,8 @@ namespace Registry.Other
         /// </summary>
         public uint RootCellOffset { get; }
 
-        public uint Sequence1 { get; }
-        public uint Sequence2 { get; }
+        public uint PrimarySequenceNumber { get; }
+        public uint SecondarySequenceNumber { get; }
 
         /// <summary>
         ///     Signature of the registry hive. Should always be "regf"
@@ -164,8 +164,8 @@ namespace Registry.Other
 
             sb.AppendLine();
 
-            sb.AppendLine($"Sequence1: 0x{Sequence1:X}");
-            sb.AppendLine($"Sequence2: 0x{Sequence2:X}");
+            sb.AppendLine($"PrimarySequenceNumber: 0x{PrimarySequenceNumber:X}");
+            sb.AppendLine($"SecondarySequenceNumber: 0x{SecondarySequenceNumber:X}");
 
             sb.AppendLine();
 

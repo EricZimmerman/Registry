@@ -36,7 +36,7 @@ namespace Registry
             Initialize();
         }
 
-        public byte[] ReadBytesFromHive(long offset, int length)
+        private byte[] ReadBytesFromHive(long offset, int length)
         {
             var readLength = Math.Abs(length);
             
@@ -125,6 +125,8 @@ namespace Registry
                 throw new FileNotFoundException();
             }
 
+            
+
             var fileStream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
@@ -134,6 +136,12 @@ namespace Registry
 
             binaryReader.Close();
             fileStream.Close();
+
+            if (FileBytes.Length == 0)
+            {
+                throw new Exception("0 byte log file. Nothing to do");
+            }
+
 
             Logger = LogManager.GetLogger(logFile);
 
