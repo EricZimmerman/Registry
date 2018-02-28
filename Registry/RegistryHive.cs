@@ -589,6 +589,11 @@ namespace Registry
                 hiveLength = (uint) FileBytes.Length;
             }
 
+            if (Header.Sequence1 != Header.Sequence2)
+            {
+                Logger.Warn($"Sequence numbers do not match! Hive is dirty and the transaction logs should be reviewed for relevant data!");
+            }
+
             //keep reading the file until we reach the end
             while (offsetInHive < hiveLength)
             {
