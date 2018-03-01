@@ -15,6 +15,20 @@ namespace Registry.Test
         [Test]
         public void Something()
         {
+            var log1 = @"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG1";
+            var log2 = @"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG2";
+
+            var hive1 = new RegistryHive(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
+            hive1.ParseHive();
+
+            var logs = new List<string>();
+            logs.Add(log1);
+            logs.Add(log2);
+
+            var newb = hive1.ProcessTransactionLogs(logs, (int) hive1.Header.SecondarySequenceNumber);
+
+
+
             var r = new TransactionLog(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG1");
             Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
 

@@ -133,6 +133,53 @@ namespace Registry
             return dn;
         }
 
+        public byte[] ProcessTransactionLogs(List<string> logFiles, int seqNumber)
+        {
+            var bytes = FileBytes;
+
+            var logs = new List<TransactionLog>();
+
+            foreach (var ofFileName in logFiles)
+            {
+                var fi = new FileInfo(ofFileName);
+                if (fi.Length == 0)
+                {
+                    continue;
+                }
+
+                var transLog = new TransactionLog(ofFileName);
+                transLog.ParseLog();
+
+                logs.Add(transLog);
+            }
+
+            var firstLog = logs.SingleOrDefault(t => t.Header.SecondarySequenceNumber == seqNumber);
+
+            if (firstLog != null)
+            {
+                bytes = firstLog.UpdateHiveBytes(bytes, (int) seqNumber);
+            }
+
+            //check for any other log files to apply
+            var maxSeq = firstLog?.TransactionLogEntries.Max(t => t.SequenceNumber);
+
+            if (maxSeq != null)
+            {
+                var secondLog = logs.SingleOrDefault(t => t.Header.SecondarySequenceNumber == maxSeq+1);
+
+                if (secondLog != null)
+                {
+                    bytes = secondLog.UpdateHiveBytes(bytes,  maxSeq.Value);
+                }
+            }
+
+            var seqBytes = BitConverter.GetBytes(Header.PrimarySequenceNumber);
+
+            Buffer.BlockCopy(seqBytes,0, bytes,0x8,0x4);
+
+            return bytes;
+        }
+
         //TODO this needs refactored to remove duplicated code
         private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
         {
