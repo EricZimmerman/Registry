@@ -155,7 +155,7 @@ namespace Registry
 
             var firstLog = logs.SingleOrDefault(t => t.Header.SecondarySequenceNumber == seqNumber);
 
-            if (firstLog != null)
+            if (firstLog != null && firstLog.Header.ValidateCheckSum())
             {
                 bytes = firstLog.UpdateHiveBytes(bytes, (int) seqNumber);
             }

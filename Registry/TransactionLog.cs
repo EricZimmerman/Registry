@@ -117,7 +117,7 @@ namespace Registry
         {
             if (logFile == null)
             {
-                throw new ArgumentNullException("logFile cannot be null");
+                throw new ArgumentNullException(nameof(logFile));
             }
 
             if (!File.Exists(logFile))

@@ -32,6 +32,8 @@ namespace Registry.Test
             var r = new TransactionLog(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG1");
             Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
 
+            Check.That(r.Header.ValidateCheckSum()).IsTrue();
+
             r.ParseLog();
 
             var hiveBytes = File.ReadAllBytes(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
@@ -45,6 +47,8 @@ namespace Registry.Test
 
             var r1 = new TransactionLog(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG2");
             Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
+
+            Check.That(r1.Header.ValidateCheckSum()).IsTrue();
 
             r1.ParseLog();
 
