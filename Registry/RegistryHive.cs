@@ -133,8 +133,24 @@ namespace Registry
             return dn;
         }
 
-        public byte[] ProcessTransactionLogs(List<string> logFiles, int seqNumber)
+        /// <summary>
+        ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
+        /// </summary>
+        /// <param name="logFiles"></param>
+        /// <remarks>Hat tip: https://github.com/msuhanov</remarks>
+        /// <returns>Byte array containing the updated bytes</returns>
+        public byte[] ProcessTransactionLogs(List<string> logFiles)
         {
+            if (logFiles.Count == 0)
+            {
+                throw new Exception("No logs were supplied");
+            }
+
+            if (Header.PrimarySequenceNumber == Header.SecondarySequenceNumber)
+            {
+                throw new Exception("Sequence numbers match! Hive is not dirty");
+            }
+
             var bytes = FileBytes;
 
             var logs = new List<TransactionLog>();
@@ -148,34 +164,118 @@ namespace Registry
                 }
 
                 var transLog = new TransactionLog(ofFileName);
+
+                if (HiveType != transLog.HiveType)
+                {
+                    throw new Exception(
+                        $"Transaction log contains a type ({transLog.HiveType}) that is different from the Registry hive ({HiveType})");
+                }
+
+                if (transLog.Header.PrimarySequenceNumber < Header.SecondarySequenceNumber)
+                {
+                    //log predates the last confirmed update, so skip  
+                    Logger.Warn(
+                        $"Dropping {ofFileName} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber");
+                    continue;
+                }
+
                 transLog.ParseLog();
 
                 logs.Add(transLog);
             }
 
-            var firstLog = logs.SingleOrDefault(t => t.Header.SecondarySequenceNumber == seqNumber);
+            var wasUpdated = false;
+            var maximumSequenceNumber = 0;
 
-            if (firstLog != null && firstLog.Header.ValidateCheckSum())
+            //get first and second, do the compares
+
+            var logOne = logs.SingleOrDefault(t => t.LogPath.ToLowerInvariant().EndsWith("log1"));
+            var logTwo = logs.SingleOrDefault(t => t.LogPath.ToLowerInvariant().EndsWith("log2"));
+            TransactionLog soloLog = null;
+
+            if (logOne != null && logTwo != null)
             {
-                bytes = firstLog.UpdateHiveBytes(bytes, (int) seqNumber);
+                //both sent in, compare sequence #s for higher of the two
+
+                Logger.Info("Two transaction logs found. Determining primary log...");
+
+                TransactionLog firstLog;
+                TransactionLog secondLog;
+
+                //Find the one with the lower sequence numbers as it contains older data than the other one
+                if (logOne.Header.PrimarySequenceNumber >= logTwo.Header.PrimarySequenceNumber)
+                {
+                    firstLog = logTwo;
+                    secondLog = logOne;
+                }
+                else
+                {
+                    firstLog = logOne;
+                    secondLog = logTwo;
+                }
+
+                Logger.Info($"Primary log: {firstLog.LogPath}, secondary log: {secondLog.LogPath}");
+
+                //start with the first log and replay it.
+                //if second log's primary seq number is one more than firstLogs LAST, replay it as well
+                if (Header.ValidateCheckSum() &&
+                    firstLog.Header.PrimarySequenceNumber >= Header.SecondarySequenceNumber)
+                {
+                    Logger.Info($"Replaying log file: {firstLog.LogPath}");
+                    //we can replay the log
+                    bytes = firstLog.UpdateHiveBytes(bytes);
+                    wasUpdated = true;
+                }
+                else
+                {
+                    bytes = secondLog.UpdateHiveBytes(bytes);
+                    wasUpdated = true;
+                }
+
+                maximumSequenceNumber = firstLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+
+                if (secondLog.Header.PrimarySequenceNumber == maximumSequenceNumber + 1 &&
+                    secondLog.Header.PrimarySequenceNumber > Header.SecondarySequenceNumber)
+                {
+                    Logger.Info($"Replaying log file: {secondLog.LogPath}");
+                    bytes = secondLog.UpdateHiveBytes(bytes);
+                    maximumSequenceNumber = secondLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+                }
+            }
+            else if (logOne != null)
+            {
+                soloLog = logOne;
+            }
+            else if (logTwo != null)
+            {
+                soloLog = logTwo;
             }
 
-            //check for any other log files to apply
-            var maxSeq = firstLog?.TransactionLogEntries.Max(t => t.SequenceNumber);
-
-            if (maxSeq != null)
+            if (soloLog != null)
             {
-                var secondLog = logs.SingleOrDefault(t => t.Header.SecondarySequenceNumber == maxSeq+1);
+                Logger.Info($"Single log file available: {soloLog.LogPath}");
 
-                if (secondLog != null)
+                if (Header.ValidateCheckSum() && soloLog.Header.PrimarySequenceNumber >= Header.SecondarySequenceNumber)
                 {
-                    bytes = secondLog.UpdateHiveBytes(bytes,  maxSeq.Value);
+                    Logger.Info($"Replaying log file: {soloLog.LogPath}");
+                    //we can replay the log
+                    bytes = soloLog.UpdateHiveBytes(bytes);
+                    maximumSequenceNumber = soloLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+                    wasUpdated = true;
                 }
             }
 
-            var seqBytes = BitConverter.GetBytes(Header.PrimarySequenceNumber);
+            if (wasUpdated)
+            {
+                //update sequence numbers with latest available
+                var seqBytes = BitConverter.GetBytes(maximumSequenceNumber);
 
-            Buffer.BlockCopy(seqBytes,0, bytes,0x8,0x4);
+                Buffer.BlockCopy(seqBytes, 0, bytes, 0x4, 0x4); //Primary #
+                Buffer.BlockCopy(seqBytes, 0, bytes, 0x8, 0x4); //Secondary #
+
+                Logger.Info(
+                    $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}");
+            }
 
             return bytes;
         }
@@ -638,7 +738,8 @@ namespace Registry
 
             if (Header.PrimarySequenceNumber != Header.SecondarySequenceNumber)
             {
-                Logger.Warn($"Sequence numbers do not match! Hive is dirty and the transaction logs should be reviewed for relevant data!");
+                Logger.Warn(
+                    $"Sequence numbers do not match! Hive is dirty and the transaction logs should be reviewed for relevant data!");
             }
 
             //keep reading the file until we reach the end
@@ -675,11 +776,6 @@ namespace Registry
                     $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
-
-//                if (offsetInHive == 0x3ff000)
-//                {
-//                    Debug.WriteLine(1);
-//                }
 
                 try
                 {

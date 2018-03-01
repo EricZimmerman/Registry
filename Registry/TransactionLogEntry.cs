@@ -6,8 +6,6 @@ namespace Registry
 {
     public class TransactionLogEntry
     {
-        public List<DirtyPageInfo> DirtyPages{ get; }
-
         public TransactionLogEntry(byte[] rawBytes)
         {
             var sig = Encoding.GetEncoding(1252).GetString(rawBytes, 0, 4);
@@ -75,7 +73,6 @@ namespace Registry
             foreach (var dirtyPageInfo in DirtyPages)
             {
                 //dirtyPageInfo.Size contains how many bytes we need to overwrite in the main hive's bytes
-
                 //from index, read size bytes, update dirtyPage
 
                 var pageBuff = new byte[dirtyPageInfo.Size];
@@ -88,6 +85,8 @@ namespace Registry
             }
         }
 
+        public List<DirtyPageInfo> DirtyPages { get; }
+
         public int DirtyPageCount { get; }
         public long Hash1 { get; }
         public long Hash2 { get; }
@@ -96,8 +95,17 @@ namespace Registry
 
         public override string ToString()
         {
+            var x = 0;
+            var sb = new StringBuilder();
+
+            foreach (var dp in DirtyPages)
+            {
+                sb.AppendLine($"Index: {x} {dp}");
+                x += 1;
+            }
+
             return
-                $"Size: 0x{Size:X4}, Sequence Number: 0x{SequenceNumber:X4}, Dirty Page Count: 0x{Size:DirtyPageCount}, Hash1: 0x{Hash1:X}, Hash1: 0x{Hash1:X}";
+                $"Size: 0x{Size:X4}, Sequence Number: 0x{SequenceNumber:X4}, Dirty Page Count: {DirtyPageCount:N0}, Hash1: 0x{Hash1:X}, Hash2: 0x{Hash2:X} "; //Page info: {sb}
         }
     }
 
@@ -111,8 +119,16 @@ namespace Registry
 
         public int Offset { get; }
         public int Size { get; }
+
+        /// <summary>
+        ///     Contains the bytes to be overwritten at Offset in the original hive (from the start of hbins)
+        /// </summary>
         public byte[] PageBytes { get; private set; }
 
+        /// <summary>
+        ///     Updates PageBytes to contain the data to be used when overwriting part of an original hive
+        /// </summary>
+        /// <param name="bytes"></param>
         public void UpdatePageBytes(byte[] bytes)
         {
             PageBytes = bytes;

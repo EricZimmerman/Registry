@@ -269,7 +269,7 @@ namespace Registry.Test
 
             usrclass.ParseHive();
 
-            Check.That(usrclass.SoftParsingErrors).IsGreaterThan(0);
+            Check.That(usrclass.SoftParsingErrors).IsStrictlyGreaterThan(0);
         }
 
         [Test]
@@ -298,10 +298,10 @@ namespace Registry.Test
             Check.That(sam.Header).IsNotNull();
             Check.That(sam.Header.FileName).IsNotNull();
             Check.That(sam.Header.FileName).IsNotEmpty();
-            Check.That(sam.Header.Length).IsGreaterThan(0);
-            Check.That(sam.Header.MajorVersion).IsGreaterThan(0);
-            Check.That(sam.Header.MinorVersion).IsGreaterThan(0);
-            Check.That(sam.Header.RootCellOffset).IsGreaterThan(0);
+            Check.That(sam.Header.Length).IsStrictlyGreaterThan(0);
+            Check.That(sam.Header.MajorVersion).IsStrictlyGreaterThan(0);
+            Check.That(sam.Header.MinorVersion).IsStrictlyGreaterThan(0);
+            Check.That(sam.Header.RootCellOffset).IsStrictlyGreaterThan(0);
             Check.That(sam.Header.CalculatedChecksum).Equals(sam.Header.CheckSum);
             Check.That(sam.Header.ValidateCheckSum()).Equals(true);
             Check.That(sam.Header.ToString()).IsNotEmpty();

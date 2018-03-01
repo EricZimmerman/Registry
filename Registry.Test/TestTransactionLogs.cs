@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,49 +14,43 @@ namespace Registry.Test
     {
 
         [Test]
-        public void Something()
+        public void HiveTests()
         {
-            var log1 = @"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG1";
-            var log2 = @"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG2";
+            var dir = @"C:\Temp\hives";
 
-            var hive1 = new RegistryHive(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
-            hive1.ParseHive();
+            var files = Directory.GetFiles(dir);
 
-            var logs = new List<string>();
-            logs.Add(log1);
-            logs.Add(log2);
+            foreach (var file in files)
+            {
+                if (file.Contains("LOG") || file.EndsWith("_NONDIRTY"))
+                {
+                    continue;
+                }
 
-            var newb = hive1.ProcessTransactionLogs(logs, (int) hive1.Header.SecondarySequenceNumber);
+                var log1 = $"{file}.LOG1";
+                var log2 = $"{file}.LOG2";
 
+                var hive1 = new RegistryHive(file);
 
+                var logs = new List<string>();
+                logs.Add(log1);
+                logs.Add(log2);
 
-            var r = new TransactionLog(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG1");
-            Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
+                if (hive1.Header.PrimarySequenceNumber != hive1.Header.SecondarySequenceNumber)
+                {
+                    Debug.WriteLine("");
+                    Debug.WriteLine($"File: {file} Valid checksum: {hive1.Header.ValidateCheckSum()} Primary: 0x{hive1.Header.PrimarySequenceNumber:X} Secondary: 0x{hive1.Header.SecondarySequenceNumber:X}"); 
+                    var newb = hive1.ProcessTransactionLogs(logs);
 
-            Check.That(r.Header.ValidateCheckSum()).IsTrue();
+                    var newName = file + "_NONDIRTY";
 
-            r.ParseLog();
+                    File.WriteAllBytes(newName,newb);
+                }
 
-            var hiveBytes = File.ReadAllBytes(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
-
-            var hive = new RegistryHive(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM");
-
-
-          var newHiveBytes =   r.UpdateHiveBytes(hiveBytes,(int) hive.Header.SecondarySequenceNumber);
-
-            
-
-            var r1 = new TransactionLog(@"C:\Users\eric\Desktop\8.1-unreconciled\after\SYSTEM.LOG2");
-            Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
-
-            Check.That(r1.Header.ValidateCheckSum()).IsTrue();
-
-            r1.ParseLog();
-
-            r1.UpdateHiveBytes(hiveBytes,(int) hive.Header.SecondarySequenceNumber);
-
-            File.WriteAllBytes(@"C:\temp\newSYSTEM",newHiveBytes);
+            }
 
         }
+
+       
     }
 }

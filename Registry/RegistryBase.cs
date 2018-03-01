@@ -113,7 +113,7 @@ namespace Registry
 
             Logger.Debug("Got header. Embedded file name {0}", Header.FileName);
 
-            var fNameBase = Path.GetFileName(Header.FileName).ToLower();
+            var fNameBase = Path.GetFileName(Header.FileName).ToLowerInvariant();
 
             switch (fNameBase)
             {
