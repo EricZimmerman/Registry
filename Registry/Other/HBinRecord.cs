@@ -340,15 +340,15 @@ namespace Registry.Other
                 {
                     var actualStart = i;
 
-                    var size = BitConverter.ToUInt32(remainingData, actualStart);
+                    var size = BitConverter.ToInt32(remainingData, actualStart);
 
-                    if (size <= 3 || remainingData.Length - actualStart < size)
+                    if (Math.Abs(size) <= 3 || remainingData.Length - actualStart < size)
                     {
                         //if its empty or the size is beyond the data that is left, move on
                         continue;
                     }
 
-                    raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs((int) size)).ToArray();
+                    raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs(size)).ToArray();
 
                     if (raw.Length < 6)
                     {
