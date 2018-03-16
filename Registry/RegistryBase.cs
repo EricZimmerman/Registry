@@ -73,7 +73,7 @@ namespace Registry
 
         public long TotalBytesRead { get; internal set; }
 
-        public byte[] FileBytes { get; }
+        public byte[] FileBytes { get; internal set; }
 
         public HiveTypeEnum HiveType { get; private set; }
 
@@ -103,7 +103,7 @@ namespace Registry
             return r.ToArray();
         }
 
-        private void Initialize()
+        internal void Initialize()
         {
             var header = ReadBytesFromHive(0, 4096);
 

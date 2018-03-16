@@ -137,9 +137,10 @@ namespace Registry
         ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
         /// </summary>
         /// <param name="logFiles"></param>
+        /// <param name="updateExistingData"></param>
         /// <remarks>Hat tip: https://github.com/msuhanov</remarks>
         /// <returns>Byte array containing the updated bytes</returns>
-        public byte[] ProcessTransactionLogs(List<string> logFiles)
+        public byte[] ProcessTransactionLogs(List<string> logFiles,bool updateExistingData = false)
         {
             if (logFiles.Count == 0)
             {
@@ -275,6 +276,12 @@ namespace Registry
 
                 Logger.Info(
                     $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}");
+            }
+
+            if (updateExistingData)
+            {
+                FileBytes = bytes;
+                Initialize(); //reprocess header
             }
 
             return bytes;
