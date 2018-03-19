@@ -69,7 +69,7 @@ namespace Registry.Test
         [Test]
         public void OneOff()
         {
-            var r = new RegistryHive(@"C:\Users\eric\Desktop\UsrClassWorks.7Brokev9.dat");
+            var r = new RegistryHive(@"C:\Users\eric\Desktop\SAM");
             r.RecoverDeleted = true;
             r.ParseHive();
         }

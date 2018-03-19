@@ -76,7 +76,15 @@ namespace Registry.Other
 
             ts = BitConverter.ToInt64(rawBytes, 0xa8);
 
-            LastReorganizedTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+            try
+            {
+                LastReorganizedTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+            }
+            catch (Exception e)
+            {
+                
+            }
+            
 
             //End new
 
