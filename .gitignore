@@ -193,3 +193,4 @@ ModelManifest.xml
 *.ide
 *.ide-shm
 *.ide-wal
+/.vs/Registry/DesignTimeBuild/.dtbcache

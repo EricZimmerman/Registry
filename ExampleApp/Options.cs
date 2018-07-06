@@ -11,27 +11,27 @@ internal class Options
         HelpText = "Name of directory to lok for registry hives to process")]
     public string DirectoryName { get; set; }
 
-    [Option('e', DefaultValue = false, Required = false,
+    [Option('e', Default = false, Required = false,
         HelpText = "If true, export a file that can be compared to other Registry parsers")]
     public bool ExportHiveData { get; set; }
 
-    [Option('p', DefaultValue = false, Required = false,
+    [Option('p', Default = false, Required = false,
         HelpText = "If true, pause after processing a hive and wait for keypress to continue")]
     public bool PauseAfterEachFile { get; set; }
 
-    [Option('a', DefaultValue = false, Required = false,
+    [Option('a', Default = false, Required = false,
         HelpText = "If true, only recovered deleted keys/values will be exported")]
     public bool ExportDeletedOnly { get; set; }
 
-    [Option('r', DefaultValue = false, Required = false,
+    [Option('r', Default = false, Required = false,
         HelpText = "If true, recover and process deleted Registry keys/values")]
     public bool RecoverDeleted { get; set; }
 
-    [Option('v', DefaultValue = 0, Required = false,
+    [Option('v', Default = 0, Required = false,
         HelpText = "Verbosity level. 0 = Info, 1 = Debug, 2 = Trace")]
     public int VerboseLevel { get; set; }
 
-    [Option('y', DefaultValue = false, Required = false,
+    [Option('y', Default = false, Required = false,
         HelpText = "If false, lists containing cell record and lists will be flushed at the end of parsing")]
     public bool DontFlushLists { get; set; }
 

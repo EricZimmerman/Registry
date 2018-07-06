@@ -3,7 +3,6 @@ using System.IO;
 using NFluent;
 using NLog;
 using NUnit.Framework;
-using Registry.Other;
 
 namespace Registry.Test
 {
@@ -19,14 +18,14 @@ namespace Registry.Test
         [Test]
         public void BcdHiveShouldHaveBcdHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\BCD");
+            var r = new RegistryBase(@"..\..\..\Hives\BCD");
             Check.That(HiveTypeEnum.Bcd).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void DriversHiveShouldHaveDriversHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\Drivers");
+            var r = new RegistryBase(@"..\..\..\Hives\Drivers");
             Check.That(HiveTypeEnum.Drivers).IsEqualTo(r.HiveType);
         }
 
@@ -46,22 +45,22 @@ namespace Registry.Test
         [Test]
         public void HivePathShouldReflectWhatIsPassedIn()
         {
-            var security = new RegistryHiveOnDemand(@"..\..\Hives\SECURITY");
+            var security = new RegistryHiveOnDemand(@"..\..\..\Hives\SECURITY");
 
-            Check.That(security.HivePath).IsEqualTo(@"..\..\Hives\SECURITY");
+            Check.That(security.HivePath).IsEqualTo(@"..\..\..\Hives\SECURITY");
         }
 
         [Test]
         public void InvalidRegistryHiveShouldThrowException()
         {
-            Check.ThatCode(() => { new RegistryBase(@"..\..\Hives\NotAHive"); }).Throws<Exception>();
+            Check.ThatCode(() => { new RegistryBase(@"..\..\..\Hives\NotAHive"); }).Throws<Exception>();
         }
 
 
         [Test]
         public void NtuserHiveShouldHaveNtuserHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\NTUSER.DAT");
+            var r = new RegistryBase(@"..\..\..\Hives\NTUSER.DAT");
             Check.That(HiveTypeEnum.NtUser).IsEqualTo(r.HiveType);
         }
 
@@ -82,28 +81,28 @@ namespace Registry.Test
         [Test]
         public void OtherHiveShouldHaveOtherHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\SAN(OTHER)");
+            var r = new RegistryBase(@"..\..\..\Hives\SAN(OTHER)");
             Check.That(HiveTypeEnum.Other).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void SamHiveShouldHaveSamHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\SAM");
+            var r = new RegistryBase(@"..\..\..\Hives\SAM");
             Check.That(HiveTypeEnum.Sam).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void SecurityHiveShouldHaveSecurityHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\Security");
+            var r = new RegistryBase(@"..\..\..\Hives\Security");
             Check.That(HiveTypeEnum.Security).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void ShouldTakeByteArrayInConstructor()
         {
-            var fileStream = new FileStream(@"..\..\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fileStream = new FileStream(@"..\..\..\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -123,7 +122,7 @@ namespace Registry.Test
         [Test]
         public void ShouldThrowExceptionWhenNotRegistryHiveAndByteArray()
         {
-            var fileStream = new FileStream(@"..\..\Hives\NotAHive", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fileStream = new FileStream(@"..\..\..\Hives\NotAHive", FileMode.Open, FileAccess.Read, FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -143,28 +142,28 @@ namespace Registry.Test
         [Test]
         public void SoftwareHiveShouldHaveSoftwareHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\software");
+            var r = new RegistryBase(@"..\..\..\Hives\software");
             Check.That(HiveTypeEnum.Software).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void SystemHiveShouldHaveSystemHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\system");
+            var r = new RegistryBase(@"..\..\..\Hives\system");
             Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void UsrclassHiveShouldHaveUsrclassHiveType()
         {
-            var r = new RegistryBase(@"..\..\Hives\UsrClass 1.dat");
+            var r = new RegistryBase(@"..\..\..\Hives\UsrClass 1.dat");
             Check.That(HiveTypeEnum.UsrClass).IsEqualTo(r.HiveType);
         }
 
         [Test]
         public void Windows10ExtraData()
         {
-            var r = new RegistryBase(@"D:\SynologyDrive\RegistryHives\SOFTWARE_win10");
+            var r = new RegistryBase(@"D:\SynologyDrive\Registry\SOFTWARE_win10");
             Check.That(r.Header.KtmFlags).IsEqualTo(KtmFlag.Unset);
             Check.That(r.Header.LastReorganizedTimestamp.HasValue).IsTrue();
         }

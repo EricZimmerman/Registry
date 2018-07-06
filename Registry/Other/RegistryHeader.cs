@@ -80,7 +80,7 @@ namespace Registry.Other
             {
                 LastReorganizedTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 
             }

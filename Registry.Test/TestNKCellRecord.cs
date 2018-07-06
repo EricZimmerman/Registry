@@ -1,6 +1,5 @@
 ﻿using NFluent;
 using NUnit.Framework;
-using Registry.Cells;
 
 namespace Registry.Test
 {
@@ -10,7 +9,7 @@ namespace Registry.Test
         [Test]
         public void ShouldHavePaddingLengthOfZeroWhenRecordIsFree()
         {
-            var bcd = new RegistryHive(@"..\..\Hives\BCD");
+            var bcd = new RegistryHive(@"..\..\..\Hives\BCD");
             bcd.FlushRecordListsAfterParse = false;
             bcd.RecoverDeleted = true;
             bcd.ParseHive();
@@ -24,7 +23,7 @@ namespace Registry.Test
         [Test]
         public void ShouldHaveUnableToDetermineName()
         {
-            var usrClassBeef = new RegistryHive(@"..\..\Hives\UsrClass BEEF000E.dat");
+            var usrClassBeef = new RegistryHive(@"..\..\..\Hives\UsrClass BEEF000E.dat");
             usrClassBeef.RecoverDeleted = true;
             usrClassBeef.FlushRecordListsAfterParse = false;
             usrClassBeef.ParseHive();
@@ -40,7 +39,7 @@ namespace Registry.Test
         [Test]
         public void ShouldVerifyNkRecordProperties()
         {
-            var sam = new RegistryHive(@"..\..\Hives\SAM");
+            var sam = new RegistryHive(@"..\..\..\Hives\SAM");
             sam.FlushRecordListsAfterParse = false;
             sam.ParseHive();
 

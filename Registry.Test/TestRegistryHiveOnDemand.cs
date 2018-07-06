@@ -10,7 +10,7 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldBeNullWithNonExistentPath()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
             var key = samOnDemand.GetKey(@"SAM\Domains\Account\This\Does\Not\Exist");
 
             Check.That(key).IsNull();
@@ -19,7 +19,7 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithFullPath()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
             var key =
                 samOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account");
@@ -30,7 +30,7 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithShortPath()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
             var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             Check.That(key).IsNotNull();
@@ -39,7 +39,7 @@ namespace Registry.Test
         [Test]
         public void GetKeyShouldNotBeNullWithShortPathMixedSpelling()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
             var key = samOnDemand.GetKey(@"SAM\DomAins\AccoUnt");
 
             Check.That(key).IsNotNull();
@@ -48,7 +48,7 @@ namespace Registry.Test
         [Test]
         public void ShouldProcessLiListRecord()
         {
-            var usrClass1OnDemand = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass 1.dat");
+            var usrClass1OnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\UsrClass 1.dat");
 
             var key =
                 usrClass1OnDemand.GetKey(
@@ -61,7 +61,7 @@ namespace Registry.Test
         [Test]
         public void ShouldTakeByteArrayInConstructor()
         {
-            var fileStream = new FileStream(@"..\..\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fileStream = new FileStream(@"..\..\..\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
             var binaryReader = new BinaryReader(fileStream);
 
             binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -81,7 +81,7 @@ namespace Registry.Test
         [Test]
         public void TestFileNameConstructor()
         {
-            var r = new RegistryHiveOnDemand(@"..\..\Hives\SAM");
+            var r = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
 
             Check.That(r.Header).IsNotNull();
         }
@@ -89,7 +89,7 @@ namespace Registry.Test
         [Test]
         public void TestsListRecords()
         {
-            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
+            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\DRIVERS");
 
             var key =
                 driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}\DriverDatabase\DeviceIds");
@@ -101,7 +101,7 @@ namespace Registry.Test
         [Test]
         public void TestsListRecordsContinued()
         {
-            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\Hives\DRIVERS");
+            var driversOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\DRIVERS");
 
 
             var key = driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}");
@@ -113,7 +113,7 @@ namespace Registry.Test
         [Test]
         public void TestsListRecordsContinued3()
         {
-            var usrClassFtp = new RegistryHiveOnDemand(@"..\..\Hives\UsrClass FTP.dat");
+            var usrClassFtp = new RegistryHiveOnDemand(@"..\..\..\Hives\UsrClass FTP.dat");
 
             var key =
                 usrClassFtp.GetKey(

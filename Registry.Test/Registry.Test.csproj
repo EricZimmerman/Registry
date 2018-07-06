@@ -1,112 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0E97C9AC-C1FD-482F-A0DC-548F8402562A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Registry.Test</RootNamespace>
-    <AssemblyName>Registry.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>net461</TargetFrameworks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="NFluent, Version=2.2.0.125, Culture=neutral, PublicKeyToken=18828b37b84b1437, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFluent.2.2.0\lib\net45\NFluent.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=3.9.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.3.9.0\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="NFluent" Version="2.3.1" />
+    <PackageReference Include="NLog" Version="4.5.6" />
+	<PackageReference Include="NUnit" Version="3.9.0" />
   </ItemGroup>
+
+
+
   <ItemGroup>
-    <Compile Include="TestNKCellRecord.cs" />
-    <Compile Include="TestRegistryBase.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestRegistryHive.cs" />
-    <Compile Include="TestRegistryHiveOnDemand.cs" />
-    <Compile Include="TestRegistryOther.cs" />
-    <Compile Include="TestRegistrySkeleton.cs" />
-    <Compile Include="TestSetup.cs" />
-    <Compile Include="TestSKCellRecord.cs" />
-    <Compile Include="TestTransactionLogs.cs" />
-    <Compile Include="TestVKCellRecord.cs" />
+    <ProjectReference Include="..\Registry\Registry.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Hives\Acronis_0x52_Usrclass.dat" />
-    <None Include="Hives\BCD" />
-    <None Include="Hives\DRIVERS" />
-    <None Include="Hives\ERZ_Win81_UsrClass.dat" />
-    <None Include="Hives\NotAHive" />
-    <None Include="Hives\NTUSER slack.DAT" />
-    <None Include="Hives\NTUSER.DAT" />
-    <None Include="Hives\NTUSER1.DAT" />
-    <None Include="Hives\SAM" />
-    <None Include="Hives\SAMBadHBinHeader" />
-    <None Include="Hives\SAM_DUPENAME" />
-    <None Include="Hives\SAM_hasBigEndianDWord" />
-    <None Include="Hives\SAM_RootValue" />
-    <None Include="Hives\SAN%28OTHER%29" />
-    <None Include="Hives\SECURITY" />
-    <None Include="Hives\SECURITYNoRoot" />
-    <None Include="Hives\software" />
-    <None Include="Hives\SYSTEM" />
-    <None Include="Hives\UsrClass 1.dat" />
-    <None Include="Hives\UsrClass BEEF000E.dat" />
-    <None Include="Hives\UsrClass FTP.dat" />
-    <None Include="Hives\UsrClass zip files unicode.dat" />
-    <None Include="Hives\UsrClass-win7.dat" />
-    <None Include="Hives\UsrClassJVM.dat" />
-    <None Include="Hives\UsrClassDeletedBags.dat" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Notes.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Registry\Registry.csproj">
-      <Project>{5c40be24-a89d-4973-b668-2d6e945cb047}</Project>
-      <Name>Registry</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>
+
