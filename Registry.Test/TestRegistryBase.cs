@@ -3,6 +3,7 @@ using System.IO;
 using NFluent;
 using NLog;
 using NUnit.Framework;
+using Registry.Other;
 
 namespace Registry.Test
 {

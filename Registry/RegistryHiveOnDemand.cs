@@ -217,7 +217,7 @@ namespace Registry
             var newPath = keyPath.ToLowerInvariant();
 
             // when getting child keys, the name may start with the root key name. if so, strip it
-            if (newPath.StartsWith(rootNk.Name.ToLowerInvariant()))
+            if (newPath.StartsWith(rootNk.Name,StringComparison.OrdinalIgnoreCase))
             {
                 var segs = keyPath.Split('\\');
                 newPath = string.Join("\\", segs.Skip(1));
@@ -235,7 +235,7 @@ namespace Registry
             {
                 finalKey =
                     finalKey.SubKeys.SingleOrDefault(
-                        r => r.KeyName.ToLowerInvariant() == keyNames[i].ToLowerInvariant());
+                        r => string.Equals(r.KeyName, keyNames[i], StringComparison.OrdinalIgnoreCase));
 
                 if (finalKey == null)
                 {

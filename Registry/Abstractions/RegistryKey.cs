@@ -161,7 +161,7 @@ namespace Registry.Abstractions
                     keyNameOut = $"\"{keyNameOut.Replace("\"", "\\\"")}\"";
                 }
 
-                var keyValueOut = "";
+                var keyValueOut = string.Empty;
 
                 switch (keyValue.VkRecord.DataType)
                 {

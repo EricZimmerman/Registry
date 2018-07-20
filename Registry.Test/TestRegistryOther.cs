@@ -1,6 +1,8 @@
 ﻿using System;
 using NFluent;
 using NUnit.Framework;
+using Registry.Lists;
+using Registry.Other;
 
 namespace Registry.Test
 {

@@ -190,8 +190,8 @@ namespace Registry
 
             //get first and second, do the compares
 
-            var logOne = logs.SingleOrDefault(t => t.LogPath.ToLowerInvariant().EndsWith("log1"));
-            var logTwo = logs.SingleOrDefault(t => t.LogPath.ToLowerInvariant().EndsWith("log2"));
+            var logOne = logs.SingleOrDefault(t => t.LogPath.EndsWith("log1",StringComparison.OrdinalIgnoreCase));
+            var logTwo = logs.SingleOrDefault(t => t.LogPath.EndsWith("log2",StringComparison.OrdinalIgnoreCase));
             TransactionLog soloLog = null;
 
             if (logOne != null && logTwo != null)
@@ -692,6 +692,9 @@ namespace Registry
         public RegistryKey GetKey(string keyPath)
         {
             keyPath = keyPath.ToLowerInvariant();
+
+            //trim slashes to match the value in keyPathKeyMap
+            keyPath = keyPath.Trim('\\', '/');
 
             if (_keyPathKeyMap.ContainsKey(keyPath))
             {
@@ -1345,7 +1348,7 @@ namespace Registry
                 return false;
             }
 
-            return s.Length % 4 == 0 && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
+            return s.Length % 4 == 0 && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.Compiled);
         }
 
 

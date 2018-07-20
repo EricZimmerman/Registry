@@ -595,7 +595,7 @@ namespace Registry.Cells
 
                         var valString = BitConverter.ToString(RawBytes, 0x18, NameLength);
 
-                        var foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?");
+                        var foundMatch = Regex.IsMatch(valString, "[0-9A-Fa-f]{2}-[0]{2}-?",RegexOptions.Compiled);
 
                         if (foundMatch)
                         {
