@@ -1176,7 +1176,7 @@ namespace Registry
                 if (keyValue.ValueData.Trim().Length < minLength) continue;
 
                 if (IsBase64String2(keyValue.ValueData))
-                    yield return new SearchHit(registryKey.Value, keyValue, keyValue.ValueData);
+                    yield return new SearchHit(registryKey.Value, keyValue, keyValue.ValueData, keyValue.ValueData);
             }
         }
 
@@ -1234,12 +1234,12 @@ namespace Registry
                 if (useRegEx)
                 {
                     if (Regex.IsMatch(registryKey.Value.KeyName, searchTerm, RegexOptions.IgnoreCase))
-                        yield return new SearchHit(registryKey.Value, null, searchTerm);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm,searchTerm);
                 }
                 else
                 {
                     if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
-                        yield return new SearchHit(registryKey.Value, null, searchTerm);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm,searchTerm);
                 }
         }
 
@@ -1249,17 +1249,17 @@ namespace Registry
                 if (start != null && end != null)
                 {
                     if (start <= registryKey.Value.LastWriteTime && registryKey.Value.LastWriteTime <= end)
-                        yield return new SearchHit(registryKey.Value, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null, null);
                 }
                 else if (end != null)
                 {
                     if (registryKey.Value.LastWriteTime < end)
-                        yield return new SearchHit(registryKey.Value, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null,null);
                 }
                 else if (start != null)
                 {
                     if (registryKey.Value.LastWriteTime > start)
-                        yield return new SearchHit(registryKey.Value, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null,null);
                 }
         }
 
@@ -1270,12 +1270,12 @@ namespace Registry
                 if (useRegEx)
                 {
                     if (Regex.IsMatch(keyValue.ValueName, searchTerm, RegexOptions.IgnoreCase))
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
                 }
                 else
                 {
                     if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
                 }
         }
 
@@ -1293,13 +1293,13 @@ namespace Registry
                 if (useRegEx)
                 {
                     if (Regex.IsMatch(keyValue.ValueData, searchTerm, RegexOptions.IgnoreCase))
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
                 }
                 else
                 {
                     //plaintext matching
                     if (keyValue.ValueData.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
 
                     if (literal) continue;
 
@@ -1333,7 +1333,7 @@ namespace Registry
                             var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
 
                             var asciiHit = BitConverter.ToString(asciihex);
-                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
+                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit,hitString);
                         }
 
                         hitString = string.Empty;
@@ -1355,7 +1355,7 @@ namespace Registry
                         var unicodehex = Encoding.Unicode.GetBytes(hitString);
 
                         var unicodeHit = BitConverter.ToString(unicodehex);
-                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit);
+                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit,hitString);
                     }
                 }
         }
@@ -1368,14 +1368,14 @@ namespace Registry
                 if (useRegEx)
                 {
                     if (Regex.IsMatch(keyValue.ValueSlack, searchTerm, RegexOptions.IgnoreCase))
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
                 }
                 else
                 {
                     if (literal)
                     {
                         if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
-                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm,searchTerm);
                     }
                     else
                     {
@@ -1400,7 +1400,7 @@ namespace Registry
                             var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
 
                             var asciiHit = BitConverter.ToString(asciihex);
-                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit);
+                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit,hitString);
                         }
 
                         hitString = string.Empty;
@@ -1418,7 +1418,7 @@ namespace Registry
                         var unicodehex = Encoding.Unicode.GetBytes(hitString);
 
                         var unicodeHit = BitConverter.ToString(unicodehex);
-                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit);
+                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit,hitString);
                     }
                 }
         }

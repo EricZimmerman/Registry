@@ -4,16 +4,18 @@ namespace Registry.Abstractions
 {
     public class SearchHit
     {
-        public SearchHit(RegistryKey key, KeyValue value, string hitstring)
+        public SearchHit(RegistryKey key, KeyValue value, string hitstring, string decodedValue)
         {
             Key = key;
             Value = value;
             HitString = hitstring;
+            DecodedValue = decodedValue;
         }
 
         public RegistryKey Key { get; }
         public KeyValue Value { get; }
         public string HitString { get; }
+        public string DecodedValue { get; }
 
         public bool StripRootKeyName { get; set; }
 
