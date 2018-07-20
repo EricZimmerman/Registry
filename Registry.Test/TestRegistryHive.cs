@@ -27,6 +27,15 @@ namespace Registry.Test
             Check.That(sam.HardParsingErrors).IsEqualTo(0);
         }
 
+        [Test]
+        public void SomeTest()
+        {
+            var n = new RegistryHive(@"C:\Temp\NTUSER.DAT");
+            n.FlushRecordListsAfterParse = true;
+            n.ParseHive();
+
+
+        }
 
         [Test]
         public void DeletedFindTest()
