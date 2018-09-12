@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="NFluent" Version="2.3.1" />
-    <PackageReference Include="NLog" Version="4.5.7" />
+    <PackageReference Include="NLog" Version="4.5.9" />
   </ItemGroup>
 
 </Project>
