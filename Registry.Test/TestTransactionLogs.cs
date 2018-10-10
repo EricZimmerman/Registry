@@ -5,9 +5,8 @@ using NUnit.Framework;
 
 namespace Registry.Test
 {
-   public class TestTransactionLogs
+    public class TestTransactionLogs
     {
-
         [Test]
         public void HiveTests()
         {
@@ -34,18 +33,15 @@ namespace Registry.Test
                 if (hive1.Header.PrimarySequenceNumber != hive1.Header.SecondarySequenceNumber)
                 {
                     Debug.WriteLine("");
-                    Debug.WriteLine($"File: {file} Valid checksum: {hive1.Header.ValidateCheckSum()} Primary: 0x{hive1.Header.PrimarySequenceNumber:X} Secondary: 0x{hive1.Header.SecondarySequenceNumber:X}"); 
+                    Debug.WriteLine(
+                        $"File: {file} Valid checksum: {hive1.Header.ValidateCheckSum()} Primary: 0x{hive1.Header.PrimarySequenceNumber:X} Secondary: 0x{hive1.Header.SecondarySequenceNumber:X}");
                     var newb = hive1.ProcessTransactionLogs(logs);
 
                     var newName = file + "_NONDIRTY";
 
-                    File.WriteAllBytes(newName,newb);
+                    File.WriteAllBytes(newName, newb);
                 }
-
             }
-
         }
-
-       
     }
 }

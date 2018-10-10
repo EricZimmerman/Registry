@@ -82,9 +82,8 @@ namespace Registry.Other
             }
             catch (Exception)
             {
-                
             }
-            
+
 
             //End new
 

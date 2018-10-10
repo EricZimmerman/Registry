@@ -48,7 +48,7 @@ namespace Registry.Test
             ;
         }
 
-        
+
         [Test]
         public void DeletedFindTestValue()
         {
@@ -59,11 +59,29 @@ namespace Registry.Test
 
             var k = r.GetKey("123");
 
+            Check.That(k.Values[0].VkRecord.IsFree).IsFalse();
+
+            Check.That(k.Values.Count).IsEqualTo(2);
+
+            Check.That(k.Values[1].VkRecord.IsFree).IsTrue();
+
             foreach (var keyValue in k.Values)
             {
                 Debug.WriteLine(keyValue);
             }
         }
+
+        [Test]
+        public void OneOffParse()
+        {
+            var f = @"D:\SynologyDrive\Registry\NTUSER_RecentAppsERZ.DAT";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+        }
+
+
 
         [Test]
         public void HBinSizeShouldMatchReadSize()
