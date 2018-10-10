@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -308,6 +309,11 @@ namespace Registry
                 var offsetList = GetDataNodeFromOffset(key.NkRecord.ValueListCellIndex);
 
                 offsetList.IsReferenced = true;
+
+                if (key.KeyName == "123")
+                {
+                    Debug.WriteLine(1);
+                }
 
                 for (var i = 0; i < key.NkRecord.ValueListCount; i++)
                 {

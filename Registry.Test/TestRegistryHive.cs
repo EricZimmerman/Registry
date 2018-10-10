@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NFluent;
@@ -45,6 +46,23 @@ namespace Registry.Test
             Check.That(t).IsNotNull();
             Check.That(t.NkRecord.IsDeleted).IsTrue();
             ;
+        }
+
+        
+        [Test]
+        public void DeletedFindTestValue()
+        {
+            var f = @"D:\!downloads\yarp-master\hives_for_tests\DeletedDataHive";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+            var k = r.GetKey("123");
+
+            foreach (var keyValue in k.Values)
+            {
+                Debug.WriteLine(keyValue);
+            }
         }
 
         [Test]
