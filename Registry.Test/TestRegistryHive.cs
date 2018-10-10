@@ -74,7 +74,7 @@ namespace Registry.Test
         [Test]
         public void OneOffParse()
         {
-            var f = @"D:\SynologyDrive\Registry\NTUSER_RecentAppsERZ.DAT";
+            var f = @"D:\SynologyDrive\Registry\NTUSER_MarkElliot_RecentApps.DAT";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             r.ParseHive();

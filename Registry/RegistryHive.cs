@@ -324,11 +324,6 @@ namespace Registry
 
                 offsetList.IsReferenced = true;
 
-                if (key.KeyName == "123")
-                {
-                    Debug.WriteLine(1);
-                }
-
                 var lastI = 0;
                 for (var i = 0; i < key.NkRecord.ValueListCount; i++)
                 {
@@ -1068,18 +1063,21 @@ namespace Registry
                                 nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                         } //ncrunch: no coverage
 
+                        var lastI = 0;
                         if (offsetList != null)
                         {
                             Logger.Trace("Found offset list for nk at absolute offset 0x{0:X}. Processing.",
                                 nk.AbsoluteOffset);
                             try
                             {
+                                
                                 for (var i = 0; i < regKey.NkRecord.ValueListCount; i++)
                                 {
                                     //use i * 4 so we get 4, 8, 12, 16, etc
                                     var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
 
                                     regKey.NkRecord.ValueOffsets.Add(os);
+                                    lastI = i;
                                 }
                             }
                             catch (Exception) //ncrunch: no coverage
@@ -1089,11 +1087,36 @@ namespace Registry
                                     "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
                                     nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                             } //ncrunch: no coverage
+
+                            //check to see if there are any other values hanging out in this list beyond what is expected
+                            lastI += 1; //lastI initially points to where we left off, so add 1
+                            var offsetIndex = lastI * 4; //our starting point
+                            while (offsetIndex<offsetList.Data.Length)
+                            {
+                                var os = BitConverter.ToUInt32(offsetList.Data, offsetIndex);
+
+                                if (os < 8 || os % 8 != 0)
+                                {
+                                    break;
+                                }
+
+                                Logger.Trace("Got value offset 0x{0:X}", os);
+
+                                if (regKey.NkRecord.ValueOffsets.Contains(os) == false)
+                                {
+                                    regKey.NkRecord.ValueOffsets.Add(os);
+                                }
+                        
+                                offsetIndex += 4;
+                            }
                         }
                     }
 
                     Logger.Trace("Looking for vk records for nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
+                  
+
+                    var valOffsetIndex = 0;
                     //For each value offset, get the vk record if it exists, create a KeyValue, and assign it to the current RegistryKey
                     foreach (var valueOffset in nk.ValueOffsets)
                     {
@@ -1119,6 +1142,7 @@ namespace Registry
                                 {
                                     associatedVkRecordOffsets.Add(val.RelativeOffset);
 
+
                                     var kv = new KeyValue(val);
 
                                     regKey.Values.Add(kv);
@@ -1135,7 +1159,7 @@ namespace Registry
                     }
 
                     Logger.Trace(
-                        $"Associated {regKey.Values.Count:N0} value(s) out of {nk.ValueListCount:N0} possible values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
+                        $"Associated {regKey.Values.Count:N0} value(s) out of {nk.ValueOffsets.Count:N0} possible values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
 
 
                     deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
