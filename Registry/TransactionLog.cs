@@ -83,6 +83,8 @@ namespace Registry
         public HiveTypeEnum HiveType { get; private set; }
         public List<TransactionLogEntry> TransactionLogEntries { get; }
 
+        public int NewSequenceNumber { get; private set; }
+
         private byte[] ReadBytesFromHive(long offset, int length)
         {
             var readLength = Math.Abs(length);
@@ -213,6 +215,9 @@ namespace Registry
                     continue;
                 }
                 Logger.Debug($"Processing log entry: {transactionLogEntry}");
+
+                NewSequenceNumber = transactionLogEntry.SequenceNumber;
+
                 foreach (var dirtyPage in transactionLogEntry.DirtyPages)
                 {
                     Logger.Debug($"Processing dirty page: {dirtyPage}");

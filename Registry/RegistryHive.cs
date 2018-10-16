@@ -234,14 +234,14 @@ namespace Registry
                     wasUpdated = true;
                 }
 
-                maximumSequenceNumber = firstLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+                maximumSequenceNumber = firstLog.NewSequenceNumber;
 
                 if (secondLog.Header.PrimarySequenceNumber == maximumSequenceNumber + 1 &&
                     secondLog.Header.PrimarySequenceNumber > Header.SecondarySequenceNumber)
                 {
                     Logger.Info($"Replaying log file: {secondLog.LogPath}");
                     bytes = secondLog.UpdateHiveBytes(bytes);
-                    maximumSequenceNumber = secondLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+                    maximumSequenceNumber = secondLog.NewSequenceNumber;//TransactionLogEntries.Max(t => t.SequenceNumber);
                 }
             }
             else if (logOne != null)
@@ -262,7 +262,7 @@ namespace Registry
                     Logger.Info($"Replaying log file: {soloLog.LogPath}");
                     //we can replay the log
                     bytes = soloLog.UpdateHiveBytes(bytes);
-                    maximumSequenceNumber = soloLog.TransactionLogEntries.Max(t => t.SequenceNumber);
+                    maximumSequenceNumber = soloLog.NewSequenceNumber;//TransactionLogEntries.Max(t => t.SequenceNumber);
                     wasUpdated = true;
                 }
             }
