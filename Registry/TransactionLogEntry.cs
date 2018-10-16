@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Registry.Other;
 
 namespace Registry
 {
     public class TransactionLogEntry
     {
+        private byte[] _rawBytes;
+
         public TransactionLogEntry(byte[] rawBytes)
         {
             var sig = Encoding.GetEncoding(1252).GetString(rawBytes, 0, 4);
@@ -14,6 +17,8 @@ namespace Registry
             {
                 throw new Exception("Data is not a transaction log entry (bad signature)");
             }
+
+            _rawBytes = rawBytes;
 
             var index = 4;
 
@@ -32,10 +37,10 @@ namespace Registry
             DirtyPageCount = BitConverter.ToInt32(rawBytes, index);
             index += 4;
 
-            Hash1 = BitConverter.ToInt64(rawBytes, index);
+            Hash1 = BitConverter.ToUInt64(rawBytes, index);
             index += 8;
 
-            Hash2 = BitConverter.ToInt64(rawBytes, index);
+            Hash2 = BitConverter.ToUInt64(rawBytes, index);
             index += 8;
 
             var dpCount = 0;
@@ -88,10 +93,34 @@ namespace Registry
         public List<DirtyPageInfo> DirtyPages { get; }
 
         public int DirtyPageCount { get; }
-        public long Hash1 { get; }
-        public long Hash2 { get; }
+        public ulong Hash1 { get; }
+        public ulong Hash2 { get; }
         public int SequenceNumber { get; }
         public uint Size { get; }
+
+        public bool HasValidHashes()
+        {
+            return Hash1 == CalculateHash1() && Hash2 == CalculateHash2();
+        }
+
+        private ulong CalculateHash1()
+        {
+            var b = new byte[_rawBytes.Length - 40];
+            Buffer.BlockCopy(_rawBytes,40,b,0,b.Length);
+
+           var aaa =  Marvin.ComputeHash(ref b[0], b.Length, 0x82EF4D887A4E55C5);
+
+            return (ulong) aaa;
+        }
+        private ulong CalculateHash2()
+        {
+            var b = new byte[32];
+            Buffer.BlockCopy(_rawBytes,0,b,0,32);
+
+            var aaa =  Marvin.ComputeHash(ref b[0], b.Length, 0x82EF4D887A4E55C5);
+
+            return (ulong) aaa;
+        }
 
         public override string ToString()
         {

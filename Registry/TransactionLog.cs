@@ -145,6 +145,9 @@ namespace Registry
                 case "bcd":
                     HiveType = HiveTypeEnum.Bcd;
                     break;
+                case "amcache.hve":
+                    HiveType = HiveTypeEnum.Amcache;
+                    break;
                 default:
                     HiveType = HiveTypeEnum.Other;
                     break;
@@ -164,7 +167,7 @@ namespace Registry
                 throw new Exception("ParseLog already called");
             }
 
-            var index = 0x200; //data starts at offset 500 decimal
+            var index = 0x200; //data starts at offset 512 decimal
 
             while (index < FileBytes.Length)
             {
@@ -197,13 +200,18 @@ namespace Registry
         /// </summary>
         /// <param name="hiveBytes"></param>
         /// <remarks>This method does nothing to determine IF the data should be overwritten</remarks>
-        /// <returns>Byte array containing the updaated hive</returns>
+        /// <returns>Byte array containing the updated hive</returns>
         public byte[] UpdateHiveBytes(byte[] hiveBytes)
         {
             const int baseOffset = 0x1000; //hbins start at 4096 bytes
 
             foreach (var transactionLogEntry in TransactionLogEntries)
             {
+                if (transactionLogEntry.HasValidHashes() == false)
+                {
+                    Logger.Debug($"Skipping transaction log entry (Hash verification failed): {transactionLogEntry}");
+                    continue;
+                }
                 Logger.Debug($"Processing log entry: {transactionLogEntry}");
                 foreach (var dirtyPage in transactionLogEntry.DirtyPages)
                 {

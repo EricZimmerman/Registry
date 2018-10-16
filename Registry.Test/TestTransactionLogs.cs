@@ -1,12 +1,54 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using NUnit.Framework;
 
 namespace Registry.Test
 {
     public class TestTransactionLogs
     {
+        [Test]
+        public void HiveTestAmcache()
+        {
+            var config = new LoggingConfiguration();
+            var loglevel = LogLevel.Trace;
+
+            const string layout = @"${message}";
+
+            var consoleTarget = new ColoredConsoleTarget();
+
+            config.AddTarget("console", consoleTarget);
+
+            consoleTarget.Layout = layout;
+
+            var rule1 = new LoggingRule("Console", loglevel, consoleTarget);
+            config.LoggingRules.Add(rule1);
+
+      
+
+            LogManager.Configuration = config;
+
+
+            var hive = @"D:\temp\amcache\amcache.hve";
+            var hive1 = new RegistryHive(hive);
+
+            var log1 = $"{hive}.LOG1";
+            var log2 = $"{hive}.LOG2";
+
+            var logs = new List<string>();
+            logs.Add(log1);
+            logs.Add(log2);
+
+            var newb = hive1.ProcessTransactionLogs(logs);
+
+            var newName = hive + "_NONDIRTY";
+
+            File.WriteAllBytes(newName, newb);
+        }
+
         [Test]
         public void HiveTests()
         {

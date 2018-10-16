@@ -144,6 +144,9 @@ namespace Registry
                 case "bcd":
                     HiveType = HiveTypeEnum.Bcd;
                     break;
+                case "amcache.hve":
+                    HiveType = HiveTypeEnum.Amcache;
+                    break;
                 default:
                     HiveType = HiveTypeEnum.Other;
                     break;

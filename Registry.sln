@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.22609.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Registry", "Registry\Registry.csproj", "{5C40BE24-A89D-4973-B668-2D6E945CB047}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry", "Registry\Registry.csproj", "{5C40BE24-A89D-4973-B668-2D6E945CB047}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleApp", "ExampleApp\ExampleApp.csproj", "{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleApp", "ExampleApp\ExampleApp.csproj", "{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Registry.Test", "Registry.Test\Registry.Test.csproj", "{0E97C9AC-C1FD-482F-A0DC-548F8402562A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Test", "Registry.Test\Registry.Test.csproj", "{0E97C9AC-C1FD-482F-A0DC-548F8402562A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,7 +20,6 @@ Global
 		{5C40BE24-A89D-4973-B668-2D6E945CB047}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C40BE24-A89D-4973-B668-2D6E945CB047}.Release|Any CPU.Build.0 = Release|Any CPU
 		{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59EA257D-E4A2-4820-B911-1D6A3C8C70F9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0E97C9AC-C1FD-482F-A0DC-548F8402562A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -30,5 +29,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3A6C6CBA-DC68-4707-9519-DC2268422BF7}
 	EndGlobalSection
 EndGlobal
