@@ -1362,7 +1362,7 @@ namespace Registry
             }
         }
 
-        private bool IsBase64String2(string value)
+        private static bool IsBase64String2(string value)
         {
             if (string.IsNullOrEmpty(value) || value.Length % 4 != 0
                                             || value.Contains(' ') || value.Contains('\t') || value.Contains('\r') ||
@@ -1394,7 +1394,7 @@ namespace Registry
         }
 
         // Make it private as there is the name makes no sense for an outside caller
-        private bool IsInvalid(char value)
+        private static bool IsInvalid(char value)
         {
             var intValue = (int) value;
             if (intValue >= 48 && intValue <= 57)
