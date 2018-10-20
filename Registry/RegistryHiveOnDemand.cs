@@ -145,7 +145,7 @@ namespace Registry
             if (offsets.Count != valueListCount)
             {
                 //ncrunch: no coverage
-                Logger.Warn(
+                Logger.Debug(
                     "Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
                     //ncrunch: no coverage
                     valueListCount, offsets.Count);

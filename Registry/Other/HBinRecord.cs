@@ -394,7 +394,7 @@ namespace Registry.Other
                 {
                     //ncrunch: no coverage
                     // this is a corrupted/unusable record
-                    _registryHive.Logger.Warn( //ncrunch: no coverage
+                    _registryHive.Logger.Debug( //ncrunch: no coverage
                         ex,
                         $"When recovering from slack at absolute offset 0x{relativeoffset + i + 0x1000:X8}, an error happened! raw Length: 0x{raw?.Length:x}");
 

@@ -409,7 +409,7 @@ namespace Registry
 
             if (key.Values.Count != key.NkRecord.ValueListCount)
             {
-                Logger.Warn(
+                Logger.Debug(
                     "{2}: Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
                     //ncrunch: no coverage
                     key.NkRecord.ValueListCount, key.NkRecord.ValueOffsets.Count,key.KeyPath);
@@ -1008,7 +1008,7 @@ namespace Registry
 
                     if (nk.ValueListCount > 10000)
                     {
-                        Logger.Warn(
+                        Logger.Debug(
                             $"When getting values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}, implausable value count ({nk.ValueListCount:N0}). Skipping");
                         continue;
                     }
@@ -1058,7 +1058,7 @@ namespace Registry
                         {
 //ncrunch: no coverage
                             //sometimes the data node doesn't have enough data to even do this, or its wrong data
-                            Logger.Warn( //ncrunch: no coverage
+                            Logger.Debug( //ncrunch: no coverage
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                         } //ncrunch: no coverage
@@ -1083,7 +1083,7 @@ namespace Registry
                             catch (Exception) //ncrunch: no coverage
                             {
 //ncrunch: no coverage
-                                Logger.Warn( //ncrunch: no coverage
+                                Logger.Debug( //ncrunch: no coverage
                                     "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
                                     nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                             } //ncrunch: no coverage
@@ -1134,7 +1134,7 @@ namespace Registry
                                 //if its an in use record AND referenced, warn
                                 if (val.IsFree == false && val.IsReferenced)
                                 {
-                                    Logger.Warn(
+                                    Logger.Debug(
                                         "When getting values for nk record at absolute offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
                                         nk.AbsoluteOffset, valueOffset);
                                 }
