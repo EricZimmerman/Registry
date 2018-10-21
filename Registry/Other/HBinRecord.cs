@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using NFluent;
+
 using Registry.Cells;
 using Registry.Lists;
 using static Registry.Other.Helpers;
@@ -43,7 +43,11 @@ namespace Registry.Other
 
             var sig = BitConverter.ToInt32(rawBytes, 0);
 
-            Check.That(sig).IsEqualTo(HbinSignature);
+           // Check.That(sig).IsEqualTo(HbinSignature);
+            if (sig != HbinSignature)
+            {
+                throw new Exception("Invalid hbin signature");
+            }
 
             reg.Logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 

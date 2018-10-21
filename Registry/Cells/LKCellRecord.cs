@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NFluent;
+
 using Registry.Other;
 
 // namespaces...
@@ -140,8 +140,8 @@ namespace Registry.Cells
                 //Padding = BitConverter.ToString(rawBytes, paddingOffset, paddingLength);
             }
 
-            //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
-            Check.That(paddingOffset + paddingLength).IsEqualTo(rawBytes.Length);
+            //we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.
+            
         }
 
         // public properties...

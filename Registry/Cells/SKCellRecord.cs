@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using NFluent;
+
 using Registry.Other;
 
 // namespaces...
@@ -34,7 +34,7 @@ namespace Registry.Cells
             {
                 var padding = rawBytes.Skip((int) paddingOffset).Take((int) paddingLength).ToArray();
 
-                Check.That(Array.TrueForAll(padding, a => a == 0));
+                //Check.That(Array.TrueForAll(padding, a => a == 0));
             }
 
             //Check that we have accounted for all bytes in this record. this ensures nothing is hidden in this record or there arent additional data structures we havent processed in the record.

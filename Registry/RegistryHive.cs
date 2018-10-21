@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using NFluent;
+
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -835,8 +835,7 @@ namespace Registry
                     break;
                 }
 
-                Check.That(hbinSig).IsEqualTo(HbinSignature);
-
+                
                 Logger.Debug(
                     $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
@@ -919,8 +918,7 @@ namespace Registry
             }
 
             //validate what we found above via the flag method
-            Check.That((long) Header.RootCellOffset).IsEqualTo(rootNode.RelativeOffset);
-
+            
             rootNode.IsReferenced = true;
 
             Logger.Info("Found root node! Getting subkeys...");

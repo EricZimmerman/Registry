@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using NFluent;
+
 
 // namespaces...
 
@@ -28,7 +28,11 @@ namespace Registry.Other
             FileName = string.Empty;
             Signature = Encoding.ASCII.GetString(rawBytes, 0, 4);
 
-            Check.That(Signature).IsEqualTo("regf");
+
+            if (Signature != "regf")
+            {
+                throw new Exception("This is not a Registry hive. Header != 'regf'");
+            }
 
             PrimarySequenceNumber = BitConverter.ToUInt32(rawBytes, 0x4);
             SecondarySequenceNumber = BitConverter.ToUInt32(rawBytes, 0x8);
