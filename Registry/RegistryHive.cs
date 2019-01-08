@@ -308,7 +308,7 @@ namespace Registry
                 d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NkRecord.ClassLength);
                 key.ClassName = clsName;
-                Logger.Debug("Class name found {0}", clsName);
+                Logger.Trace("Class name found {0}", clsName);
             }
 
             //Build ValueOffsets for this NKRecord
@@ -316,7 +316,7 @@ namespace Registry
             {
                 //there are values for this key, so get the offsets so we can pull them next
 
-                Logger.Debug("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
+                Logger.Trace("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
                     key.NkRecord.ValueListCellIndex, key.NkRecord.ValueListCount);
 
 
@@ -814,7 +814,7 @@ namespace Registry
 
                 if (hbinSize == 0)
                 {
-                    Logger.Info("Found hbin with size 0 at absolute offset 0x{0:X}", offsetInHive);
+                    Logger.Debug("Found hbin with size 0 at absolute offset 0x{0:X}", offsetInHive);
                     // Go to end if we find a 0 size block (padding?)
                     offsetInHive = HiveLength();
                     continue;
@@ -836,7 +836,7 @@ namespace Registry
                 }
 
                 
-                Logger.Debug(
+                Logger.Trace(
                     $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
@@ -891,7 +891,7 @@ namespace Registry
                 offsetInHive += hbinSize;
             }
 
-            Logger.Info("Initial processing complete. Building tree...");
+            Logger.Debug("Initial processing complete. Building tree...");
 
             //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
             //here we are looking for the flag
@@ -921,7 +921,7 @@ namespace Registry
             
             rootNode.IsReferenced = true;
 
-            Logger.Info("Found root node! Getting subkeys...");
+            Logger.Debug("Found root node! Getting subkeys...");
 
             Root = new RegistryKey(rootNode, null);
             Logger.Debug("Created root node object. Getting subkeys.");
@@ -931,7 +931,7 @@ namespace Registry
 
             Root.SubKeys.AddRange(keys);
 
-            Logger.Info("Hive processing complete!");
+            Logger.Debug("Hive processing complete!");
 
             //All processing is complete, so we do some tests to see if we really saw everything
             if (RecoverDeleted && HiveLength() != TotalBytesRead)
@@ -963,7 +963,7 @@ namespace Registry
 
             if (FlushRecordListsAfterParse)
             {
-                Logger.Info("Flushing record lists...");
+                Logger.Debug("Flushing record lists...");
                 ListRecords.Clear();
 
                 var toRemove = CellRecords.Where(pair => pair.Value is NkCellRecord || pair.Value is VkCellRecord)
@@ -986,7 +986,7 @@ namespace Registry
         /// </summary>
         private void BuildDeletedRegistryKeys()
         {
-            Logger.Info("Associating deleted keys and values...");
+            Logger.Debug("Associating deleted keys and values...");
 
             var unreferencedNkCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NkCellRecord);
 
@@ -1001,12 +1001,12 @@ namespace Registry
                 {
                     var nk = unreferencedNkCell.Value as NkCellRecord;
 
-                    Logger.Debug("Processing deleted nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
+                    Logger.Trace("Processing deleted nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
 
                     if (nk.ValueListCount > 10000)
                     {
-                        Logger.Debug(
+                        Logger.Trace(
                             $"When getting values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}, implausable value count ({nk.ValueListCount:N0}). Skipping");
                         continue;
                     }
@@ -1056,7 +1056,7 @@ namespace Registry
                         {
 //ncrunch: no coverage
                             //sometimes the data node doesn't have enough data to even do this, or its wrong data
-                            Logger.Debug( //ncrunch: no coverage
+                            Logger.Trace( //ncrunch: no coverage
                                 "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
                                 nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                         } //ncrunch: no coverage
@@ -1081,7 +1081,7 @@ namespace Registry
                             catch (Exception) //ncrunch: no coverage
                             {
 //ncrunch: no coverage
-                                Logger.Debug( //ncrunch: no coverage
+                                Logger.Trace( //ncrunch: no coverage
                                     "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
                                     nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                             } //ncrunch: no coverage
@@ -1132,7 +1132,7 @@ namespace Registry
                                 //if its an in use record AND referenced, warn
                                 if (val.IsFree == false && val.IsReferenced)
                                 {
-                                    Logger.Debug(
+                                    Logger.Trace(
                                         "When getting values for nk record at absolute offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
                                         nk.AbsoluteOffset, valueOffset);
                                 }
@@ -1190,7 +1190,7 @@ namespace Registry
                         //add the key as as subkey of its parent
                         var parent = deletedRegistryKeys[deletedRegistryKey.Value.NkRecord.ParentCellIndex];
 
-                        Logger.Debug(
+                        Logger.Trace(
                             "Found subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
                             deletedRegistryKey.Value.NkRecord.AbsoluteOffset, parent.NkRecord.AbsoluteOffset);
 
@@ -1223,7 +1223,7 @@ namespace Registry
                     //an parent key has been located, so get it
                     var parentNk = CellRecords[deletedRegistryKey.Value.NkRecord.ParentCellIndex] as NkCellRecord;
 
-                    Logger.Debug(
+                    Logger.Trace(
                         "Found possible parent key at absolute offset 0x{0:X} for deleted key at absolute offset 0x{1:X}",
                         deletedRegistryKey.Value.NkRecord.ParentCellIndex + 0x1000,
                         deletedRegistryKey.Value.NkRecord.AbsoluteOffset);
@@ -1238,7 +1238,7 @@ namespace Registry
                         //parent exists in our primary tree, so get that key
                         var pk = GetKey(deletedRegistryKey.Value.NkRecord.ParentCellIndex);
 
-                        Logger.Debug(
+                        Logger.Trace(
                             "Copying subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
                             deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
 
@@ -1260,7 +1260,7 @@ namespace Registry
                                 deletedRegistryKey.Value);
                         }
 
-                        Logger.Debug(
+                        Logger.Trace(
                             "Associated deleted key at absolute offset 0x{0:X} to active parent key at absolute offset 0x{1:X}",
                             deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
                     }

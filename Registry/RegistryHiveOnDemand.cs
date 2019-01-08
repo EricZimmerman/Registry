@@ -259,7 +259,7 @@ namespace Registry
                 d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, finalKey.NkRecord.ClassLength);
                 finalKey.ClassName = clsName;
-                Logger.Debug("Class name found {0}", clsName);
+                Logger.Trace("Class name found {0}", clsName);
             }
 
             return finalKey;

@@ -143,7 +143,7 @@ namespace Registry.Other
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
                 readSize = Math.Abs(readSize);
 
-                _registryHive.Logger.Debug(
+                _registryHive.Logger.Trace(
                     $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
 
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
