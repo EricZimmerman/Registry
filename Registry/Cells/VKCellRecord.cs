@@ -129,13 +129,25 @@ namespace Registry.Cells
             {
                 //for free records, we need to do extra check to make sure non-resident data record has not been reallocated.
                 //read the non-resident data in order to check size. if its negative, its in use, and therefore has been reused
-                var dbSize = BitConverter.ToInt32(DataBlockRaw, 0);
 
-                if (dbSize < 0)
+                try
                 {
-                    //datablock is in use somewhere else
-                    DataRecordAllocated = true;
+                    //while we could just look at DataBlockRaw, this is a lot more I/O, so just grab what we need here.
+                    var sizeBytes = _registryHive.ReadBytesFromHive(4096 + OffsetToData, 4);
+
+                    var dbSize = BitConverter.ToInt32(sizeBytes, 0);
+
+                    if (dbSize < 0)
+                    {
+                        //datablock is in use somewhere else
+                        DataRecordAllocated = true;
+                    }
                 }
+                catch (Exception )
+                {
+                    //crazy things can happen in IsFree records
+                }
+
             }
 
             //force to a known datatype 
