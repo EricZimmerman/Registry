@@ -48,6 +48,28 @@ namespace Registry.Test
             ;
         }
 
+        [Test]
+        public void ReallocTest()
+        {
+            var f = @"D:\SynologyDrive\Registry\ReallocValueDataHive";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+            var ts = "2017-09-10 21:47:31 +00:00";
+
+            var td = DateTimeOffset.Parse(ts);
+
+            var t = r.GetDeletedKey(@"2", td.ToString());
+
+            Check.That(t).IsNotNull();
+            Check.That(t.NkRecord.IsDeleted).IsTrue();
+            
+
+            Check.That(t.Values[0].VkRecord.DataRecordAllocated).IsEqualTo(true);
+         //   Check.That(t.Values[0].ValueData).IsNotEqualTo("1111");
+
+        }
 
         [Test]
         public void DeletedFindTestValue()

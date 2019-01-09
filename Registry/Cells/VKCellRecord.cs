@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -124,6 +125,18 @@ namespace Registry.Cells
 
                 _internalDataOffset = 0;
             }
+            else if (IsFree)
+            {
+                //for free records, we need to do extra check to make sure non-resident data record has not been reallocated.
+                //read the non-resident data in order to check size. if its negative, its in use, and therefore has been reused
+                var dbSize = BitConverter.ToInt32(DataBlockRaw, 0);
+
+                if (dbSize < 0)
+                {
+                    //datablock is in use somewhere else
+                    DataRecordAllocated = true;
+                }
+            }
 
             //force to a known datatype 
             var dataTypeInternal = DataTypeRaw;
@@ -211,6 +224,9 @@ namespace Registry.Cells
                         try
                         {
                             datablockRaw = _registryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
+
+                          
+
                         }
                         catch (Exception)
                         {
@@ -613,6 +629,12 @@ namespace Registry.Cells
         public long AbsoluteOffset => RelativeOffset + 4096;
 
         public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
+
+        /// <summary>
+        /// When true, the VK is free but the non-resident value data (in a data record) is in use elsewhere.
+        /// <remarks>Useful to display a warning to end user so they know the data may not be correct since the record has been reused by something else.</remarks>
+        /// </summary>
+        public bool DataRecordAllocated { get;  }
 
         public bool IsReferenced { get; internal set; }
 
