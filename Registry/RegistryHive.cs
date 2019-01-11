@@ -982,28 +982,22 @@ namespace Registry
         }
 
       
-
+/// <summary>
+/// Expands a key path with a wildcard (*) in it to all matching keys that exist.
+/// <remarks>Calling this on a path without a wildcard returns the empty set</remarks>
+/// </summary>
+/// <param name="wildCardPath"></param>
+/// <param name="stripRoot"></param>
+/// <returns></returns>
         public List<string> ExpandKeyPath(string wildCardPath, bool stripRoot = true)
         {
-             
-
             var keyPaths = new List<string>();
-//
-//            //just a directory, nothing else
-//            if (wildCardPath.Contains("*") == false)
-//            {
-//                keyPaths.Add(wildCardPath);
-//                return keyPaths;
-//            }
 
-            //            //ControlSet00*\\Services
+            wildCardPath = wildCardPath.Trim('\\', '/');
+            
             var segments = wildCardPath.Split('\\');
 
-            //0 == ControlSet00
-            //1 == Services
-
             //for each segment, check for wildcard. if found, expand it based on position of *
-
             var lastKey = Root;
 
             var leftOfStar = string.Empty;
@@ -1081,17 +1075,15 @@ namespace Registry
 
             foreach (var keyPath in keyPaths)
             {
-                var aaa = GetKey(keyPath);
-
                 if (GetKey(keyPath) != null)
                 {
                     if (stripRoot)
                     {
-                        existingKeyPaths.Add(Helpers.StripRootKeyNameFromKeyPath(keyPath));    
+                        existingKeyPaths.Add(Helpers.StripRootKeyNameFromKeyPath(keyPath.Trim('\\', '/')));    
                     }
                     else
                     {
-                        existingKeyPaths.Add(keyPath);    
+                        existingKeyPaths.Add(keyPath.Trim('\\', '/'));    
                     }
                     
                 }
@@ -1285,7 +1277,7 @@ namespace Registry
                 catch (Exception ex) //ncrunch: no coverage
                 {
 //ncrunch: no coverage
-                    Logger.Error( //ncrunch: no coverage
+                    Logger.Trace( //ncrunch: no coverage
                         ex,
                         $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
                 } //ncrunch: no coverage

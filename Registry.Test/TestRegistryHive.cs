@@ -57,10 +57,9 @@ namespace Registry.Test
             
             r.ParseHive();
 
-//            var oneKey = r.ExpandKeyPath("ControlSet001\\Services");
-//
-//            Check.That(oneKey.Count).IsEqualTo(1);
-//            Check.That(oneKey.First()).IsEqualTo("ControlSet001\\Services");
+            var oneKey = r.ExpandKeyPath("ControlSet001\\Services");
+
+            Check.That(oneKey.Count).IsEqualTo(0);
 
             var keys = r.ExpandKeyPath("ControlSet00*\\Services");
 
@@ -70,8 +69,8 @@ namespace Registry.Test
 
             var otherKeys = r.ExpandKeyPath("ControlSet002\\Services\\aic*");
             Check.That(otherKeys.Count).IsEqualTo(2);
-            Check.That(otherKeys.First()).IsEqualTo(@"ControlSet002\Services\aic78u2\");
-            Check.That(otherKeys.Last()).IsEqualTo(@"ControlSet002\Services\aic78xx\");
+            Check.That(otherKeys.First()).IsEqualTo(@"ControlSet002\Services\aic78u2");
+            Check.That(otherKeys.Last()).IsEqualTo(@"ControlSet002\Services\aic78xx");
 
             var evenMoreKeys = r.ExpandKeyPath(@"ControlSet001\Control\IDConfigDB\*\0001");
             Check.That(evenMoreKeys.Count).IsEqualTo(2);
@@ -81,9 +80,9 @@ namespace Registry.Test
 
             var otherKeys2 = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86");
             Check.That(otherKeys2.Count).IsEqualTo(3);
-            Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86\");
-            Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86\");
-            Check.That(otherKeys2[2]).IsEqualTo(@"ControlSet002\Services\Avgrkx86\");
+            Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86");
+            Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86");
+            Check.That(otherKeys2[2]).IsEqualTo(@"ControlSet002\Services\Avgrkx86");
 
             var shouldNotExist = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86\DoesNotExist");
             Check.That(shouldNotExist.Count).IsEqualTo(0);
@@ -97,8 +96,25 @@ namespace Registry.Test
             var endCheck3 = r.ExpandKeyPath(@"ControlSet002\Services\*\Parameters");
      
             Check.That(endCheck3.Count).IsEqualTo(127);
+        }
+
+        [Test]
+        public void ExpandoTest2()
+        {
+            
+            var f2 = @"C:\Temp\NTUSER.DAT";
+            var r2 = new RegistryHive(f2);
+            r2.RecoverDeleted = true;
+            
+            r2.ParseHive();
+
+            var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\*\File MRU");
+
+            Check.That(keys2.Count).IsEqualTo(1);
+            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
 
         }
+
 
         [Test]
         public void ReallocTest()
