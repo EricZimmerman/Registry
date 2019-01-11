@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -241,7 +241,8 @@ namespace Registry
                 {
                     Logger.Info($"Replaying log file: {secondLog.LogPath}");
                     bytes = secondLog.UpdateHiveBytes(bytes);
-                    maximumSequenceNumber = secondLog.NewSequenceNumber;//TransactionLogEntries.Max(t => t.SequenceNumber);
+                    maximumSequenceNumber =
+                        secondLog.NewSequenceNumber; //TransactionLogEntries.Max(t => t.SequenceNumber);
                 }
             }
             else if (logOne != null)
@@ -262,7 +263,8 @@ namespace Registry
                     Logger.Info($"Replaying log file: {soloLog.LogPath}");
                     //we can replay the log
                     bytes = soloLog.UpdateHiveBytes(bytes);
-                    maximumSequenceNumber = soloLog.NewSequenceNumber;//TransactionLogEntries.Max(t => t.SequenceNumber);
+                    maximumSequenceNumber =
+                        soloLog.NewSequenceNumber; //TransactionLogEntries.Max(t => t.SequenceNumber);
                     wasUpdated = true;
                 }
             }
@@ -339,7 +341,7 @@ namespace Registry
                     //check to see if there are any other values hanging out in this list beyond what is expected
                     lastI += 1; //lastI initially points to where we left off, so add 1
                     var offsetIndex = lastI * 4; //our starting point
-                    while (offsetIndex<offsetList.Data.Length)
+                    while (offsetIndex < offsetList.Data.Length)
                     {
                         var os = BitConverter.ToUInt32(offsetList.Data, offsetIndex);
 
@@ -354,7 +356,7 @@ namespace Registry
                         {
                             key.NkRecord.ValueOffsets.Add(os);
                         }
-                        
+
                         offsetIndex += 4;
                     }
                 }
@@ -388,7 +390,7 @@ namespace Registry
                             continue;
                         }
                     }
-                    
+
                     vk.IsReferenced = true;
 
                     var value = new KeyValue(vk);
@@ -401,7 +403,6 @@ namespace Registry
                     {
                         Logger.Warn($"An expected value was not found at offset 0x{valueOffset:X}. Key: {key.KeyPath}");
                     }
-                    
                 }
 
                 valOffsetIndex += 1;
@@ -412,7 +413,7 @@ namespace Registry
                 Logger.Debug(
                     "{2}: Value count mismatch! ValueListCount is {0:N0} but NKRecord.ValueOffsets.Count is {1:N0}",
                     //ncrunch: no coverage
-                    key.NkRecord.ValueListCount, key.NkRecord.ValueOffsets.Count,key.KeyPath);
+                    key.NkRecord.ValueListCount, key.NkRecord.ValueOffsets.Count, key.KeyPath);
             }
 
             Logger.Trace("Looking for sk record at relative offset 0x{0:X}", key.NkRecord.SecurityCellIndex);
@@ -835,7 +836,7 @@ namespace Registry
                     break;
                 }
 
-                
+
                 Logger.Trace(
                     $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
@@ -918,7 +919,7 @@ namespace Registry
             }
 
             //validate what we found above via the flag method
-            
+
             rootNode.IsReferenced = true;
 
             Logger.Debug("Found root node! Getting subkeys...");
@@ -978,6 +979,127 @@ namespace Registry
 
             _parsed = true;
             return true;
+        }
+
+      
+
+        public List<string> ExpandKeyPath(string wildCardPath, bool stripRoot = true)
+        {
+             
+
+            var keyPaths = new List<string>();
+//
+//            //just a directory, nothing else
+//            if (wildCardPath.Contains("*") == false)
+//            {
+//                keyPaths.Add(wildCardPath);
+//                return keyPaths;
+//            }
+
+            //            //ControlSet00*\\Services
+            var segments = wildCardPath.Split('\\');
+
+            //0 == ControlSet00
+            //1 == Services
+
+            //for each segment, check for wildcard. if found, expand it based on position of *
+
+            var lastKey = Root;
+
+            var leftOfStar = string.Empty;
+            var rightOfStar = string.Empty;
+
+            var segmentCounter = 1;
+
+            foreach (var segment in segments)
+            {
+                if (segment.Contains("*"))
+                {
+                    //we have a wild card present
+                    //when a * is present, need to find it and what is to the left and right of it.
+                    var starPos1 = segment.IndexOf("*", StringComparison.InvariantCultureIgnoreCase);
+
+                    leftOfStar = segment.Substring(0, starPos1);
+                    rightOfStar = segment.Substring(starPos1 + 1);
+
+                    IEnumerable<RegistryKey> matches;
+
+                    if (leftOfStar.Length > 0 && rightOfStar.Length == 0)
+                    {
+                        matches = lastKey.SubKeys.Where(t =>
+                            t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant()));
+                    }
+                    else if (leftOfStar.Length == 0 && rightOfStar.Length > 0)
+                    {
+                        //star is at front
+                        matches = lastKey.SubKeys.Where(t =>
+                            t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant()));
+                    }
+                    else
+                    {
+                        //star is in middle somewhere (leftOfStar.Length>0 && rightOfStar.Length>0)
+                        matches = lastKey.SubKeys.Where(t =>
+                            t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant()) &&
+                            t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant()));
+                    }
+
+                    //matches now has now many matches there were in lastKey
+
+                    var remainingPath = string.Join("\\", segments.Skip(segmentCounter));
+
+                    foreach (var registryKey in matches)
+                    {
+                        var newPath = $"{registryKey.KeyPath}\\{remainingPath}";
+
+                        if (newPath.Contains("*"))
+                        {
+                            var newDirEx = ExpandKeyPath(newPath);
+                            keyPaths.AddRange(newDirEx);
+                        }
+                        else
+                        {
+                            keyPaths.Add(newPath);
+                        }
+                    }
+                }
+                else
+                {
+                    //no wildcard
+                    var newLastKey = lastKey.SubKeys.SingleOrDefault(t =>
+                        t.KeyName.ToUpperInvariant() == segment.ToUpperInvariant());
+                    if (newLastKey != null)
+                    {
+                        lastKey = newLastKey;
+                    }
+                }
+
+                segmentCounter += 1;
+            }
+
+
+            var existingKeyPaths = new List<string>();
+
+            foreach (var keyPath in keyPaths)
+            {
+                var aaa = GetKey(keyPath);
+
+                if (GetKey(keyPath) != null)
+                {
+                    if (stripRoot)
+                    {
+                        existingKeyPaths.Add(Helpers.StripRootKeyNameFromKeyPath(keyPath));    
+                    }
+                    else
+                    {
+                        existingKeyPaths.Add(keyPath);    
+                    }
+                    
+                }
+               
+            }
+
+            return existingKeyPaths;
+
         }
 
         /// <summary>
@@ -1068,7 +1190,6 @@ namespace Registry
                                 nk.AbsoluteOffset);
                             try
                             {
-                                
                                 for (var i = 0; i < regKey.NkRecord.ValueListCount; i++)
                                 {
                                     //use i * 4 so we get 4, 8, 12, 16, etc
@@ -1089,7 +1210,7 @@ namespace Registry
                             //check to see if there are any other values hanging out in this list beyond what is expected
                             lastI += 1; //lastI initially points to where we left off, so add 1
                             var offsetIndex = lastI * 4; //our starting point
-                            while (offsetIndex<offsetList.Data.Length)
+                            while (offsetIndex < offsetList.Data.Length)
                             {
                                 var os = BitConverter.ToUInt32(offsetList.Data, offsetIndex);
 
@@ -1104,7 +1225,7 @@ namespace Registry
                                 {
                                     regKey.NkRecord.ValueOffsets.Add(os);
                                 }
-                        
+
                                 offsetIndex += 4;
                             }
                         }
@@ -1112,7 +1233,6 @@ namespace Registry
 
                     Logger.Trace("Looking for vk records for nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
-                  
 
                     var valOffsetIndex = 0;
                     //For each value offset, get the vk record if it exists, create a KeyValue, and assign it to the current RegistryKey

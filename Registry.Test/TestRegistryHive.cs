@@ -5,6 +5,7 @@ using System.Linq;
 using NFluent;
 using NLog;
 using NUnit.Framework;
+using Registry.Other;
 
 namespace Registry.Test
 {
@@ -45,7 +46,58 @@ namespace Registry.Test
 
             Check.That(t).IsNotNull();
             Check.That(t.NkRecord.IsDeleted).IsTrue();
-            ;
+        }
+
+        [Test]
+        public void ExpandoTest()
+        {
+            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+//            var oneKey = r.ExpandKeyPath("ControlSet001\\Services");
+//
+//            Check.That(oneKey.Count).IsEqualTo(1);
+//            Check.That(oneKey.First()).IsEqualTo("ControlSet001\\Services");
+
+            var keys = r.ExpandKeyPath("ControlSet00*\\Services");
+
+            Check.That(keys.Count).IsEqualTo(2);
+            Check.That(keys.First()).IsEqualTo("ControlSet001\\Services");
+            Check.That(keys.Last()).IsEqualTo("ControlSet002\\Services");
+
+            var otherKeys = r.ExpandKeyPath("ControlSet002\\Services\\aic*");
+            Check.That(otherKeys.Count).IsEqualTo(2);
+            Check.That(otherKeys.First()).IsEqualTo(@"ControlSet002\Services\aic78u2\");
+            Check.That(otherKeys.Last()).IsEqualTo(@"ControlSet002\Services\aic78xx\");
+
+            var evenMoreKeys = r.ExpandKeyPath(@"ControlSet001\Control\IDConfigDB\*\0001");
+            Check.That(evenMoreKeys.Count).IsEqualTo(2);
+            Check.That(evenMoreKeys.First()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Alias\0001");
+            Check.That(evenMoreKeys.Last()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Hardware Profiles\0001");
+
+
+            var otherKeys2 = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86");
+            Check.That(otherKeys2.Count).IsEqualTo(3);
+            Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86\");
+            Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86\");
+            Check.That(otherKeys2[2]).IsEqualTo(@"ControlSet002\Services\Avgrkx86\");
+
+            var shouldNotExist = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86\DoesNotExist");
+            Check.That(shouldNotExist.Count).IsEqualTo(0);
+
+            var endCheck = r.ExpandKeyPath(@"Setup\AllowStart\*ss");
+            Check.That(endCheck.Count).IsEqualTo(2);
+
+            var endCheck2 = r.ExpandKeyPath(@"Setup\AllowStart\*mss");
+            Check.That(endCheck2.Count).IsEqualTo(1);
+
+            var endCheck3 = r.ExpandKeyPath(@"ControlSet002\Services\*\Parameters");
+     
+            Check.That(endCheck3.Count).IsEqualTo(127);
+
         }
 
         [Test]
