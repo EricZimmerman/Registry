@@ -150,6 +150,9 @@ namespace Registry
                 case "amcache.hve":
                     HiveType = HiveTypeEnum.Amcache;
                     break;
+                case "syscache.hve":
+                    HiveType = HiveTypeEnum.Syscache;
+                    break;
                 default:
                     HiveType = HiveTypeEnum.Other;
                     break;
