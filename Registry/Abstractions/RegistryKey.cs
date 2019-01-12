@@ -133,6 +133,9 @@ namespace Registry.Abstractions
                 case HiveTypeEnum.Amcache:
                     keyBase = "";
                     break;
+                case HiveTypeEnum.Syscache:
+                    keyBase = "";
+                    break;
 
                 default:
                     keyBase = "HKEY_CURRENT_USER\\UNKNOWN_BASEPATH";
