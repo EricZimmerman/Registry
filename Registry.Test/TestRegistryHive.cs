@@ -73,13 +73,11 @@ namespace Registry.Test
             
             r.ParseHive();
 
-           
-
             var keys = r.ExpandKeyPath("ControlSet00*\\Services");
 
             Check.That(keys.Count).IsEqualTo(2);
-            Check.That(keys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Services");
-            Check.That(keys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services");
+            Check.That(keys.First()).IsEqualTo("ControlSet001\\Services");
+            Check.That(keys.Last()).IsEqualTo("ControlSet002\\Services");
         }
 
          [Test]
@@ -94,8 +92,8 @@ namespace Registry.Test
           
             var otherKeys = r.ExpandKeyPath("ControlSet002\\Services\\aic*");
             Check.That(otherKeys.Count).IsEqualTo(2);
-            Check.That(otherKeys.First()).IsEqualTo(@"$$$PROTO.HIV\ControlSet002\Services\aic78u2");
-            Check.That(otherKeys.Last()).IsEqualTo(@"$$$PROTO.HIV\ControlSet002\Services\aic78xx");
+            Check.That(otherKeys.First()).IsEqualTo(@"ControlSet002\Services\aic78u2");
+            Check.That(otherKeys.Last()).IsEqualTo(@"ControlSet002\Services\aic78xx");
 
   
         }
@@ -111,8 +109,8 @@ namespace Registry.Test
 
             var evenMoreKeys = r.ExpandKeyPath(@"ControlSet001\Control\IDConfigDB\*\0001");
             Check.That(evenMoreKeys.Count).IsEqualTo(2);
-            Check.That(evenMoreKeys.First()).IsEqualTo(@"$$$PROTO.HIV\ControlSet001\Control\IDConfigDB\Alias\0001");
-            Check.That(evenMoreKeys.Last()).IsEqualTo(@"$$$PROTO.HIV\ControlSet001\Control\IDConfigDB\Hardware Profiles\0001");
+            Check.That(evenMoreKeys.First()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Alias\0001");
+            Check.That(evenMoreKeys.Last()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Hardware Profiles\0001");
 
         }
 
@@ -128,9 +126,9 @@ namespace Registry.Test
 
             var otherKeys2 = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86");
             Check.That(otherKeys2.Count).IsEqualTo(3);
-            Check.That(otherKeys2[0]).IsEqualTo(@"$$$PROTO.HIV\ControlSet002\Services\Avgldx86");
-            Check.That(otherKeys2[1]).IsEqualTo(@"$$$PROTO.HIV\ControlSet002\Services\Avgmfx86");
-            Check.That(otherKeys2[2]).IsEqualTo(@"$$$PROTO.HIV\ControlSet002\Services\Avgrkx86");
+            Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86");
+            Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86");
+            Check.That(otherKeys2[2]).IsEqualTo(@"ControlSet002\Services\Avgrkx86");
 
         }
 
@@ -143,7 +141,7 @@ namespace Registry.Test
             
             r.ParseHive();
          
-            var shouldNotExist = r.ExpandKeyPath(@"$$$PROTO.HIV\ControlSet002\Services\Avg*x86\DoesNotExist");
+            var shouldNotExist = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86\DoesNotExist");
             Check.That(shouldNotExist.Count).IsEqualTo(0);
         }
 
@@ -158,6 +156,8 @@ namespace Registry.Test
          
             var endCheck = r.ExpandKeyPath(@"Setup\AllowStart\*ss");
             Check.That(endCheck.Count).IsEqualTo(2);
+            Check.That(endCheck.First()).IsEqualTo(@"Setup\AllowStart\Rpcss");
+            Check.That(endCheck.Last()).IsEqualTo(@"Setup\AllowStart\SamSs");
         }
 
         [Test]
@@ -183,7 +183,7 @@ namespace Registry.Test
             
             r.ParseHive();
 
-            var endCheck3 = r.ExpandKeyPath(@"$$$PROTO.HIV\ControlSet002\Services\*\Parameters");
+            var endCheck3 = r.ExpandKeyPath(@"ControlSet002\Services\*\Parameters");
      
             Check.That(endCheck3.Count).IsEqualTo(127);
         }
@@ -202,7 +202,7 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\*\File MRU");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
+            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
 
         }
 
@@ -220,7 +220,7 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath(@"SOFTWARE\Microsoft\Office\*\*\User MRU\");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU");
+            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU");
 
         }
 
@@ -237,7 +237,7 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath(@"WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
+            Check.That(keys2.First()).IsEqualTo(@"WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
 
         }
 
@@ -254,11 +254,11 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath(@"SOFTWARE\Microsoft\Office\*\*\User MRU\*");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F");
-                                                             //Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F
+            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F");
         }
 
-
+        
+       
         [Test]
         public void ExpandoTest13()
         {
@@ -272,8 +272,8 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\*");
 
             Check.That(keys2.Count).IsEqualTo(2);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
-            //Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F
+            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
+            Check.That(keys2.Last()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\Place MRU");
         }
 
         [Test]
@@ -289,13 +289,43 @@ namespace Registry.Test
             //no wildcards should 
             var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\");
 
+            Check.That(keys2.Count).IsEqualTo(1);
+        }
+        
+        [Test]
+        public void ExpandoTest15()
+        {
+            
+            var f2 = @"C:\Temp\SYSTEM_loneWolf";
+            var r2 = new RegistryHive(f2);
+            r2.RecoverDeleted = true;
+            
+            r2.ParseHive();
 
+            var keys2 = r2.ExpandKeyPath(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            //Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
-            //Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F
+            Check.That(keys2.First()).IsEqualTo(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl");
         }
-        //
+
+        [Test]
+        public void ExpandoTest16()
+        {
+            
+            var f2 = @"C:\Temp\SYSTEM_loneWolf";
+            var r2 = new RegistryHive(f2);
+            r2.RecoverDeleted = true;
+            
+            r2.ParseHive();
+
+            //TODO try to get this to work, if you do, remove WithoutWildCard
+            var keys2 = r2.ExpandKeyPath(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\*");
+
+            Check.That(keys2.Count).IsEqualTo(1);
+            Check.That(keys2.First()).IsEqualTo(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum");
+        }
+
+
 
         [Test]
         public void ReallocTest()

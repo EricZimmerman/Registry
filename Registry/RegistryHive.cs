@@ -979,13 +979,6 @@ namespace Registry
             return true;
         }
 
-
-        /// <summary>
-        ///     Expands a key path with a wildcard (*) in it to all matching keys that exist.
-        ///     <remarks>Calling this on a path without a wildcard returns the empty set</remarks>
-        /// </summary>
-        /// <param name="wildCardPath"></param>
-        /// <returns></returns>
         public List<string> ExpandKeyPath(string wildCardPath)
         {
             var keyPaths = new List<string>();
@@ -997,158 +990,141 @@ namespace Registry
                 wildCardPath = StripRootKeyNameFromKeyPath(wildCardPath);
             }
 
-            if (wildCardPath.Contains("*") == false)
+            if (GetKey(wildCardPath) != null)
             {
+                //a key was passed in and found, so what is there to do but return?
                 keyPaths.Add(wildCardPath);
                 return keyPaths;
             }
 
-            var pathSegments = wildCardPath.Split('\\');
-            var lastKey = Root;
+            RegistryKey startKey = null;
 
-            var que = new Queue<string>();
-            foreach (var pathSegment in pathSegments)
+            var pathSegments = wildCardPath.Split('\\');
+            var startingSegment = pathSegments.Length - 1;
+
+            var remainingPath = string.Empty;
+            for (var i = pathSegments.Length - 1; i >= 0; i--)
             {
-                que.Enqueue(pathSegment);
+                var newPath = string.Join("\\", pathSegments.Take(i));
+
+                startKey = GetKey(newPath);
+                if (startKey != null)
+                {
+                    //we have somewhere to start from
+                    remainingPath = string.Join("\\", pathSegments.Skip(startingSegment));
+                    break;
+                }
+
+                startingSegment = startingSegment - 1;
             }
 
-            var currentSegmentNumber = 0;
-            foreach (var pathSegment in pathSegments)
+            if (startKey == null)
             {
-                que.Dequeue(); //throw current one away
+                startKey = Root;
+                remainingPath = string.Join("\\", pathSegments);
+            }
 
-                if (pathSegment.Contains("*"))
-                {
-                    //we have a wildcard, so find out some things about this segment, namely, where the * is
-                    var starPos1 = pathSegment.IndexOf("*", StringComparison.InvariantCultureIgnoreCase);
+            //Debug.WriteLine($"startkey path: {startKey.KeyPath} remainingPath: {remainingPath}");
 
-                    var leftOfStar = pathSegment.Substring(0, starPos1);
-                    var rightOfStar = pathSegment.Substring(starPos1 + 1);
+            //expand *, for each returned, call ExpandKeyPath
+            pathSegments = remainingPath.Split('\\');
 
-                    //now we have to look for any keys based on what we have here
-                    IEnumerable<RegistryKey> matches;
+            var firstSeg = pathSegments[0];
+            var remainingSegs = string.Join("\\", pathSegments.Skip(1));
 
-                    if (pathSegment.Equals("*"))
-                    {
-                        //everything matches
-                        matches = lastKey.SubKeys;
-                    }
-                    else if (leftOfStar.Length > 0 && rightOfStar.Length == 0)
-                    {
-                        matches = lastKey.SubKeys.Where(t =>
-                            t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant())).ToList();
-                    }
-                    else if (leftOfStar.Length == 0 && rightOfStar.Length > 0)
-                    {
-                        //star is at front
-                        matches = lastKey.SubKeys.Where(t =>
-                            t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
-                    }
-                    else
-                    {
-                        //star is in middle somewhere (leftOfStar.Length>0 && rightOfStar.Length>0)
-                        matches = lastKey.SubKeys.Where(t =>
-                            t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant()) &&
-                            t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
-                    }
+            var paths = ExpandStar(startKey, firstSeg);
 
-                    var nextSegmentValue = string.Empty;
-
-                    if (que.Count > 0)
-                    {
-                        nextSegmentValue = que.Peek();
-                    }
-
-                    foreach (var matchedKey in matches)
-                    {
-                        if (nextSegmentValue.Contains("*"))
-                        {
-                            //append rest and let expand work
-                            var remainingPath =
-                                string.Join("\\", pathSegments.Skip(currentSegmentNumber + 1).ToArray());
-
-                            var newPath = $"{matchedKey.KeyPath}\\{remainingPath}".Trim('\\', '/');
-
-                            if (newPath.Contains("*"))
-                            {
-                                //need to expand the path more
-                                var newDirEx = ExpandKeyPath(newPath);
-
-                                foreach (var newdir in newDirEx)
-                                {
-                                    keyPaths.Add(newdir.Trim('\\', '/'));
-                                }
-                            }
-                            else
-                            {
-                                if (GetKey(newPath) != null)
-                                {
-                                    //it exists, so add it
-                                    keyPaths.Add(newPath.Trim('\\', '/'));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            //since next segment is not wildcarded, does it exist in the current location?
-                            var tempPath = $"{matchedKey.KeyPath}\\{nextSegmentValue}";
-
-                            if (GetKey(tempPath) != null)
-                            {
-                                //it exists, so continue
-                                var remainingPath = string.Join("\\",
-                                    pathSegments.Skip(currentSegmentNumber + 1).ToArray());
-
-                                var newPath = $"{matchedKey.KeyPath}\\{remainingPath}".Trim('\\', '/');
-
-                                if (newPath.Contains("*") && remainingPath.Length == 0)
-                                {
-                                    //there is a wildcard, but it cant be expanded
-                                    keyPaths.Add(newPath);
-                                }
-
-                                else if (newPath.Contains("*"))
-                                {
-                                    //need to expand the path more
-                                    var newDirEx = ExpandKeyPath(newPath);
-
-                                    foreach (var newdir in newDirEx)
-                                    {
-                                        keyPaths.Add(newdir.Trim('\\', '/'));
-                                    }
-                                }
-                                else
-                                {
-                                    if (GetKey(newPath) != null)
-                                    {
-                                        //it exists, so add it
-                                        keyPaths.Add(newPath.Trim('\\', '/'));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //no wildcard, so we can just check if the current segment exists in lastKey
-                    var currentKey = lastKey.SubKeys.SingleOrDefault(t =>
-                        t.KeyName.ToUpperInvariant() == pathSegment.ToUpperInvariant());
-                    if (currentKey == null)
-                    {
-                        //does not exist, so we are done here
-                        return keyPaths;
-                    }
-
-                    //move our pointer further into the hive
-                    lastKey = currentKey;
-                }
-
-                currentSegmentNumber += 1;
+            foreach (var path in paths)
+            {
+                var morePaths = ExpandKeyPath($"{path}\\{remainingSegs}");
+                keyPaths.AddRange(morePaths);
             }
 
             return keyPaths;
         }
+
+        private IEnumerable<string> ExpandStar(RegistryKey key, string starString)
+        {
+            //Debug.WriteLine($"    EXPANDING STAR: {starString}");
+
+            var keyPaths = new List<string>();
+
+            if (starString.Equals("*"))
+            {
+                //all subkeys
+                foreach (var startKeySubKey in key.SubKeys)
+                {
+                    var cleanKey = startKeySubKey.KeyPath;
+                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
+                    {
+                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
+                    }
+
+                    keyPaths.Add(cleanKey);
+                }
+            }
+            else if (starString.Contains("*") == false)
+            {
+                //no wildcard at all
+                var asdas = key.SubKeys.SingleOrDefault(t =>
+                    t.KeyName.ToUpperInvariant() == starString.ToUpperInvariant());
+
+                if (asdas != null)
+                {
+                    var cleanKey = asdas.KeyPath;
+                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
+                    {
+                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
+                    }
+
+                    keyPaths.Add(cleanKey);
+                }
+            }
+            else
+            {
+                //we have a wildcard, so find out some things about this segment, namely, where the * is
+                var starPos1 = starString.IndexOf("*", StringComparison.InvariantCultureIgnoreCase);
+
+                var leftOfStar = starString.Substring(0, starPos1);
+                var rightOfStar = starString.Substring(starPos1 + 1);
+
+                //now we have to look for any keys based on what we have here
+                IEnumerable<RegistryKey> matches;
+
+                if (leftOfStar.Length > 0 && rightOfStar.Length == 0)
+                {
+                    matches = key.SubKeys.Where(t =>
+                        t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant())).ToList();
+                }
+                else if (leftOfStar.Length == 0 && rightOfStar.Length > 0)
+                {
+                    //star is at front
+                    matches = key.SubKeys.Where(t =>
+                        t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
+                }
+                else
+                {
+                    //star is in middle somewhere (leftOfStar.Length>0 && rightOfStar.Length>0)
+                    matches = key.SubKeys.Where(t =>
+                        t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant()) &&
+                        t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
+                }
+
+                foreach (var startKeySubKey in matches)
+                {
+                    var cleanKey = startKeySubKey.KeyPath;
+                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
+                    {
+                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
+                    }
+
+                    keyPaths.Add(cleanKey);
+                }
+            }
+
+            return keyPaths;
+        }
+
 
         /// <summary>
         ///     Associates vk records with NK records and builds a hierarchy of nk records
