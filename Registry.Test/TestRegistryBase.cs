@@ -69,7 +69,7 @@ namespace Registry.Test
         public void NullByteArrayShouldThrowEArgumentNullException()
         {
             byte[] nullBytes = null;
-            Check.ThatCode(() => { new RegistryBase(nullBytes); }).Throws<ArgumentNullException>();
+            Check.ThatCode(() => { new RegistryBase(nullBytes,null); }).Throws<ArgumentNullException>();
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace Registry.Test
             binaryReader.Close();
             fileStream.Close();
 
-            var r = new RegistryBase(fileBytes);
+            var r = new RegistryBase(fileBytes,@"..\..\..\Hives\SAM");
 
             Check.That(r.Header).IsNotNull();
             Check.That(r.HivePath).IsEqualTo("None");
@@ -135,7 +135,7 @@ namespace Registry.Test
 
             Check.ThatCode(() =>
                 {
-                    var rb = new RegistryBase(fileBytes);
+                    var rb = new RegistryBase(fileBytes,@"..\..\..\Hives\NotAHive");
                 })
                 .Throws<ArgumentException>();
         }

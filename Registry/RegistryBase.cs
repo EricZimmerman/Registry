@@ -16,7 +16,7 @@ namespace Registry
             throw new NotSupportedException("Call the other constructor and pass in the path to the Registry hive!");
         }
 
-        public RegistryBase(byte[] rawBytes)
+        public RegistryBase(byte[] rawBytes, string hivePath)
         {
             FileBytes = rawBytes;
             HivePath = "None";
@@ -29,6 +29,8 @@ namespace Registry
 
                 throw new ArgumentException("Data in byte array is not a Registry hive (bad signature)");
             }
+
+            HivePath = hivePath;
 
             Initialize();
         }

@@ -40,7 +40,7 @@ namespace Registry
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
-        public RegistryHive(byte[] rawBytes) : base(rawBytes)
+        public RegistryHive(byte[] rawBytes, string filePath) : base(rawBytes,filePath)
         {
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
@@ -132,16 +132,9 @@ namespace Registry
             return dn;
         }
 
-        /// <summary>
-        ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
-        /// </summary>
-        /// <param name="logFiles"></param>
-        /// <param name="updateExistingData"></param>
-        /// <remarks>Hat tip: https://github.com/msuhanov</remarks>
-        /// <returns>Byte array containing the updated bytes</returns>
-        public byte[] ProcessTransactionLogs(List<string> logFiles, bool updateExistingData = false)
+        public byte[] ProcessTransactionLogs(List<TransactionLogFileInfo> logFileInfos, bool updateExistingData = false)
         {
-            if (logFiles.Count == 0)
+             if (logFileInfos.Count == 0)
             {
                 throw new Exception("No logs were supplied");
             }
@@ -155,15 +148,14 @@ namespace Registry
 
             var logs = new List<TransactionLog>();
 
-            foreach (var ofFileName in logFiles)
+            foreach (var logFile in logFileInfos)
             {
-                var fi = new FileInfo(ofFileName);
-                if (fi.Length == 0)
+                if (logFile.FileBytes.Length == 0)
                 {
                     continue;
                 }
 
-                var transLog = new TransactionLog(ofFileName);
+                var transLog = new TransactionLog(logFile.FileBytes,logFile.FileName);
 
                 if (HiveType != transLog.HiveType)
                 {
@@ -175,7 +167,7 @@ namespace Registry
                 {
                     //log predates the last confirmed update, so skip  
                     Logger.Warn(
-                        $"Dropping {ofFileName} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber");
+                        $"Dropping {logFile.FileBytes} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber");
                     continue;
                 }
 
@@ -286,6 +278,47 @@ namespace Registry
             }
 
             return bytes;
+        }
+
+        /// <summary>
+        ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
+        /// </summary>
+        /// <param name="logFiles"></param>
+        /// <param name="updateExistingData"></param>
+        /// <remarks>Hat tip: https://github.com/msuhanov</remarks>
+        /// <returns>Byte array containing the updated bytes</returns>
+        public byte[] ProcessTransactionLogs(List<string> logFiles, bool updateExistingData = false)
+        {
+            if (logFiles.Count == 0)
+            {
+                throw new Exception("No logs were supplied");
+            }
+
+            if (Header.PrimarySequenceNumber == Header.SecondarySequenceNumber)
+            {
+                throw new Exception("Sequence numbers match! Hive is not dirty");
+            }
+
+            var logfileInfos = new List<TransactionLogFileInfo>();
+
+            foreach (var ofFileName in logFiles)
+            {
+                //get bytes for file
+                var b = File.ReadAllBytes(ofFileName);
+              
+
+                if (b.Length == 0)
+                {
+                    continue;
+                }
+
+                var lfi = new TransactionLogFileInfo(ofFileName,b);
+
+                logfileInfos.Add(lfi);
+            }
+
+            return ProcessTransactionLogs(logfileInfos, updateExistingData);
+
         }
 
         //TODO this needs refactored to remove duplicated code

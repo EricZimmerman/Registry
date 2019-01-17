@@ -71,7 +71,7 @@ namespace Registry.Test
             binaryReader.Close();
             fileStream.Close();
 
-            var r = new RegistryHiveOnDemand(fileBytes);
+            var r = new RegistryHiveOnDemand(fileBytes,@"..\..\..\Hives\SAM");
 
             Check.That(r.Header).IsNotNull();
             Check.That(r.HivePath).IsEqualTo("None");

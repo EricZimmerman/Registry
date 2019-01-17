@@ -15,7 +15,7 @@ namespace Registry
 
         private bool _parsed;
 
-        public TransactionLog(byte[] rawBytes)
+        public TransactionLog(byte[] rawBytes, string logFile)
         {
             FileBytes = rawBytes;
             LogPath = "None";
@@ -28,6 +28,10 @@ namespace Registry
 
                 throw new ArgumentException("Data in byte array is not a Registry transaction log (bad signature)");
             }
+
+            LogPath = logFile;
+
+            TransactionLogEntries = new List<TransactionLogEntry>();
 
             Initialize();
         }

@@ -29,6 +29,24 @@ namespace Registry.Test
             Check.That(sam.HardParsingErrors).IsEqualTo(0);
         }
 
+        
+        [Test]
+        public void LockedFileTest()
+        {
+            var f = @"C:\Windows\appcompat\Programs\Amcache.hve";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+            var ts = "2014-12-08 13:39:33 +00:00";
+
+            var td = DateTimeOffset.Parse(ts);
+
+            var t = r.GetDeletedKey(@"Software\Microsoft\VisualStudio\12.0_Config\Debugger", td.ToString());
+
+            Check.That(t).IsNotNull();
+            Check.That(t.NkRecord.IsDeleted).IsTrue();
+        }
 
         [Test]
         public void DeletedFindTest()
@@ -879,7 +897,7 @@ namespace Registry.Test
             sam.FlushRecordListsAfterParse = false;
             sam.ParseHive();
 
-            var r = new RegistryHive(sam.FileBytes);
+            var r = new RegistryHive(sam.FileBytes,@"..\..\..\Hives\SAM");
 
             Check.That(r.Header).IsNotNull();
             Check.That(r.HivePath).IsEqualTo("None");

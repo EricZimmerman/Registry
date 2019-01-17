@@ -16,7 +16,7 @@ namespace Registry
         {
         }
 
-        public RegistryHiveOnDemand(byte[] rawBytes) : base(rawBytes)
+        public RegistryHiveOnDemand(byte[] rawBytes, string fileName) : base(rawBytes,fileName)
         {
         }
 

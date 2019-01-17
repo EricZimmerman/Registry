@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using NFluent;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -32,7 +33,7 @@ namespace Registry.Test
             LogManager.Configuration = config;
 
 
-            var hive = @"D:\temp\amcache\amcache.hve";
+            var hive = @"D:\SynologyDrive\Registry\amcache\aa\Amcache.hve";
             var hive1 = new RegistryHive(hive);
 
             var log1 = $"{hive}.LOG1";
@@ -43,6 +44,8 @@ namespace Registry.Test
             logs.Add(log2);
 
             var newb = hive1.ProcessTransactionLogs(logs);
+
+            
 
             var newName = hive + "_NONDIRTY";
 

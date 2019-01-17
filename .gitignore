@@ -194,3 +194,5 @@ ModelManifest.xml
 *.ide-shm
 *.ide-wal
 /.vs/Registry/DesignTimeBuild/.dtbcache
+/.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json
