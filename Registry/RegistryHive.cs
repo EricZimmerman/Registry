@@ -829,7 +829,7 @@ namespace Registry
             var hiveLength = Header.Length + 0x1000;
             if (hiveLength < FileBytes.Length)
             {
-                Logger.Warn("Header length is smaller than the size of the file.");
+                Logger.Debug("Header length is smaller than the size of the file.");
                 hiveLength = (uint) FileBytes.Length;
             }
 
