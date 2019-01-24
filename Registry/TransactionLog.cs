@@ -218,7 +218,7 @@ namespace Registry
             {
                 if (transactionLogEntry.HasValidHashes() == false)
                 {
-                    Logger.Debug($"Skipping transaction log entry (Hash verification failed): {transactionLogEntry}");
+                    Logger.Debug($"Skipping transaction log entry with sequence # 0x{transactionLogEntry.SequenceNumber:X}. Hash verification failed");
                     continue;
                 }
                 Logger.Trace($"Processing log entry: {transactionLogEntry}");
