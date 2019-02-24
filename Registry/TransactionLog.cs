@@ -82,6 +82,7 @@ namespace Registry
         public byte[] FileBytes { get; }
 
         public string LogPath { get; }
+        public string Version { get; private set; }
 
         public RegistryHeader Header { get; set; }
         public HiveTypeEnum HiveType { get; private set; }
@@ -114,11 +115,11 @@ namespace Registry
         {
             var header = ReadBytesFromHive(0, 4096);
 
-            Logger.Trace("Getting header");
+         //   Logger.Trace("Getting header");
 
             Header = new RegistryHeader(header);
 
-            Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
+        //    Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
 
             var fNameBase = Path.GetFileName(Header.FileName).ToLowerInvariant();
 
@@ -162,11 +163,11 @@ namespace Registry
                     break;
             }
 
-            Logger.Trace($"Hive is a {HiveType} hive");
+       //     Logger.Trace($"Hive is a {HiveType} hive");
 
-            var version = $"{Header.MajorVersion}.{Header.MinorVersion}";
+           Version = $"{Header.MajorVersion}.{Header.MinorVersion}";
 
-            Logger.Trace($"Hive version is {version}");
+        //    Logger.Trace($"Hive version is {version}");
         }
 
         public bool ParseLog()
@@ -221,13 +222,13 @@ namespace Registry
                     Logger.Debug($"Skipping transaction log entry with sequence # 0x{transactionLogEntry.SequenceNumber:X}. Hash verification failed");
                     continue;
                 }
-                Logger.Trace($"Processing log entry: {transactionLogEntry}");
+           //     Logger.Trace($"Processing log entry: {transactionLogEntry}");
 
                 NewSequenceNumber = transactionLogEntry.SequenceNumber;
 
                 foreach (var dirtyPage in transactionLogEntry.DirtyPages)
                 {
-                    Logger.Trace($"Processing dirty page: {dirtyPage}");
+               //     Logger.Trace($"Processing dirty page: {dirtyPage}");
 
                     Buffer.BlockCopy(dirtyPage.PageBytes, 0, hiveBytes, dirtyPage.Offset + baseOffset, dirtyPage.Size);
                 }

@@ -68,7 +68,7 @@ namespace Registry
 
             HivePath = hivePath;
 
-            Logger.Trace("Set HivePath to {0}", hivePath);
+        //    Logger.Trace("Set HivePath to {0}", hivePath);
 
             Initialize();
         }
@@ -80,13 +80,13 @@ namespace Registry
         public HiveTypeEnum HiveType { get; private set; }
 
         public string HivePath { get; }
+        public string Version { get; private set; }
 
         public RegistryHeader Header { get; set; }
 
         public byte[] ReadBytesFromHive(long offset, int length)
         {
             var readLength = Math.Abs(length);
-
 
             var remaining = FileBytes.Length - offset;
 
@@ -109,11 +109,11 @@ namespace Registry
         {
             var header = ReadBytesFromHive(0, 4096);
 
-            Logger.Trace("Getting header");
+        //    Logger.Trace("Getting header");
 
             Header = new RegistryHeader(header);
 
-            Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
+        //    Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
 
             var fNameBase = Path.GetFileName(Header.FileName).ToLowerInvariant();
 
@@ -157,11 +157,11 @@ namespace Registry
                     break;
             }
 
-            Logger.Trace("Hive is a {0} hive", HiveType);
+        //    Logger.Trace("Hive is a {0} hive", HiveType);
 
-            var version = $"{Header.MajorVersion}.{Header.MinorVersion}";
+           Version = $"{Header.MajorVersion}.{Header.MinorVersion}";
 
-            Logger.Trace("Hive version is {0}", version);
+         //   Logger.Trace("Hive version is {0}", version);
         }
 
         public bool HasValidSignature()

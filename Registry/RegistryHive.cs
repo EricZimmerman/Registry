@@ -329,7 +329,7 @@ namespace Registry
 
             _keyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);
 
-            Logger.Trace("Getting subkeys for {0}", key.KeyPath);
+        //    Logger.Trace("Getting subkeys for {0}", key.KeyPath);
 
             key.KeyFlags = RegistryKey.KeyFlagsEnum.HasActiveParent;
 
@@ -337,12 +337,12 @@ namespace Registry
 
             if (key.NkRecord.ClassCellIndex > 0)
             {
-                Logger.Trace("Getting Class cell information at relative offset 0x{0:X}", key.NkRecord.ClassCellIndex);
+                //         Logger.Trace("Getting Class cell information at relative offset 0x{0:X}", key.NkRecord.ClassCellIndex);
                 var d = GetDataNodeFromOffset(key.NkRecord.ClassCellIndex);
                 d.IsReferenced = true;
                 var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NkRecord.ClassLength);
                 key.ClassName = clsName;
-                Logger.Trace("Class name found {0}", clsName);
+                //         Logger.Trace("Class name found {0}", clsName);
             }
 
             //Build ValueOffsets for this NKRecord
@@ -350,8 +350,8 @@ namespace Registry
             {
                 //there are values for this key, so get the offsets so we can pull them next
 
-                Logger.Trace("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
-                    key.NkRecord.ValueListCellIndex, key.NkRecord.ValueListCount);
+                //         Logger.Trace("Getting value list offset at relative offset 0x{0:X}. Value count is {1:N0}",
+                //     key.NkRecord.ValueListCellIndex, key.NkRecord.ValueListCount);
 
 
                 var offsetList = GetDataNodeFromOffset(key.NkRecord.ValueListCellIndex);
@@ -363,7 +363,7 @@ namespace Registry
                 {
                     //use i * 4 so we get 4, 8, 12, 16, etc
                     var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
-                    Logger.Trace("Got value offset 0x{0:X}", os);
+                    //             Logger.Trace("Got value offset 0x{0:X}", os);
                     key.NkRecord.ValueOffsets.Add(os);
                     lastI = i;
                 }
@@ -382,7 +382,7 @@ namespace Registry
                             break;
                         }
 
-                        Logger.Trace("Got value offset 0x{0:X}", os);
+                        //        Logger.Trace("Got value offset 0x{0:X}", os);
 
                         if (key.NkRecord.ValueOffsets.Contains(os) == false)
                         {
@@ -398,7 +398,7 @@ namespace Registry
             // look for values in this key 
             foreach (var valueOffset in key.NkRecord.ValueOffsets)
             {
-                Logger.Trace("Looking for vk record at relative offset 0x{0:X}", valueOffset);
+                //        Logger.Trace("Looking for vk record at relative offset 0x{0:X}", valueOffset);
 
                 if (CellRecords.ContainsKey((long) valueOffset))
                 {
@@ -411,8 +411,8 @@ namespace Registry
                         continue;
                     }
 
-                    Logger.Trace("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset,
-                        vk.ValueName);
+                    //           Logger.Trace("Found vk record at relative offset 0x{0:X}. Value name: {1}", valueOffset,
+                    //  vk.ValueName);
 
                     if (valOffsetIndex >= key.NkRecord.ValueListCount)
                     {
@@ -448,7 +448,7 @@ namespace Registry
                     key.NkRecord.ValueListCount, key.NkRecord.ValueOffsets.Count, key.KeyPath);
             }
 
-            Logger.Trace("Looking for sk record at relative offset 0x{0:X}", key.NkRecord.SecurityCellIndex);
+            //      Logger.Trace("Looking for sk record at relative offset 0x{0:X}", key.NkRecord.SecurityCellIndex);
 
 //            var sk = CellRecords[key.NKRecord.SecurityCellIndex] as SKCellRecord;
 //            sk.IsReferenced = true;
@@ -469,8 +469,8 @@ namespace Registry
                 return keys;
             }
 
-            Logger.Trace("Looking for list record at relative offset 0x{0:X}",
-                key.NkRecord.SubkeyListsStableCellIndex);
+            //    Logger.Trace("Looking for list record at relative offset 0x{0:X}",
+            //         key.NkRecord.SubkeyListsStableCellIndex);
             var l = ListRecords[key.NkRecord.SubkeyListsStableCellIndex];
 
             var sig = BitConverter.ToInt16(l.RawBytes, 4);
@@ -483,7 +483,7 @@ namespace Registry
                     lxRecord.IsReferenced = true;
                     foreach (var offset in lxRecord.Offsets)
                     {
-                        Logger.Trace("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset.Key);
+                        //            Logger.Trace("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset.Key);
 
                         if (CellRecords.ContainsKey(offset.Key) == false)
                         {
@@ -496,8 +496,8 @@ namespace Registry
                         var nk = cell as NkCellRecord;
                         nk.IsReferenced = true;
 
-                        Logger.Trace("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
-                            nk.Name);
+                        //          Logger.Trace("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
+                        //     nk.Name);
 
                         var tempKey = new RegistryKey(nk, key);
 
@@ -514,7 +514,7 @@ namespace Registry
                     riRecord.IsReferenced = true;
                     foreach (var offset in riRecord.Offsets)
                     {
-                        Logger.Trace("In ri, looking for list record at relative offset 0x{0:X}", offset);
+                        //           Logger.Trace("In ri, looking for list record at relative offset 0x{0:X}", offset);
                         var tempList = ListRecords[offset];
 
                         //templist is now an li or lh list 
@@ -525,7 +525,7 @@ namespace Registry
 
                             foreach (var offset1 in sk3.Offsets)
                             {
-                                Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
+                                //                    Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
                                 var cell = CellRecords[offset1];
 
                                 var nk = cell as NkCellRecord;
@@ -546,8 +546,8 @@ namespace Registry
 
                             foreach (var offset3 in lxRecord2.Offsets)
                             {
-                                Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}",
-                                    offset3.Key);
+                                //                  Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}",
+                                //            offset3.Key);
                                 var cell = CellRecords[offset3.Key];
 
                                 var nk = cell as NkCellRecord;
@@ -570,7 +570,7 @@ namespace Registry
                     liRecord.IsReferenced = true;
                     foreach (var offset in liRecord.Offsets)
                     {
-                        Logger.Trace("In li, looking for nk record at relative offset 0x{0:X}", offset);
+                        //           Logger.Trace("In li, looking for nk record at relative offset 0x{0:X}", offset);
                         var cell = CellRecords[offset];
 
                         var nk = cell as NkCellRecord;
@@ -869,8 +869,8 @@ namespace Registry
                 }
 
 
-                Logger.Trace(
-                    $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
+                //        Logger.Trace(
+                //              $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
                 var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
 
@@ -878,14 +878,14 @@ namespace Registry
                 {
                     var h = new HBinRecord(rawhbin, offsetInHive - 0x1000, Header.MinorVersion, RecoverDeleted, this);
 
-                    Logger.Trace("hbin info: {0}", h);
+                    //            Logger.Trace("hbin info: {0}", h);
 
-                    Logger.Trace("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
+                    //            Logger.Trace("Getting records from hbin at absolute offset 0x{0:X}", offsetInHive);
 
                     var records = h.Process();
 
-                    Logger.Trace("Found {0:N0} records from hbin at absolute offset 0x{1:X}", records.Count,
-                        offsetInHive);
+                    //             Logger.Trace("Found {0:N0} records from hbin at absolute offset 0x{1:X}", records.Count,
+                    //                 offsetInHive);
 
                     foreach (var record in records)
                         //TODO change this to compare against constants?
@@ -896,8 +896,8 @@ namespace Registry
                             case "sk":
                             case "lk":
                             case "vk":
-                                Logger.Trace("Adding cell record with signature {0} at absolute offset 0x{1:X}",
-                                    record.Signature, record.AbsoluteOffset);
+                                //                      Logger.Trace("Adding cell record with signature {0} at absolute offset 0x{1:X}",
+                                //                           record.Signature, record.AbsoluteOffset);
                                 CellRecords.Add(record.AbsoluteOffset - 4096, (ICellTemplate) record);
                                 break;
 
@@ -906,8 +906,8 @@ namespace Registry
                             case "ri":
                             case "lh":
                             case "lf":
-                                Logger.Trace("Adding list record with signature {0} at absolute offset 0x{1:X}",
-                                    record.Signature, record.AbsoluteOffset);
+                                //                  Logger.Trace("Adding list record with signature {0} at absolute offset 0x{1:X}",
+                                //                        record.Signature, record.AbsoluteOffset);
                                 ListRecords.Add(record.AbsoluteOffset - 4096, (IListTemplate) record);
                                 break;
                         }
@@ -1191,13 +1191,13 @@ namespace Registry
                 {
                     var nk = unreferencedNkCell.Value as NkCellRecord;
 
-                    Logger.Trace("Processing deleted nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
+                    //       Logger.Trace("Processing deleted nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
 
                     if (nk.ValueListCount > 10000)
                     {
-                        Logger.Trace(
-                            $"When getting values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}, implausable value count ({nk.ValueListCount:N0}). Skipping");
+                        //             Logger.Trace(
+                        //                  $"When getting values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}, implausable value count ({nk.ValueListCount:N0}). Skipping");
                         continue;
                     }
 
@@ -1219,8 +1219,8 @@ namespace Registry
                     {
                         //there are values for this key, so get the offsets so we can pull them next
 
-                        Logger.Trace("Processing deleted nk record values for nk at absolute offset 0x{0:X}",
-                            nk.AbsoluteOffset);
+                        //              Logger.Trace("Processing deleted nk record values for nk at absolute offset 0x{0:X}",
+                        //                  nk.AbsoluteOffset);
 
                         DataNode offsetList = null;
 
@@ -1246,16 +1246,16 @@ namespace Registry
                         {
 //ncrunch: no coverage
                             //sometimes the data node doesn't have enough data to even do this, or its wrong data
-                            Logger.Trace( //ncrunch: no coverage
-                                "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
-                                nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
+                            //                 Logger.Trace( //ncrunch: no coverage
+                            //                         "When getting values for nk record at absolute offset 0x{0:X}, not enough/invalid data was found at offset 0x{1:X}to look for value offsets. Value recovery is not possible",
+                            //         nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                         } //ncrunch: no coverage
 
                         var lastI = 0;
                         if (offsetList != null)
                         {
-                            Logger.Trace("Found offset list for nk at absolute offset 0x{0:X}. Processing.",
-                                nk.AbsoluteOffset);
+                            //                Logger.Trace("Found offset list for nk at absolute offset 0x{0:X}. Processing.",
+                            //                     nk.AbsoluteOffset);
                             try
                             {
                                 for (var i = 0; i < regKey.NkRecord.ValueListCount; i++)
@@ -1270,9 +1270,9 @@ namespace Registry
                             catch (Exception) //ncrunch: no coverage
                             {
 //ncrunch: no coverage
-                                Logger.Trace( //ncrunch: no coverage
-                                    "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
-                                    nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
+                                //                     Logger.Trace( //ncrunch: no coverage
+                                //                          "When getting value offsets for nk record at absolute offset 0x{0:X}, not enough data was found at offset 0x{1:X} to look for all value offsets. Only partial value recovery possible",
+                                //                          nk.AbsoluteOffset, regKey.NkRecord.ValueListCellIndex);
                             } //ncrunch: no coverage
 
                             //check to see if there are any other values hanging out in this list beyond what is expected
@@ -1299,7 +1299,7 @@ namespace Registry
                         }
                     }
 
-                    Logger.Trace("Looking for vk records for nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
+                    //         Logger.Trace("Looking for vk records for nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
 
                     var valOffsetIndex = 0;
@@ -1308,9 +1308,9 @@ namespace Registry
                     {
                         if (CellRecords.ContainsKey((long) valueOffset))
                         {
-                            Logger.Trace(
-                                "Found vk record at relative offset 0x{0:X} for nk record at absolute offset 0x{1:X}",
-                                valueOffset, nk.AbsoluteOffset);
+                            //                 Logger.Trace(
+                            //                      "Found vk record at relative offset 0x{0:X} for nk record at absolute offset 0x{1:X}",
+                            //     valueOffset, nk.AbsoluteOffset);
 
                             var val = CellRecords[(long) valueOffset] as VkCellRecord;
                             //we have a value for this key
@@ -1320,9 +1320,9 @@ namespace Registry
                                 //if its an in use record AND referenced, warn
                                 if (val.IsFree == false && val.IsReferenced)
                                 {
-                                    Logger.Trace(
-                                        "When getting values for nk record at absolute offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
-                                        nk.AbsoluteOffset, valueOffset);
+                                    //                        Logger.Trace(
+                                    //                              "When getting values for nk record at absolute offset 0x{0:X}, VK record at relative offset 0x{1:X} isn't free and is referenced by another nk record. Skipping!",
+                                    //             nk.AbsoluteOffset, valueOffset);
                                 }
                                 else
                                 {
@@ -1332,20 +1332,20 @@ namespace Registry
                                     var kv = new KeyValue(val);
 
                                     regKey.Values.Add(kv);
-                                    Logger.Trace(
-                                        $"Added vk record at relative offset 0x{valueOffset:X} for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
+                                    //                         Logger.Trace(
+                                    //                             $"Added vk record at relative offset 0x{valueOffset:X} for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
                                 }
                             }
                         }
                         else
                         {
-                            Logger.Trace(
-                                $"vk record at relative offset 0x{valueOffset:X} not found for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
+                            //                    Logger.Trace(
+                            //                          $"vk record at relative offset 0x{valueOffset:X} not found for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
                         }
                     }
 
-                    Logger.Trace(
-                        $"Associated {regKey.Values.Count:N0} value(s) out of {nk.ValueOffsets.Count:N0} possible values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
+                    //          Logger.Trace(
+                    //              $"Associated {regKey.Values.Count:N0} value(s) out of {nk.ValueOffsets.Count:N0} possible values for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
 
 
                     deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
@@ -1353,9 +1353,9 @@ namespace Registry
                 catch (Exception ex) //ncrunch: no coverage
                 {
 //ncrunch: no coverage
-                    Logger.Trace( //ncrunch: no coverage
-                        ex,
-                        $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
+                    //             Logger.Trace( //ncrunch: no coverage
+                    //                 ex,
+                    //                 $"Error while processing deleted nk record at absolute offset 0x{unreferencedNkCell.Value.AbsoluteOffset:X}");
                 } //ncrunch: no coverage
             }
 
@@ -1378,9 +1378,9 @@ namespace Registry
                         //add the key as as subkey of its parent
                         var parent = deletedRegistryKeys[deletedRegistryKey.Value.NkRecord.ParentCellIndex];
 
-                        Logger.Trace(
-                            "Found subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
-                            deletedRegistryKey.Value.NkRecord.AbsoluteOffset, parent.NkRecord.AbsoluteOffset);
+                        //         Logger.Trace(
+                        //                 "Found subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
+                        //                     deletedRegistryKey.Value.NkRecord.AbsoluteOffset, parent.NkRecord.AbsoluteOffset);
 
                         deletedRegistryKey.Value.KeyPath = $@"{parent.KeyPath}\{deletedRegistryKey.Value.KeyName}";
 
@@ -1411,10 +1411,10 @@ namespace Registry
                     //an parent key has been located, so get it
                     var parentNk = CellRecords[deletedRegistryKey.Value.NkRecord.ParentCellIndex] as NkCellRecord;
 
-                    Logger.Trace(
-                        "Found possible parent key at absolute offset 0x{0:X} for deleted key at absolute offset 0x{1:X}",
-                        deletedRegistryKey.Value.NkRecord.ParentCellIndex + 0x1000,
-                        deletedRegistryKey.Value.NkRecord.AbsoluteOffset);
+                    //            Logger.Trace(
+                    //                 "Found possible parent key at absolute offset 0x{0:X} for deleted key at absolute offset 0x{1:X}",
+                    //                 deletedRegistryKey.Value.NkRecord.ParentCellIndex + 0x1000,
+                    //                 deletedRegistryKey.Value.NkRecord.AbsoluteOffset);
 
                     if (parentNk == null)
                     {
@@ -1426,9 +1426,9 @@ namespace Registry
                         //parent exists in our primary tree, so get that key
                         var pk = GetKey(deletedRegistryKey.Value.NkRecord.ParentCellIndex);
 
-                        Logger.Trace(
-                            "Copying subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
-                            deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
+                        //           Logger.Trace(
+                        //                "Copying subkey at absolute offset 0x{0:X} for parent key at absolute offset 0x{1:X}",
+                        //                deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
 
                         deletedRegistryKey.Value.KeyPath = $@"{pk.KeyPath}\{deletedRegistryKey.Value.KeyName}";
 
@@ -1448,9 +1448,9 @@ namespace Registry
                                 deletedRegistryKey.Value);
                         }
 
-                        Logger.Trace(
-                            "Associated deleted key at absolute offset 0x{0:X} to active parent key at absolute offset 0x{1:X}",
-                            deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
+                        //           Logger.Trace(
+                        //               "Associated deleted key at absolute offset 0x{0:X} to active parent key at absolute offset 0x{1:X}",
+                        //               deletedRegistryKey.Value.NkRecord.AbsoluteOffset, pk.NkRecord.AbsoluteOffset);
                     }
                 }
             }
@@ -1473,7 +1473,7 @@ namespace Registry
 
         private void UpdateChildPaths(RegistryKey key)
         {
-            Logger.Trace("Updating child paths or key {0}", key.KeyPath);
+       //     Logger.Trace("Updating child paths or key {0}", key.KeyPath);
             foreach (var sk in key.SubKeys)
             {
                 sk.KeyPath = $@"{key.KeyPath}\{sk.KeyName}";

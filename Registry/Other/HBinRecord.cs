@@ -50,7 +50,7 @@ namespace Registry.Other
                 throw new Exception("Invalid hbin signature");
             }
 
-            reg.Logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
+          //  reg.Logger.Trace("Got valid hbin signature for hbin at absolute offset 0x{0:X}", AbsoluteOffset);
 
             FileOffset = BitConverter.ToUInt32(rawBytes, 0x4);
 
@@ -144,8 +144,8 @@ namespace Registry.Other
                 // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
                 readSize = Math.Abs(readSize);
 
-                _registryHive.Logger.Trace(
-                    $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
+     //           _registryHive.Logger.Trace(
+     //               $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
 
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
 
@@ -164,13 +164,13 @@ namespace Registry.Other
                     //only process records with 2 letter signatures. this avoids crazy output for data cells
                     if (foundMatch)
                     {
-                        _registryHive.Logger.Trace(
-                            $"Processing {cellSignature} record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
+                        //                 _registryHive.Logger.Trace(
+                        //                      $"Processing {cellSignature} record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                     else
                     {
-                        _registryHive.Logger.Trace(
-                            $"Processing data record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
+                        //                 _registryHive.Logger.Trace(
+                        //                      $"Processing data record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
                     }
                 }
                 //ncrunch: no coverage end
@@ -320,8 +320,8 @@ namespace Registry.Other
 
             byte[] raw = null;
 
-            _registryHive.Logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
-                relativeoffset + 0x1000);
+         //   _registryHive.Logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
+      //          relativeoffset + 0x1000);
 
             for (var i = 0; i < remainingData.Length; i++)
             {
@@ -376,8 +376,8 @@ namespace Registry.Other
                             var nk = new NkCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                             if (nk.LastWriteTimestamp.Year > 1900)
                             {
-                                _registryHive.Logger.Trace("Found nk record in slack at absolute offset 0x{0:X}",
-                                    relativeoffset + actualStart + 0x1000);
+                  //              _registryHive.Logger.Trace("Found nk record in slack at absolute offset 0x{0:X}",
+              //                      relativeoffset + actualStart + 0x1000);
                                 records.Add(nk);
                             }
 
@@ -391,8 +391,8 @@ namespace Registry.Other
 
                             var vk = new VkCellRecord(raw.Length, relativeoffset + actualStart, _minorVersion,
                                 _registryHive);
-                            _registryHive.Logger.Trace("Found vk record in slack at absolute offset 0x{0:X}",
-                                relativeoffset + actualStart + 0x1000);
+                      //      _registryHive.Logger.Trace("Found vk record in slack at absolute offset 0x{0:X}",
+                  //              relativeoffset + actualStart + 0x1000);
                             records.Add(vk);
                             break;
                     }
