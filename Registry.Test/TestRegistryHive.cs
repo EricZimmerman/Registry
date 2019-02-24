@@ -135,6 +135,67 @@ namespace Registry.Test
         }
 
         [Test]
+        public void ExpandoTestOneOff4()
+        {
+
+            var f = @"D:\SynologyDrive\Registry\AdminUsrClass.dat";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath("Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\*\\Shell\\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
+
+            Check.That(keys.Count).IsEqualTo(15);
+
+        }
+
+        [Test]
+        public void ExpandoTestOneOff5()
+        {
+
+            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\System*");
+
+            Check.That(keys.Count).IsEqualTo(7);
+        }
+
+        [Test]
+        public void ExpandoTestOneOff6()
+        {
+
+            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\*up");
+
+            Check.That(keys.Count).IsEqualTo(2);
+        }
+
+        [Test]
+        public void ExpandoTestOneOff7()
+        {
+
+            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\System*tion");
+
+            Check.That(keys.Count).IsEqualTo(3);
+        }
+
+        [Test]
         public void ExpandoTest01()
         {
             var f = @"D:\SynologyDrive\Registry\system_registry_hive";

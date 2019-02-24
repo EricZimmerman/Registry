@@ -959,7 +959,6 @@ namespace Registry
             Root = new RegistryKey(rootNode, null);
             Logger.Debug("Created root node object. Getting subkeys.");
 
-
             var keys = GetSubKeysAndValues(Root);
 
             Root.SubKeys.AddRange(keys);
@@ -1013,25 +1012,6 @@ namespace Registry
             return true;
         }
 
-        private HashSet<string> ExpandKeyPathInternal(RegistryKey key, string wildCardPath)
-        {
-            var keyPaths = new HashSet<string>();
-
-            wildCardPath = wildCardPath.Trim('\\', '/');
-
-            if (wildCardPath.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
-            {
-                wildCardPath = StripRootKeyNameFromKeyPath(wildCardPath);
-            }
-
-
-
-
-            return keyPaths;
-        }
-
-       
-
         public HashSet<string> ExpandKeyPath( string wildCardPath)
         {
             var keyPaths = new HashSet<string>();
@@ -1050,8 +1030,6 @@ namespace Registry
                // return keyPaths;
             }
 
-            RegistryKey startKey = null;
-
             var currentKey = Root;
 
             var pathSegments = wildCardPath.Split('\\');
@@ -1063,24 +1041,18 @@ namespace Registry
                 {
                     //we have a wild card
                     var expanded = ExpandStar(currentKey, pathSegment).ToList();
-                //    Debug.WriteLine($"Found following matches (total: {expanded.Count()}) :\r\n----- {string.Join("\r\n------", expanded)}\r\n");
 
                     //take the expanded paths and append what is left, then continue
                     var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
 
-              //      Debug.WriteLine($"currentkey: {currentKey.KeyPath} whatsLeft: {whatsLeft}");
-
                     foreach (var exp in expanded)
                     {
-                      //  Debug.WriteLine($"exp: {exp} whatsLeft: {whatsLeft}");
-
                         var tempPath = $"{exp}\\{whatsLeft}";
                         var tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
 
                         if (GetKey(tempPFullath) != null)
                         {
                             //the path as is exists
-                 //           Debug.WriteLine($"Adding {tempPFullath}");
                             keyPaths.Add(tempPFullath);
                         }
 
@@ -1092,7 +1064,6 @@ namespace Registry
                                 keyPaths.Add(aa);
                             }
                         }
-
                     }
 
                 }
@@ -1108,7 +1079,6 @@ namespace Registry
                     }
                     //it was found, so move pointer up
 
-            //        Debug.WriteLine($"Moving current pointer up to {tempKey.KeyPath}");
                     currentKey = tempKey;
                 }
 
@@ -1117,72 +1087,10 @@ namespace Registry
 
             return keyPaths;
 
-
-            //OLD BELOW
-//
-//
-//
-//            var startingSegment = pathSegments.Length - 1;
-//
-//            var remainingPath = string.Empty;
-//            for (var i = pathSegments.Length - 1; i >= 0; i--)
-//            {
-//                var newPath = string.Join("\\", pathSegments.Take(i));
-//
-//                Debug.WriteLine($"$newpath: {newPath}");
-//
-//                
-//
-//                startKey = GetKey(newPath);
-//                if (newPath.EndsWith("\\*"))
-//                {
-//                    startKey = null;
-//                }
-//                if (startKey != null)
-//                {
-//                    Debug.WriteLine($"startKey! = NULL:");
-//                    //we have somewhere to start from
-//                    remainingPath = string.Join("\\", pathSegments.Skip(startingSegment));
-//
-//                    Debug.WriteLine($"remainingPath! = {remainingPath}:");
-//                    break;
-//                }
-//
-//                startingSegment = startingSegment - 1;
-//            }
-//
-//            if (startKey == null)
-//            {
-//                Debug.WriteLine($"startKey! = startKey");
-//                startKey = Root;
-//                remainingPath = string.Join("\\", pathSegments);
-//
-//                Debug.WriteLine($"remainingPath! = {remainingPath}:");
-//            }
-//
-//            Debug.WriteLine($"startkey path: {startKey.KeyPath} remainingPath: {remainingPath}");
-//
-//            //expand *, for each returned, call ExpandKeyPath
-//            pathSegments = remainingPath.Split('\\');
-//
-//            var firstSeg = pathSegments[0];
-//            var remainingSegs = string.Join("\\", pathSegments.Skip(1));
-//
-//            var paths = ExpandStar(startKey, firstSeg);
-//
-//            foreach (var path in paths)
-//            {
-//                var morePaths = ExpandKeyPath($"{path}\\{remainingSegs}");
-//                keyPaths.AddRange(morePaths);
-//            }
-
-            
         }
 
         private IEnumerable<string> ExpandStar(RegistryKey key, string starString)
         {
-           // Debug.WriteLine($"    EXPANDING STAR: {starString}");
-
             var keyPaths = new List<string>();
 
             if (starString.Equals("*"))
