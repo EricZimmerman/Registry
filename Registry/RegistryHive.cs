@@ -16,6 +16,8 @@ namespace Registry
     // public classes...
     public class RegistryHive : RegistryBase
     {
+        //   private const string wildCardChar = "¿";
+        private const string wildCardChar = "*";
         internal static int HardParsingErrorsInternal;
         internal static int SoftParsingErrorsInternal;
         private readonly Dictionary<string, RegistryKey> _keyPathKeyMap = new Dictionary<string, RegistryKey>();
@@ -41,7 +43,7 @@ namespace Registry
             UnassociatedRegistryValues = new List<KeyValue>();
         }
 
-        public RegistryHive(byte[] rawBytes, string filePath) : base(rawBytes,filePath)
+        public RegistryHive(byte[] rawBytes, string filePath) : base(rawBytes, filePath)
         {
             CellRecords = new Dictionary<long, ICellTemplate>();
             ListRecords = new Dictionary<long, IListTemplate>();
@@ -135,7 +137,7 @@ namespace Registry
 
         public byte[] ProcessTransactionLogs(List<TransactionLogFileInfo> logFileInfos, bool updateExistingData = false)
         {
-             if (logFileInfos.Count == 0)
+            if (logFileInfos.Count == 0)
             {
                 throw new Exception("No logs were supplied");
             }
@@ -156,7 +158,7 @@ namespace Registry
                     continue;
                 }
 
-                var transLog = new TransactionLog(logFile.FileBytes,logFile.FileName);
+                var transLog = new TransactionLog(logFile.FileBytes, logFile.FileName);
 
                 if (HiveType != transLog.HiveType)
                 {
@@ -306,20 +308,19 @@ namespace Registry
             {
                 //get bytes for file
                 var b = File.ReadAllBytes(ofFileName);
-              
+
 
                 if (b.Length == 0)
                 {
                     continue;
                 }
 
-                var lfi = new TransactionLogFileInfo(ofFileName,b);
+                var lfi = new TransactionLogFileInfo(ofFileName, b);
 
                 logfileInfos.Add(lfi);
             }
 
             return ProcessTransactionLogs(logfileInfos, updateExistingData);
-
         }
 
         //TODO this needs refactored to remove duplicated code
@@ -329,7 +330,7 @@ namespace Registry
 
             _keyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);
 
-        //    Logger.Trace("Getting subkeys for {0}", key.KeyPath);
+            //    Logger.Trace("Getting subkeys for {0}", key.KeyPath);
 
             key.KeyFlags = RegistryKey.KeyFlagsEnum.HasActiveParent;
 
@@ -1012,10 +1013,7 @@ namespace Registry
             return true;
         }
 
-     //   private const string wildCardChar = "¿";
-        private const string wildCardChar = "*";
-
-        public HashSet<string> ExpandKeyPath( string wildCardPath)
+        public HashSet<string> ExpandKeyPath(string wildCardPath)
         {
             var keyPaths = new HashSet<string>();
 
@@ -1040,13 +1038,10 @@ namespace Registry
             var pathSegmentPointer = 1;
             foreach (var pathSegment in pathSegments)
             {
-                if ( pathSegment.Contains(wildCardChar))
+                if (pathSegment.Contains(wildCardChar))
                 {
-                    //we do not want to process like this if the key name == the wildcard
-
                     //we have a wild card
                     var expanded = ExpandStar(currentKey, pathSegment).ToList();
-                //    Debug.WriteLine($"pathSegment: {pathSegment}, expanded: {string.Join(",", expanded)}");
 
                     var removedSelf = false;
 
@@ -1057,106 +1052,89 @@ namespace Registry
                         {
                             keyPaths.Add($"{currentKey.KeyPath}\\{pathSegment}");
                         }
-                        
 
                         expanded.Remove(pathSegment);
                         //here we need to change from count == 1 to does the list contain the path we sent in? if so, pull that entry from the list and process it singly
 
                         removedSelf = true;
-
                     }
-                    
-                    
-                        //take the expanded paths and append what is left, then continue
-                        var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
 
-                        foreach (var exp in expanded)
+                    //take the expanded paths and append what is left, then continue
+                    var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
+
+                    foreach (var exp in expanded)
+                    {
+                        var tempPath = $"{exp}\\{whatsLeft}";
+                        var tempFullPath = $"{currentKey.KeyPath}\\{tempPath}";
+
+                        if (GetKey(tempFullPath) != null)
                         {
-                            var tempPath = $"{exp}\\{whatsLeft}";
-                            var tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
+                            //the path as is exists
+                            keyPaths.Add(tempFullPath.Trim('\\', '/'));
+                        }
 
-                            if (GetKey(tempPFullath) != null)
+                        if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempFullPath) == false)
+                        {
+                            var asd = ExpandKeyPath(tempFullPath);
+                            foreach (var aa in asd)
                             {
-                                //the path as is exists
-                                keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                                keyPaths.Add(aa.Trim('\\', '/'));
                             }
+                        }
+                    }
 
-                            if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+
+                    if (removedSelf)
+                    {
+                        //move current key up one since we already accounted for it
+                        var tempKey =
+                            currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
+                                pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
+                     
+                        currentKey = tempKey;
+
+                        var tempSkip = pathSegmentPointer;
+
+                        if (pathSegmentPointer == pathSegments.Length)
+                        {
+                            tempSkip += 1;
+                        }
+
+                        whatsLeft = string.Join("\\", pathSegments.Skip(tempSkip));
+                        var tempPFullath = $"{currentKey.KeyPath}\\{whatsLeft}";
+
+                        if (GetKey(tempPFullath) != null)
+                        {
+                            //the path as is exists
+                            keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                        }
+
+                        if (whatsLeft.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+                        {
+                            var expanded2 = ExpandStar(currentKey, whatsLeft).ToList();
+
+                            foreach (var exp in expanded2)
                             {
-                                var asd = ExpandKeyPath(tempPFullath);
-                                foreach (var aa in asd)
+                                var tempPath = $"{exp}\\{whatsLeft}";
+                                tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
+
+                                if (GetKey(tempPFullath) != null)
                                 {
-                                    keyPaths.Add(aa.Trim('\\', '/'));
+                                    //the path as is exists
+                                    keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                                }
+
+                                if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+                                {
+                                    var asd1 = ExpandKeyPath(tempPFullath);
+                                    foreach (var aa in asd1)
+                                    {
+                                        keyPaths.Add(aa.Trim('\\', '/'));
+                                    }
                                 }
                             }
                         }
-
-
-                        if (removedSelf)
-                        {
-                            //move current key up one since we already accounted for it
-                            var tempKey =
-                                currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
-                                    pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
-
-                            if (tempKey == null)
-                            {
-                              throw new Exception();
-                            }
-
-                            currentKey = tempKey;
-
-                 
-
-                           var tempSkip = pathSegmentPointer;
-
-                           if (pathSegmentPointer == pathSegments.Length)
-                           {
-                               tempSkip += 1;
-                           }
-
-
-                           whatsLeft = string.Join("\\", pathSegments.Skip(tempSkip));
-                            var tempPFullath = $"{currentKey.KeyPath}\\{whatsLeft}";
-
-                            Debug.WriteLine($"Whatsleft: {whatsLeft} tempPFullath: {tempPFullath}");
-
-                            if (GetKey(tempPFullath) != null)
-                            {
-                                //the path as is exists
-                                keyPaths.Add(tempPFullath.Trim('\\', '/'));
-                            }
-
-                            if (whatsLeft.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
-                            {
-                                var expanded2 = ExpandStar(currentKey, whatsLeft).ToList();
-
-                                foreach (var exp in expanded2)
-                                {
-                                    var tempPath = $"{exp}\\{whatsLeft}";
-                                     tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
-
-                                    if (GetKey(tempPFullath) != null)
-                                    {
-                                        //the path as is exists
-                                        keyPaths.Add(tempPFullath.Trim('\\', '/'));
-                                    }
-
-                                    if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
-                                    {
-                                        var asd1 = ExpandKeyPath(tempPFullath);
-                                        foreach (var aa in asd1)
-                                        {
-                                            keyPaths.Add(aa.Trim('\\', '/'));
-                                        }
-                                    }
-                                }
-
-                              
-                            }
-                        }
-                    
-
+                    }
                 }
                 else
                 {
@@ -1179,7 +1157,6 @@ namespace Registry
             }
 
             return keyPaths;
-
         }
 
         private IEnumerable<string> ExpandStar(RegistryKey key, string starString)
@@ -1252,9 +1229,9 @@ namespace Registry
                     var cleanKey = startKeySubKey.KeyName;
                     if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
                     {
-                    
                         cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
                     }
+
                     Debug.WriteLine($"cleanKey: {cleanKey}");
                     keyPaths.Add(cleanKey);
                 }
@@ -1431,11 +1408,6 @@ namespace Registry
                                 }
                             }
                         }
-                        else
-                        {
-                            //                    Logger.Trace(
-                            //                          $"vk record at relative offset 0x{valueOffset:X} not found for nk record at absolute offset 0x{nk.AbsoluteOffset:X}");
-                        }
                     }
 
                     //          Logger.Trace(
@@ -1567,7 +1539,7 @@ namespace Registry
 
         private void UpdateChildPaths(RegistryKey key)
         {
-       //     Logger.Trace("Updating child paths or key {0}", key.KeyPath);
+            //     Logger.Trace("Updating child paths or key {0}", key.KeyPath);
             foreach (var sk in key.SubKeys)
             {
                 sk.KeyPath = $@"{key.KeyPath}\{sk.KeyName}";
