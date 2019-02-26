@@ -1232,7 +1232,7 @@ namespace Registry
                         cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
                     }
 
-                    Debug.WriteLine($"cleanKey: {cleanKey}");
+                   // Debug.WriteLine($"cleanKey: {cleanKey}");
                     keyPaths.Add(cleanKey);
                 }
             }
