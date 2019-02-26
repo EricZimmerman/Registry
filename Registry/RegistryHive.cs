@@ -1012,6 +1012,9 @@ namespace Registry
             return true;
         }
 
+     //   private const string wildCardChar = "¿";
+        private const string wildCardChar = "*";
+
         public HashSet<string> ExpandKeyPath( string wildCardPath)
         {
             var keyPaths = new HashSet<string>();
@@ -1023,11 +1026,11 @@ namespace Registry
                 wildCardPath = StripRootKeyNameFromKeyPath(wildCardPath);
             }
 
-            if (GetKey(wildCardPath) != null)
+            if (wildCardPath.Contains(wildCardChar) == false)
             {
                 //a key was passed in and found, so what is there to do but return?
-                keyPaths.Add(wildCardPath);
-               // return keyPaths;
+                keyPaths.Add(wildCardPath.Trim('\\', '/'));
+                return keyPaths;
             }
 
             var currentKey = Root;
@@ -1037,41 +1040,72 @@ namespace Registry
             var pathSegmentPointer = 1;
             foreach (var pathSegment in pathSegments)
             {
-                if (pathSegment.Contains("*"))
+//                if (pathSegment.Equals(wildCardChar))
+//                {
+//                    //does the key treated as NOT a wildcard exist?
+//                    Debug.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+//                    //
+//
+//
+//
+//
+////                    var evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0001");
+////                    Check.That(evenMoreKeys.Count).IsEqualTo(2);
+////                    Check.That(evenMoreKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001");
+////                    Check.That(evenMoreKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001");
+//                }
+//                else //pathSegment.Equals(wildCardChar) == false &&
+                if ( pathSegment.Contains(wildCardChar))
                 {
+                    //we do not want to process like this if the key name == the wildcard
+
                     //we have a wild card
                     var expanded = ExpandStar(currentKey, pathSegment).ToList();
+                    Debug.WriteLine($"pathSegment: {pathSegment}, expanded: {string.Join(",", expanded)}");
 
-                    //take the expanded paths and append what is left, then continue
-                    var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
-
-                    foreach (var exp in expanded)
+                    if (expanded.Count == 1 && expanded.First() == pathSegment)
                     {
-                        var tempPath = $"{exp}\\{whatsLeft}";
-                        var tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
+                        //we passed something in, and got back itself, so add it
+                        keyPaths.Add($"{currentKey.KeyPath}\\{pathSegment}");
+                       
+                    }
+                    else
+                    {
+                        //take the expanded paths and append what is left, then continue
+                        var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
 
-                        if (GetKey(tempPFullath) != null)
+                        foreach (var exp in expanded)
                         {
-                            //the path as is exists
-                            keyPaths.Add(tempPFullath);
-                        }
+                            var tempPath = $"{exp}\\{whatsLeft}";
+                            var tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
 
-                        if (tempPath.Contains("*") && keyPaths.Contains(tempPFullath) == false)
-                        {
-                            var asd = ExpandKeyPath(tempPath);
-                            foreach (var aa in asd)
+                            if (GetKey(tempPFullath) != null)
                             {
-                                keyPaths.Add(aa);
+                                //the path as is exists
+                                keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                            }
+
+                            if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+                            {
+                                var asd = ExpandKeyPath(tempPFullath);
+                                foreach (var aa in asd)
+                                {
+                                    keyPaths.Add(aa.Trim('\\', '/'));
+                                }
                             }
                         }
                     }
+
+                    
 
                 }
                 else
                 {
                     //no star, so just move pointer up if it exists
                     var tempKey =
-                        currentKey.SubKeys.SingleOrDefault(t => t.KeyName.ToUpperInvariant() == pathSegment.ToUpper());
+                        currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
+                            pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
+
                     if (tempKey == null)
                     {
                         //the segment was not found, so return what we have
@@ -1093,7 +1127,7 @@ namespace Registry
         {
             var keyPaths = new List<string>();
 
-            if (starString.Equals("*"))
+            if (starString.Equals(wildCardChar))
             {
                 //all subkeys
                 foreach (var startKeySubKey in key.SubKeys)
@@ -1107,7 +1141,7 @@ namespace Registry
                     keyPaths.Add(cleanKey);
                 }
             }
-            else if (starString.Contains("*") == false)
+            else if (starString.Contains(wildCardChar) == false)
             {
                 //no wildcard at all
                 var asdas = key.SubKeys.SingleOrDefault(t =>
@@ -1127,7 +1161,7 @@ namespace Registry
             else
             {
                 //we have a wildcard, so find out some things about this segment, namely, where the * is
-                var starPos1 = starString.IndexOf("*", StringComparison.InvariantCultureIgnoreCase);
+                var starPos1 = starString.IndexOf(wildCardChar, StringComparison.InvariantCultureIgnoreCase);
 
                 var leftOfStar = starString.Substring(0, starPos1);
                 var rightOfStar = starString.Substring(starPos1 + 1);
@@ -1159,9 +1193,10 @@ namespace Registry
                     var cleanKey = startKeySubKey.KeyName;
                     if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
                     {
+                    
                         cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
                     }
-
+                    Debug.WriteLine($"cleanKey: {cleanKey}");
                     keyPaths.Add(cleanKey);
                 }
             }

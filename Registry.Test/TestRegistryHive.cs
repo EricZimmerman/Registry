@@ -82,17 +82,20 @@ namespace Registry.Test
           
         }
 
+      //  private const string wildCardChar = "¿";
+        private const string wildCardChar = "*";
+
         [Test]
         public void ExpandoTestOneOff()
         {
 
-            var f = @"D:\SynologyDrive\Registry\AdminUsrClass.dat";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\AdminUsrClass.dat";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\*\\0\\0");
+            var keys = r.ExpandKeyPath($"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\{wildCardChar}\\0\\0");
 
             Check.That(keys.Count).IsEqualTo(3);
             Check.That(keys.First()).IsEqualTo("S-1-5-21-2036804247-3058324640-2116585241-500_Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0\\0\\0");
@@ -104,13 +107,13 @@ namespace Registry.Test
         public void ExpandoTestOneOff2()
         {
             //Local Settings\Software\Microsoft\Windows\Shell\BagMRU\2\0\0
-          var       f = @"D:\SynologyDrive\Registry\SOFTWARE_win10";
+          var       f = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
            var      r = new RegistryHive(f);
                  r.RecoverDeleted = true;
             
                  r.ParseHive();
 
-         var      keys = r.ExpandKeyPath("Classes\\*\\OpenWithProgIds");
+         var      keys = r.ExpandKeyPath($"Classes\\{wildCardChar}\\OpenWithProgIds");
 
                    Check.That(keys.Count).IsEqualTo(95);
             Check.That(keys.First()).IsEqualTo("ROOT\\Classes\\.3g2\\OpenWithProgIds");
@@ -121,30 +124,30 @@ namespace Registry.Test
         public void ExpandoTestOneOff3()
         {
             //Local Settings\Software\Microsoft\Windows\Shell\BagMRU\2\0\0
-            var       f = @"D:\SynologyDrive\Registry\SOFTWARE_win10";
+            var       f = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
             var      r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var      keys = r.ExpandKeyPath("Classes\\*\\ShellEx");
+            var      keys = r.ExpandKeyPath($"Classes\\{wildCardChar}\\ShellEx");
 
-            Check.That(keys.Count).IsEqualTo(188);
-            Check.That(keys.First()).IsEqualTo("Classes\\*\\ShellEx");
-            Check.That(keys.Last()).IsEqualTo("ROOT\\Classes\\.zip\\OpenWithProgIds");
+            Check.That(keys.Count).IsEqualTo(187);
+            Check.That(keys.First()).IsEqualTo("ROOT\\Classes\\*\\ShellEx");
+            Check.That(keys.Last()).IsEqualTo("ROOT\\Classes\\WSHFile\\ShellEx");
         }
 
         [Test]
         public void ExpandoTestOneOff4()
         {
 
-            var f = @"D:\SynologyDrive\Registry\AdminUsrClass.dat";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\AdminUsrClass.dat";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\*\\Shell\\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
+            var keys = r.ExpandKeyPath($"Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\{wildCardChar}\\Shell\\" + "{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
 
             Check.That(keys.Count).IsEqualTo(15);
 
@@ -154,13 +157,13 @@ namespace Registry.Test
         public void ExpandoTestOneOff5()
         {
 
-            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\System*");
+            var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\System{wildCardChar}");
 
             Check.That(keys.Count).IsEqualTo(7);
         }
@@ -169,13 +172,13 @@ namespace Registry.Test
         public void ExpandoTestOneOff6()
         {
 
-            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\*up");
+            var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\{wildCardChar}up");
 
             Check.That(keys.Count).IsEqualTo(2);
         }
@@ -184,47 +187,84 @@ namespace Registry.Test
         public void ExpandoTestOneOff7()
         {
 
-            var f = @"D:\SynologyDrive\Registry\NTUSER_Loveall.DAT";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("AppEvents\\EventLabels\\System*tion");
+            var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\System{wildCardChar}tion");
 
             Check.That(keys.Count).IsEqualTo(3);
         }
 
         [Test]
-        public void ExpandoTest01()
+        public void ExpandoTestOneOff8()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\UsrClassXWFPath.dat";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var keys = r.ExpandKeyPath("ControlSet00*\\Services");
+            var keys = r.ExpandKeyPath($"{wildCardChar}\\shell\\{wildCardChar}\\command");
+
+            Check.That(keys.Count).IsEqualTo(224);
+
+            Check.That(keys.First()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\*\\shell\\editpad\\command");
+            Check.That(keys.Last()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\ZoomRecording\\shell\\open\\command");
+        }
+
+        [Test]
+        public void ExpandoTestOneOff9()
+        {
+
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\UsrClassXWFPath.dat";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath($"Extensions\\ContractId\\Windows.Launch\\PackageId\\{wildCardChar}\\ActivatableClassId");
+
+            Check.That(keys.Count).IsEqualTo(73);
+
+           
+        }
+
+
+
+        [Test]
+        public void ExpandoTest01()
+        {
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+            var keys = r.ExpandKeyPath($"ControlSet00{wildCardChar}\\Services");
 
             Check.That(keys.Count).IsEqualTo(2);
-            Check.That(keys.First()).IsEqualTo("ControlSet001\\Services");
-            Check.That(keys.Last()).IsEqualTo("ControlSet002\\Services");
+            Check.That(keys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Services");
+            Check.That(keys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services");
         }
 
          [Test]
         public void ExpandoTest02()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
           
-            var otherKeys = r.ExpandKeyPath("ControlSet002\\Services\\aic*");
+            var otherKeys = r.ExpandKeyPath($"ControlSet002\\Services\\aic{wildCardChar}");
             Check.That(otherKeys.Count).IsEqualTo(2);
-            Check.That(otherKeys.First()).IsEqualTo(@"ControlSet002\Services\aic78u2");
-            Check.That(otherKeys.Last()).IsEqualTo(@"ControlSet002\Services\aic78xx");
+            Check.That(otherKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services\\aic78u2");
+            Check.That(otherKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services\\aic78xx");
 
   
         }
@@ -232,30 +272,46 @@ namespace Registry.Test
           [Test]
         public void ExpandoTest03()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var evenMoreKeys = r.ExpandKeyPath(@"ControlSet001\Control\IDConfigDB\*\0001");
+            var evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0001");
             Check.That(evenMoreKeys.Count).IsEqualTo(2);
-            Check.That(evenMoreKeys.First()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Alias\0001");
-            Check.That(evenMoreKeys.Last()).IsEqualTo(@"ControlSet001\Control\IDConfigDB\Hardware Profiles\0001");
+            Check.That(evenMoreKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001");
+            Check.That(evenMoreKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001");
 
+        }
+
+        [Test]
+        public void ExpandoTest03a()
+        {
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            
+            r.ParseHive();
+
+           
+          var  evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0{wildCardChar}");
+            Check.That(evenMoreKeys.Count).IsEqualTo(3);
+            Check.That(evenMoreKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001");
+            Check.That(evenMoreKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001");
         }
 
         
         [Test]
         public void ExpandoTest04()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var otherKeys2 = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86");
+            var otherKeys2 = r.ExpandKeyPath($"ControlSet002\\Services\\Avg{wildCardChar}x86");
             Check.That(otherKeys2.Count).IsEqualTo(3);
           //  Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86");
         //    Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86");
@@ -266,55 +322,55 @@ namespace Registry.Test
         [Test]
         public void ExpandoTest05()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
          
-            var shouldNotExist = r.ExpandKeyPath(@"ControlSet002\Services\Avg*x86\DoesNotExist");
+            var shouldNotExist = r.ExpandKeyPath($"ControlSet002\\Services\\Avg{wildCardChar}x86\\DoesNotExist");
             Check.That(shouldNotExist.Count).IsEqualTo(0);
         }
 
         [Test]
         public void ExpandoTest06()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
          
-            var endCheck = r.ExpandKeyPath(@"Setup\AllowStart\*ss");
+            var endCheck = r.ExpandKeyPath($"Setup\\AllowStart\\{wildCardChar}ss");
             Check.That(endCheck.Count).IsEqualTo(2);
-            Check.That(endCheck.First()).IsEqualTo(@"Setup\AllowStart\Rpcss");
-            Check.That(endCheck.Last()).IsEqualTo(@"Setup\AllowStart\SamSs");
+            Check.That(endCheck.First()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\Rpcss");
+            Check.That(endCheck.Last()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs");
         }
 
         [Test]
         public void ExpandoTest07()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var endCheck2 = r.ExpandKeyPath(@"Setup\AllowStart\*mss");
+            var endCheck2 = r.ExpandKeyPath($"Setup\\AllowStart\\{wildCardChar}mss");
             Check.That(endCheck2.Count).IsEqualTo(1);
-
+            Check.That(endCheck2.First()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs");
         }
 
         [Test]
         public void ExpandoTest08()
         {
-            var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+            var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
             var r = new RegistryHive(f);
             r.RecoverDeleted = true;
             
             r.ParseHive();
 
-            var endCheck3 = r.ExpandKeyPath(@"ControlSet002\Services\*\Parameters");
+            var endCheck3 = r.ExpandKeyPath($"ControlSet002\\Services\\{wildCardChar}\\Parameters");
      
             Check.That(endCheck3.Count).IsEqualTo(127);
         }
@@ -324,16 +380,16 @@ namespace Registry.Test
         public void ExpandoTest09()
         {
             
-            var f2 = @"C:\Temp\NTUSER.DAT";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\*\File MRU");
+            var keys2 = r2.ExpandKeyPath($"Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\{wildCardChar}\\File MRU");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
+            Check.That(keys2.First()).IsEqualTo(	"ROOT\\Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\File MRU");
 
         }
 
@@ -342,16 +398,16 @@ namespace Registry.Test
         public void ExpandoTest10()
         {
             
-            var f2 = @"C:\Temp\NTUSER.DAT";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"SOFTWARE\Microsoft\Office\*\*\User MRU\");
+            var keys2 = r2.ExpandKeyPath($"SOFTWARE\\Microsoft\\Office\\{wildCardChar}\\{wildCardChar}\\User MRU\\");
 
-            Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU");
+            Check.That(keys2.Count).IsEqualTo(3);
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU");
 
         }
 
@@ -359,16 +415,16 @@ namespace Registry.Test
         public void ExpandoTest11()
         {
             
-            var f2 = @"C:\Temp\SOFTWARE_loneWolf";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
+            var keys2 = r2.ExpandKeyPath($"WOW6432Node\\ODBC\\ODBCINST.INI\\Microsoft dBase Driver (*.dbf)");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)");
 
         }
 
@@ -376,16 +432,16 @@ namespace Registry.Test
         public void ExpandoTest12()
         {
             
-            var f2 = @"C:\Temp\NTUSER.DAT";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"SOFTWARE\Microsoft\Office\*\*\User MRU\*");
+            var keys2 = r2.ExpandKeyPath($"SOFTWARE\\Microsoft\\Office\\{wildCardChar}\\{wildCardChar}\\User MRU\\{wildCardChar}");
 
-            Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F");
+            Check.That(keys2.Count).IsEqualTo(3);
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4");
         }
 
         
@@ -394,31 +450,31 @@ namespace Registry.Test
         public void ExpandoTest13()
         {
             
-            var f2 = @"C:\Temp\NTUSER.DAT";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\*");
+            var keys2 = r2.ExpandKeyPath($"Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\{wildCardChar}");
 
             Check.That(keys2.Count).IsEqualTo(2);
-            Check.That(keys2.First()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\File MRU");
-            Check.That(keys2.Last()).IsEqualTo(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\Place MRU");
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\File MRU");
+            Check.That(keys2.Last()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\Place MRU");
         }
 
         [Test]
         public void ExpandoTest14()
         {
             
-            var f2 = @"C:\Temp\NTUSER.DAT";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
             //no wildcards should 
-            var keys2 = r2.ExpandKeyPath(@"Software\Microsoft\Office\16.0\Excel\User MRU\LiveId_2709CD201D69E509465D3C60D830CE2490A74738D87E3C8A95FEFEA94316F09F\");
+            var keys2 = r2.ExpandKeyPath($"Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\");
 
             Check.That(keys2.Count).IsEqualTo(1);
         }
@@ -427,33 +483,33 @@ namespace Registry.Test
         public void ExpandoTest15()
         {
             
-            var f2 = @"C:\Temp\SYSTEM_loneWolf";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SYSTEM_loneWolf";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
-            var keys2 = r2.ExpandKeyPath(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl");
+            var keys2 = r2.ExpandKeyPath("ControlSet001\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}" + $"\\0001\\Ndi\\Params\\{wildCardChar}FlowControl");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl");
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl");
         }
 
         [Test]
         public void ExpandoTest16()
         {
             
-            var f2 = @"C:\Temp\SYSTEM_loneWolf";
+            var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SYSTEM_loneWolf";
             var r2 = new RegistryHive(f2);
             r2.RecoverDeleted = true;
             
             r2.ParseHive();
 
             //TODO try to get this to work, if you do, remove WithoutWildCard
-            var keys2 = r2.ExpandKeyPath(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\*");
+            var keys2 = r2.ExpandKeyPath("ControlSet001\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}"+ $"\\0001\\Ndi\\Params\\*FlowControl\\{wildCardChar}");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum");
+            Check.That(keys2.First()).IsEqualTo(@"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum");
         }
 
 
