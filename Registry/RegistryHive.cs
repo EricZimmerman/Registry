@@ -1040,37 +1040,33 @@ namespace Registry
             var pathSegmentPointer = 1;
             foreach (var pathSegment in pathSegments)
             {
-//                if (pathSegment.Equals(wildCardChar))
-//                {
-//                    //does the key treated as NOT a wildcard exist?
-//                    Debug.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//                    //
-//
-//
-//
-//
-////                    var evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0001");
-////                    Check.That(evenMoreKeys.Count).IsEqualTo(2);
-////                    Check.That(evenMoreKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001");
-////                    Check.That(evenMoreKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001");
-//                }
-//                else //pathSegment.Equals(wildCardChar) == false &&
                 if ( pathSegment.Contains(wildCardChar))
                 {
                     //we do not want to process like this if the key name == the wildcard
 
                     //we have a wild card
                     var expanded = ExpandStar(currentKey, pathSegment).ToList();
-                    Debug.WriteLine($"pathSegment: {pathSegment}, expanded: {string.Join(",", expanded)}");
+                //    Debug.WriteLine($"pathSegment: {pathSegment}, expanded: {string.Join(",", expanded)}");
 
-                    if (expanded.Count == 1 && expanded.First() == pathSegment)
+                    var removedSelf = false;
+
+                    if (expanded.Contains(pathSegment))
                     {
                         //we passed something in, and got back itself, so add it
-                        keyPaths.Add($"{currentKey.KeyPath}\\{pathSegment}");
-                       
+                        if (pathSegmentPointer == pathSegments.Length)
+                        {
+                            keyPaths.Add($"{currentKey.KeyPath}\\{pathSegment}");
+                        }
+                        
+
+                        expanded.Remove(pathSegment);
+                        //here we need to change from count == 1 to does the list contain the path we sent in? if so, pull that entry from the list and process it singly
+
+                        removedSelf = true;
+
                     }
-                    else
-                    {
+                    
+                    
                         //take the expanded paths and append what is left, then continue
                         var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
 
@@ -1094,8 +1090,71 @@ namespace Registry
                                 }
                             }
                         }
-                    }
 
+
+                        if (removedSelf)
+                        {
+                            //move current key up one since we already accounted for it
+                            var tempKey =
+                                currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
+                                    pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
+
+                            if (tempKey == null)
+                            {
+                              throw new Exception();
+                            }
+
+                            currentKey = tempKey;
+
+                 
+
+                           var tempSkip = pathSegmentPointer;
+
+                           if (pathSegmentPointer == pathSegments.Length)
+                           {
+                               tempSkip += 1;
+                           }
+
+
+                           whatsLeft = string.Join("\\", pathSegments.Skip(tempSkip));
+                            var tempPFullath = $"{currentKey.KeyPath}\\{whatsLeft}";
+
+                            Debug.WriteLine($"Whatsleft: {whatsLeft} tempPFullath: {tempPFullath}");
+
+                            if (GetKey(tempPFullath) != null)
+                            {
+                                //the path as is exists
+                                keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                            }
+
+                            if (whatsLeft.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+                            {
+                                var expanded2 = ExpandStar(currentKey, whatsLeft).ToList();
+
+                                foreach (var exp in expanded2)
+                                {
+                                    var tempPath = $"{exp}\\{whatsLeft}";
+                                     tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
+
+                                    if (GetKey(tempPFullath) != null)
+                                    {
+                                        //the path as is exists
+                                        keyPaths.Add(tempPFullath.Trim('\\', '/'));
+                                    }
+
+                                    if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
+                                    {
+                                        var asd1 = ExpandKeyPath(tempPFullath);
+                                        foreach (var aa in asd1)
+                                        {
+                                            keyPaths.Add(aa.Trim('\\', '/'));
+                                        }
+                                    }
+                                }
+
+                              
+                            }
+                        }
                     
 
                 }

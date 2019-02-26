@@ -133,8 +133,8 @@ namespace Registry.Test
             var      keys = r.ExpandKeyPath($"Classes\\{wildCardChar}\\ShellEx");
 
             Check.That(keys.Count).IsEqualTo(187);
-            Check.That(keys.First()).IsEqualTo("ROOT\\Classes\\*\\ShellEx");
-            Check.That(keys.Last()).IsEqualTo("ROOT\\Classes\\WSHFile\\ShellEx");
+            Check.That(keys.First()).IsEqualTo("ROOT\\Classes\\.3g2\\ShellEx");
+            Check.That(keys.Last()).IsEqualTo("ROOT\\Classes\\*\\ShellEx");
         }
 
         [Test]
@@ -212,8 +212,8 @@ namespace Registry.Test
 
             Check.That(keys.Count).IsEqualTo(224);
 
-            Check.That(keys.First()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\*\\shell\\editpad\\command");
-            Check.That(keys.Last()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\ZoomRecording\\shell\\open\\command");
+            Check.That(keys.First()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\7-Zip.001\\shell\\open\\command");
+            Check.That(keys.Last()).IsEqualTo("S-1-5-21-238543598-4054144643-4261915534-1114_Classes\\*\\shell\\Open in X-Ways Forensics\\command");
         }
 
         [Test]
@@ -509,7 +509,7 @@ namespace Registry.Test
             var keys2 = r2.ExpandKeyPath("ControlSet001\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}"+ $"\\0001\\Ndi\\Params\\*FlowControl\\{wildCardChar}");
 
             Check.That(keys2.Count).IsEqualTo(1);
-            Check.That(keys2.First()).IsEqualTo(@"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum");
+            Check.That(keys2.Last()).IsEqualTo(@"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum");
         }
 
 
