@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1015,7 +1014,6 @@ namespace Registry
 
         public HashSet<string> ExpandKeyPath(string wildCardPath)
         {
-            //Debug.WriteLine($"wildCardPath: {wildCardPath}");
             wildCardPath = wildCardPath.Trim('\\', '/');
 
             var keyPaths = new HashSet<string>();
@@ -1027,8 +1025,6 @@ namespace Registry
                 keyPaths.Add(wildCardPath);
                 return keyPaths;
             }
-
-            //File.WriteAllLines(@"C:\temp\keys.txt",_keyPathKeyMap.Keys);
 
             if (wildCardPath.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()) == false)
             {
@@ -1045,16 +1041,10 @@ namespace Registry
 
             wildCardPath = Regex.Escape(wildCardPath);
 
-            Debug.WriteLine($"wildCardPath after: {wildCardPath}");
+            var pattern = $"^{wildCardPath.Replace("\\*", "[^\\\\]*?")}$";
 
-         var pattern = $"^{wildCardPath.Replace("\\*","[^\\\\]*?")}$";
-
-//         var ffff = $"C:\\temp\\{Guid.NewGuid().ToString()}.txt";
-//         File.WriteAllLines(ffff,_keyPathKeyMap.Keys);
-//         Debug.WriteLine(ffff);
-//         Debug.WriteLine($"pattern: {pattern}");
-
-            var regexPattern = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+            var regexPattern = new Regex(pattern,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
             foreach (var key in _keyPathKeyMap.Keys)
             {
@@ -1063,238 +1053,9 @@ namespace Registry
                     keyPaths.Add(key);
                 }
             }
-            
+
             return keyPaths;
         }
-
-
-//        public HashSet<string> ExpandKeyPathOld(string wildCardPath)
-//        {
-//            var keyPaths = new HashSet<string>();
-//
-//            wildCardPath = wildCardPath.Trim('\\', '/');
-//
-//            if (wildCardPath.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
-//            {
-//                wildCardPath = StripRootKeyNameFromKeyPath(wildCardPath);
-//            }
-//
-//            if (wildCardPath.Contains(wildCardChar) == false)
-//            {
-//                //a key was passed in and found, so what is there to do but return?
-//                keyPaths.Add(wildCardPath.Trim('\\', '/'));
-//                return keyPaths;
-//            }
-//
-//            var currentKey = Root;
-//
-//            var pathSegments = wildCardPath.Split('\\');
-//
-//            var pathSegmentPointer = 1;
-//            foreach (var pathSegment in pathSegments)
-//            {
-//                if (pathSegment.Contains(wildCardChar))
-//                {
-//                    //we have a wild card
-//                    var expanded = ExpandStar(currentKey, pathSegment).ToList();
-//
-//                    var removedSelf = false;
-//
-//                    if (expanded.Contains(pathSegment))
-//                    {
-//                        //we passed something in, and got back itself, so add it
-//                        if (pathSegmentPointer == pathSegments.Length)
-//                        {
-//                            keyPaths.Add($"{currentKey.KeyPath}\\{pathSegment}");
-//                        }
-//
-//                        expanded.Remove(pathSegment);
-//                        //here we need to change from count == 1 to does the list contain the path we sent in? if so, pull that entry from the list and process it singly
-//
-//                        removedSelf = true;
-//                    }
-//
-//                    //take the expanded paths and append what is left, then continue
-//                    var whatsLeft = string.Join("\\", pathSegments.Skip(pathSegmentPointer));
-//
-//                    foreach (var exp in expanded)
-//                    {
-//                        var tempPath = $"{exp}\\{whatsLeft}";
-//                        var tempFullPath = $"{currentKey.KeyPath}\\{tempPath}";
-//
-//                        if (GetKey(tempFullPath) != null)
-//                        {
-//                            //the path as is exists
-//                            keyPaths.Add(tempFullPath.Trim('\\', '/'));
-//                        }
-//
-//                        if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempFullPath) == false)
-//                        {
-//                            var asd = ExpandKeyPath(tempFullPath);
-//                            foreach (var aa in asd)
-//                            {
-//                                keyPaths.Add(aa.Trim('\\', '/'));
-//                            }
-//                        }
-//                    }
-//
-//
-//                    if (removedSelf)
-//                    {
-//                        //move current key up one since we already accounted for it
-//                        var tempKey =
-//                            currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
-//                                pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
-//                     
-//                        currentKey = tempKey;
-//
-//                        var tempSkip = pathSegmentPointer;
-//
-//                        if (pathSegmentPointer == pathSegments.Length)
-//                        {
-//                            tempSkip += 1;
-//                        }
-//
-//                        whatsLeft = string.Join("\\", pathSegments.Skip(tempSkip));
-//                        var tempPFullath = $"{currentKey.KeyPath}\\{whatsLeft}";
-//
-//                        if (GetKey(tempPFullath) != null)
-//                        {
-//                            //the path as is exists
-//                            keyPaths.Add(tempPFullath.Trim('\\', '/'));
-//                        }
-//
-//                        if (whatsLeft.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
-//                        {
-//                            var expanded2 = ExpandStar(currentKey, whatsLeft).ToList();
-//
-//                            foreach (var exp in expanded2)
-//                            {
-//                                var tempPath = $"{exp}\\{whatsLeft}";
-//                                tempPFullath = $"{currentKey.KeyPath}\\{tempPath}";
-//
-//                                if (GetKey(tempPFullath) != null)
-//                                {
-//                                    //the path as is exists
-//                                    keyPaths.Add(tempPFullath.Trim('\\', '/'));
-//                                }
-//
-//                                if (tempPath.Contains(wildCardChar) && keyPaths.Contains(tempPFullath) == false)
-//                                {
-//                                    var asd1 = ExpandKeyPath(tempPFullath);
-//                                    foreach (var aa in asd1)
-//                                    {
-//                                        keyPaths.Add(aa.Trim('\\', '/'));
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//                else
-//                {
-//                    //no star, so just move pointer up if it exists
-//                    var tempKey =
-//                        currentKey.SubKeys.SingleOrDefault(t => string.Equals(t.KeyName.ToUpperInvariant(),
-//                            pathSegment.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase));
-//
-//                    if (tempKey == null)
-//                    {
-//                        //the segment was not found, so return what we have
-//                        return keyPaths;
-//                    }
-//                    //it was found, so move pointer up
-//
-//                    currentKey = tempKey;
-//                }
-//
-//                pathSegmentPointer += 1;
-//            }
-//
-//            return keyPaths;
-//        }
-//
-//        private IEnumerable<string> ExpandStar(RegistryKey key, string starString)
-//        {
-//            var keyPaths = new List<string>();
-//
-//            if (starString.Equals(wildCardChar))
-//            {
-//                //all subkeys
-//                foreach (var startKeySubKey in key.SubKeys)
-//                {
-//                    var cleanKey = startKeySubKey.KeyName;
-//                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
-//                    {
-//                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
-//                    }
-//
-//                    keyPaths.Add(cleanKey);
-//                }
-//            }
-//            else if (starString.Contains(wildCardChar) == false)
-//            {
-//                //no wildcard at all
-//                var asdas = key.SubKeys.SingleOrDefault(t =>
-//                    t.KeyName.ToUpperInvariant() == starString.ToUpperInvariant());
-//
-//                if (asdas != null)
-//                {
-//                    var cleanKey = asdas.KeyName;
-//                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
-//                    {
-//                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
-//                    }
-//
-//                    keyPaths.Add(cleanKey);
-//                }
-//            }
-//            else
-//            {
-//                //we have a wildcard, so find out some things about this segment, namely, where the * is
-//                var starPos1 = starString.IndexOf(wildCardChar, StringComparison.InvariantCultureIgnoreCase);
-//
-//                var leftOfStar = starString.Substring(0, starPos1);
-//                var rightOfStar = starString.Substring(starPos1 + 1);
-//
-//                //now we have to look for any keys based on what we have here
-//                IEnumerable<RegistryKey> matches;
-//
-//                if (leftOfStar.Length > 0 && rightOfStar.Length == 0)
-//                {
-//                    matches = key.SubKeys.Where(t =>
-//                        t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant())).ToList();
-//                }
-//                else if (leftOfStar.Length == 0 && rightOfStar.Length > 0)
-//                {
-//                    //star is at front
-//                    matches = key.SubKeys.Where(t =>
-//                        t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
-//                }
-//                else
-//                {
-//                    //star is in middle somewhere (leftOfStar.Length>0 && rightOfStar.Length>0)
-//                    matches = key.SubKeys.Where(t =>
-//                        t.KeyName.ToUpperInvariant().StartsWith(leftOfStar.ToUpperInvariant()) &&
-//                        t.KeyName.ToUpperInvariant().EndsWith(rightOfStar.ToUpperInvariant())).ToList();
-//                }
-//
-//                foreach (var startKeySubKey in matches)
-//                {
-//                    var cleanKey = startKeySubKey.KeyName;
-//                    if (cleanKey.ToUpperInvariant().StartsWith(Root.KeyName.ToUpperInvariant()))
-//                    {
-//                        cleanKey = StripRootKeyNameFromKeyPath(cleanKey);
-//                    }
-//
-//                   // Debug.WriteLine($"cleanKey: {cleanKey}");
-//                    keyPaths.Add(cleanKey);
-//                }
-//            }
-//
-//            return keyPaths;
-//        }
-
 
         /// <summary>
         ///     Associates vk records with NK records and builds a hierarchy of nk records
@@ -1428,7 +1189,7 @@ namespace Registry
                     //         Logger.Trace("Looking for vk records for nk record at absolute offset 0x{0:X}", nk.AbsoluteOffset);
 
 
-                    var valOffsetIndex = 0;
+                  //  var valOffsetIndex = 0;
                     //For each value offset, get the vk record if it exists, create a KeyValue, and assign it to the current RegistryKey
                     foreach (var valueOffset in nk.ValueOffsets)
                     {
@@ -1471,7 +1232,7 @@ namespace Registry
 
                     deletedRegistryKeys.Add(nk.RelativeOffset, regKey);
                 }
-                catch (Exception ex) //ncrunch: no coverage
+                catch (Exception ) //ncrunch: no coverage
                 {
 //ncrunch: no coverage
                     //             Logger.Trace( //ncrunch: no coverage

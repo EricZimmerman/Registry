@@ -261,25 +261,25 @@ namespace Registry
             //todo make this work
             return 0;
 
-            if (classcellId == 0)
-            {
-                return 0;
-            }
-
-            var dataLenBytes = _hive.ReadBytesFromHive(classcellId + 4096, 4);
-            var dataLen = BitConverter.ToUInt32(dataLenBytes, 0);
-            var size = (int) dataLen;
-            size = Math.Abs(size);
-
-            var dn = new DataNode(_hive.ReadBytesFromHive(classcellId + 4096, size), classcellId);
-
-            //write it out, return offset
-            CheckhbinSize(dn.RawBytes.Length);
-            dn.RawBytes.CopyTo(_hbin, _currentOffsetInHbin);
-
-            _currentOffsetInHbin += dn.RawBytes.Length;
-
-            return _currentOffsetInHbin;
+//            if (classcellId == 0)
+//            {
+//                return 0;
+//            }
+//
+//            var dataLenBytes = _hive.ReadBytesFromHive(classcellId + 4096, 4);
+//            var dataLen = BitConverter.ToUInt32(dataLenBytes, 0);
+//            var size = (int) dataLen;
+//            size = Math.Abs(size);
+//
+//            var dn = new DataNode(_hive.ReadBytesFromHive(classcellId + 4096, size), classcellId);
+//
+//            //write it out, return offset
+//            CheckhbinSize(dn.RawBytes.Length);
+//            dn.RawBytes.CopyTo(_hbin, _currentOffsetInHbin);
+//
+//            _currentOffsetInHbin += dn.RawBytes.Length;
+//
+//            return _currentOffsetInHbin;
         }
 
         private int ProcessValue(KeyValue value)
