@@ -286,7 +286,6 @@ namespace Registry
             return bytes;
         }
 
-      //  CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc);
 
       private int CalculateCheckSum(byte[] bytes)
       {
@@ -301,7 +300,7 @@ namespace Registry
 
           return xsum;
       }
-}
+
 
         /// <summary>
         ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
