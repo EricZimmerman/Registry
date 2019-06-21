@@ -269,8 +269,12 @@ namespace Registry
                 Buffer.BlockCopy(seqBytes, 0, bytes, 0x4, 0x4); //Primary #
                 Buffer.BlockCopy(seqBytes, 0, bytes, 0x8, 0x4); //Secondary #
 
+                var newchecksum = CalculateCheckSum(bytes);
+                var newcheckBytes = BitConverter.GetBytes(newchecksum);
+                Buffer.BlockCopy(newcheckBytes,0,bytes,0x1fc,4);
+
                 Logger.Info(
-                    $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}");
+                    $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}. New ChecksumL 0x{newchecksum:X}");
             }
 
             if (updateExistingData)
@@ -281,6 +285,23 @@ namespace Registry
 
             return bytes;
         }
+
+      //  CheckSum = BitConverter.ToInt32(rawBytes, 0x1fc);
+
+      private int CalculateCheckSum(byte[] bytes)
+      {
+
+          var index = 0;
+          var xsum = 0;
+          while (index <= 0x1fb)
+          {
+              xsum ^= BitConverter.ToInt32(bytes, index);
+              index += 0x04;
+          }
+
+          return xsum;
+      }
+}
 
         /// <summary>
         ///     Given a set of Registry transaction logs, apply them in order to an existing hive's data
