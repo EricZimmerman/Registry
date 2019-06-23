@@ -10,7 +10,7 @@ namespace Registry.Test
         [Test]
         public void ShouldHavePaddingLengthOfZeroWhenRecordIsFree()
         {
-            var bcd = new RegistryHive(@"..\..\..\Hives\BCD");
+            var bcd = new RegistryHive(@".\Hives\BCD");
             bcd.FlushRecordListsAfterParse = false;
             bcd.RecoverDeleted = true;
             bcd.ParseHive();
@@ -24,7 +24,7 @@ namespace Registry.Test
         [Test]
         public void ShouldHaveUnableToDetermineName()
         {
-            var usrClassBeef = new RegistryHive(@"..\..\..\Hives\UsrClass BEEF000E.dat");
+            var usrClassBeef = new RegistryHive(@".\Hives\UsrClass BEEF000E.dat");
             usrClassBeef.RecoverDeleted = true;
             usrClassBeef.FlushRecordListsAfterParse = false;
             usrClassBeef.ParseHive();
@@ -40,7 +40,7 @@ namespace Registry.Test
         [Test]
         public void ShouldVerifyNkRecordProperties()
         {
-            var sam = new RegistryHive(@"..\..\..\Hives\SAM");
+            var sam = new RegistryHive(@".\Hives\SAM");
             sam.FlushRecordListsAfterParse = false;
             sam.ParseHive();
 
@@ -56,7 +56,8 @@ namespace Registry.Test
 
             Check.That(key.KeyName).IsEqualTo("Domains");
             Check.That(key.KeyPath).IsEqualTo(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains");
-            Check.That(key.LastWriteTime.ToString()).IsEqualTo("7/3/2014 6:05:37 PM +00:00");
+            Check.That(key.LastWriteTime.HasValue).IsTrue();
+            Check.That(key.LastWriteTime.Value.ToString("MM-dd-yyyy")).IsEqualTo("07-03-2014");
             Check.That(key.NkRecord.Size).IsEqualTo(0x58);
             Check.That(key.NkRecord.RelativeOffset).IsEqualTo(0x418);
             Check.That(key.NkRecord.AbsoluteOffset).IsEqualTo(0x1418);

@@ -12,6 +12,7 @@ namespace Registry.Test
     public class TestTransactionLogs
     {
         [Test]
+        [Ignore("Unknown test source file.")]
         public void HiveTestAmcache()
         {
             var config = new LoggingConfiguration();
@@ -53,6 +54,7 @@ namespace Registry.Test
         }
 
         [Test]
+        [Ignore("Unknown test source file.")]
         public void HiveTests()
         {
             var dir = @"C:\Temp\hives";

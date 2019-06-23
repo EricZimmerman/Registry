@@ -19,7 +19,7 @@ namespace Registry.Test
         [Test]
         public void ExportToRegFormatRecursive()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
             var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             var exported = Helpers.ExportToReg(@"exportTest.reg", key, HiveTypeEnum.Sam, true);
@@ -30,21 +30,21 @@ namespace Registry.Test
         [Test]
         public void ExportToRegFormatSingleKey()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
             var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
             var exported = Helpers.ExportToReg(@"exportSamTest.reg", key, HiveTypeEnum.Sam, false);
 
             Check.That(exported).IsTrue();
 
-            var ntUser1OnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\NTUSER1.DAT");
+            var ntUser1OnDemand = new RegistryHiveOnDemand(@".\Hives\NTUSER1.DAT");
             key = ntUser1OnDemand.GetKey(@"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Console");
 
             exported = Helpers.ExportToReg(@"exportntuser1Test.reg", key, HiveTypeEnum.NtUser, false);
 
             Check.That(exported).IsTrue();
 
-            var security = new RegistryHiveOnDemand(@"..\..\..\Hives\SECURITY");
+            var security = new RegistryHiveOnDemand(@".\Hives\SECURITY");
             key =
                 security.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\Policy\Accounts\S-1-5-9");
@@ -53,7 +53,7 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            var systemOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SYSTEM");
+            var systemOnDemand = new RegistryHiveOnDemand(@".\Hives\SYSTEM");
             key =
                 systemOnDemand.GetKey(
                     @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Enum\ACPI\PNP0C02\1");
@@ -62,21 +62,21 @@ namespace Registry.Test
 
             Check.That(exported).IsTrue();
 
-            var usrClassFtp = new RegistryHiveOnDemand(@"..\..\..\Hives\UsrClass FTP.dat");
+            var usrClassFtp = new RegistryHiveOnDemand(@".\Hives\UsrClass FTP.dat");
             key = usrClassFtp.GetKey(@"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\.3g2");
 
             exported = Helpers.ExportToReg(@"exportusrTest.reg", key, HiveTypeEnum.UsrClass, false);
 
             Check.That(exported).IsTrue();
 
-            var samDupeNameOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM_DUPENAME");
+            var samDupeNameOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM_DUPENAME");
             key = samDupeNameOnDemand.GetKey(@"SAM\SAM\Domains\Account\Aliases\000003E9");
 
             exported = Helpers.ExportToReg(@"exportotherTest.reg", key, HiveTypeEnum.Other, false);
 
             Check.That(exported).IsTrue();
 
-            var usrclassDeleted = new RegistryHive(@"..\..\..\Hives\UsrClassDeletedBags.dat");
+            var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
             usrclassDeleted.RecoverDeleted = true;
             usrclassDeleted.FlushRecordListsAfterParse = false;
             usrclassDeleted.ParseHive();
@@ -92,14 +92,14 @@ namespace Registry.Test
         [Test]
         public void ExportUsrClassToCommonFormatWithDeleted()
         {
-            var usrclassDeleted = new RegistryHive(@"..\..\..\Hives\UsrClassDeletedBags.dat");
+            var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
             usrclassDeleted.RecoverDeleted = true;
             usrclassDeleted.FlushRecordListsAfterParse = false;
             usrclassDeleted.ParseHive();
 
             usrclassDeleted.ExportDataToCommonFormat("UsrClassDeletedExport.txt", true);
 
-            usrclassDeleted = new RegistryHive(@"..\..\..\Hives\UsrClassDeletedBags.dat");
+            usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
             usrclassDeleted.FlushRecordListsAfterParse = true;
             usrclassDeleted.ParseHive();
 
@@ -109,7 +109,7 @@ namespace Registry.Test
         [Test]
         public void GetEnumFromDescriptionAndViceVersa()
         {
-            var samOnDemand = new RegistryHiveOnDemand(@"..\..\..\Hives\SAM");
+            var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
             var desc = Helpers.GetDescriptionFromEnumValue(samOnDemand.HiveType);
 
             var en = Helpers.GetEnumValueFromDescription<HiveTypeEnum>(desc);
@@ -129,7 +129,7 @@ namespace Registry.Test
         [Test]
         public void ShouldCatchNkRecordThatsTooSmallFromSlackSpace()
         {
-            var usrclass = new RegistryHive(@"..\..\..\Hives\ERZ_Win81_UsrClass.dat");
+            var usrclass = new RegistryHive(@".\Hives\ERZ_Win81_UsrClass.dat");
             usrclass.RecoverDeleted = true;
             usrclass.ParseHive();
         }
@@ -137,7 +137,7 @@ namespace Registry.Test
         [Test]
         public void ShouldCatchSlackRecordTooSmallToGetSignatureFrom()
         {
-            var usrclass = new RegistryHive(@"..\..\..\Hives\UsrClassJVM.dat");
+            var usrclass = new RegistryHive(@".\Hives\UsrClassJVM.dat");
             usrclass.RecoverDeleted = true;
             usrclass.ParseHive();
         }
@@ -145,7 +145,7 @@ namespace Registry.Test
         [Test]
         public void ShouldCatchVkRecordThatsTooSmallFromSlackSpace()
         {
-            var usrclass = new RegistryHive(@"..\..\..\Hives\NTUSER slack.DAT");
+            var usrclass = new RegistryHive(@".\Hives\NTUSER slack.DAT");
             usrclass.RecoverDeleted = true;
             usrclass.ParseHive();
         }
@@ -153,14 +153,14 @@ namespace Registry.Test
         [Test]
         public void ShouldFindAdbRecordWhileParsing()
         {
-            var usrclass = new RegistryHive(@"..\..\..\Hives\SYSTEM");
+            var usrclass = new RegistryHive(@".\Hives\SYSTEM");
             usrclass.ParseHive();
         }
 
         [Test]
         public void ShouldFindDataNode()
         {
-            var bcd = new RegistryHive(@"..\..\..\Hives\BCD");
+            var bcd = new RegistryHive(@".\Hives\BCD");
             bcd.FlushRecordListsAfterParse = false;
             bcd.RecoverDeleted = true;
             bcd.ParseHive();
@@ -176,7 +176,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindDbRecord()
         {
-            var system = new RegistryHive(@"..\..\..\Hives\System");
+            var system = new RegistryHive(@".\Hives\System");
             system.FlushRecordListsAfterParse = false;
             system.ParseHive();
 
@@ -195,7 +195,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindLfListRecord()
         {
-            var bcd = new RegistryHive(@"..\..\..\Hives\BCD");
+            var bcd = new RegistryHive(@".\Hives\BCD");
             bcd.FlushRecordListsAfterParse = false;
             bcd.RecoverDeleted = true;
             bcd.ParseHive();
@@ -209,7 +209,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindLhListRecord()
         {
-            var drivers = new RegistryHive(@"..\..\..\Hives\DRIVERS");
+            var drivers = new RegistryHive(@".\Hives\DRIVERS");
             drivers.FlushRecordListsAfterParse = false;
             drivers.RecoverDeleted = true;
             drivers.ParseHive();
@@ -223,7 +223,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindLiRecord()
         {
-            var usrClass1 = new RegistryHive(@"..\..\..\Hives\UsrClass 1.dat");
+            var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
             usrClass1.RecoverDeleted = true;
             usrClass1.FlushRecordListsAfterParse = false;
             usrClass1.ParseHive();
@@ -244,7 +244,7 @@ namespace Registry.Test
         [Test]
         public void ShouldFindRiRecord()
         {
-            var system = new RegistryHive(@"..\..\..\Hives\System");
+            var system = new RegistryHive(@".\Hives\System");
             system.FlushRecordListsAfterParse = false;
             system.ParseHive();
 
@@ -262,7 +262,7 @@ namespace Registry.Test
         [Test]
         public void ShouldIncreaseSoftParsingError()
         {
-            var usrclass = new RegistryHive(@"..\..\..\Hives\UsrClass-win7.dat");
+            var usrclass = new RegistryHive(@".\Hives\UsrClass-win7.dat");
             usrclass.RecoverDeleted = true;
 
             Check.That(usrclass.SoftParsingErrors).IsEqualTo(0);
@@ -291,7 +291,7 @@ namespace Registry.Test
         [Test]
         public void VerifyHeaderInfo()
         {
-            var sam = new RegistryHive(@"..\..\..\Hives\SAM");
+            var sam = new RegistryHive(@".\Hives\SAM");
             sam.FlushRecordListsAfterParse = false;
             sam.ParseHive();
 

@@ -44,7 +44,8 @@ namespace Registry
 
             if (!File.Exists(hivePath))
             {
-                throw new FileNotFoundException();
+                var fullPath =  Path.GetFullPath(hivePath);
+                throw new FileNotFoundException($"The specified file {fullPath} was not found.", fullPath);
             }
 
             var fileStream = new FileStream(hivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
