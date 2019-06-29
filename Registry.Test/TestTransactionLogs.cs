@@ -53,6 +53,31 @@ namespace Registry.Test
             File.WriteAllBytes(newName, newb);
         }
 
+//        [Test]
+//        public void Pooh()
+//        {
+//            var log1 = $"D:\\!downloads\\Pooh.hve.LOG1";
+//            var hive = $"D:\\!downloads\\Pooh.hve";
+//
+//            var logs = new List<string>();
+//            logs.Add(log1);
+//
+//            var hive1 = new RegistryHive(hive);
+//
+//            if (hive1.Header.PrimarySequenceNumber != hive1.Header.SecondarySequenceNumber)
+//            {
+//                Debug.WriteLine("");
+//                Debug.WriteLine(
+//                    $"File: {hive} Valid checksum: {hive1.Header.ValidateCheckSum()} Primary: 0x{hive1.Header.PrimarySequenceNumber:X} Secondary: 0x{hive1.Header.SecondarySequenceNumber:X}");
+//                var newb = hive1.ProcessTransactionLogs(logs);
+//
+//                var newName = hive + "_NONDIRTY";
+//
+//                File.WriteAllBytes(newName, newb);
+//            }
+//
+//        }
+
         [Test]
         [Ignore("Unknown test source file.")]
         public void HiveTests()

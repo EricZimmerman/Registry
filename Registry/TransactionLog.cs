@@ -222,13 +222,13 @@ namespace Registry
                     Logger.Debug($"Skipping transaction log entry with sequence # 0x{transactionLogEntry.SequenceNumber:X}. Hash verification failed");
                     continue;
                 }
-           //     Logger.Trace($"Processing log entry: {transactionLogEntry}");
+                //     Logger.Trace($"Processing log entry: {transactionLogEntry}");
 
                 NewSequenceNumber = transactionLogEntry.SequenceNumber;
 
                 foreach (var dirtyPage in transactionLogEntry.DirtyPages)
                 {
-               //     Logger.Trace($"Processing dirty page: {dirtyPage}");
+                    //     Logger.Trace($"Processing dirty page: {dirtyPage}");
 
                     Buffer.BlockCopy(dirtyPage.PageBytes, 0, hiveBytes, dirtyPage.Offset + baseOffset, dirtyPage.Size);
                 }

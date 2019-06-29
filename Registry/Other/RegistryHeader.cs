@@ -160,7 +160,7 @@ namespace Registry.Other
 
         public uint Type { get; }
 
-        public bool ValidateCheckSum()
+        public bool ValidateCheckSum(bool ignore = false)
         {
             return CheckSum == CalculatedChecksum;
         }

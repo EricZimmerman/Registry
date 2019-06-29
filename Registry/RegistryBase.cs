@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NLog;
 using Registry.Other;
 using static Registry.Other.Helpers;
@@ -11,6 +12,8 @@ namespace Registry
     {
         internal readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+        
+
         public RegistryBase()
         {
             throw new NotSupportedException("Call the other constructor and pass in the path to the Registry hive!");
@@ -18,6 +21,7 @@ namespace Registry
 
         public RegistryBase(byte[] rawBytes, string hivePath)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             FileBytes = rawBytes;
             HivePath = "None";
 
@@ -37,6 +41,7 @@ namespace Registry
 
         public RegistryBase(string hivePath)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             if (hivePath == null)
             {
                 throw new ArgumentNullException("hivePath cannot be null");

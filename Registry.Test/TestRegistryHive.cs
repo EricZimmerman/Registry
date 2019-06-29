@@ -29,6 +29,14 @@ namespace Registry.Test
             Check.That(sam.HardParsingErrors).IsEqualTo(0);
         }
 
+        [Test]
+        public void PoohTest()
+        {
+            var f = @"D:\SynologyDrive\Registry\Pooh\Pooh.hve";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+        }
         
         [Test]
         [Ignore("Unknown test source file.")]
