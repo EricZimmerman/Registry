@@ -236,9 +236,6 @@ namespace Registry.Cells
                         try
                         {
                             datablockRaw = _registryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
-
-                          
-
                         }
                         catch (Exception)
                         {
@@ -262,6 +259,12 @@ namespace Registry.Cells
                         datablockRaw = _registryHive.ReadBytesFromHive(4096 + OffsetToData, dataBlockSize);
 
                         var db = new DbListRecord(datablockRaw, 4096 + OffsetToData);
+
+                        if (db.Size == 0)
+                        {
+                            //nothing to do
+                            return new byte[0];
+                        }
 
                         // db now contains a pointer to where we can get db.NumberOfEntries offsets to our data and reassemble it
 
@@ -554,8 +557,8 @@ namespace Registry.Cells
                 }
                 else
                 {
-                    return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
-                        (int) _dataLengthInternal).ToArray();
+                        return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
+                            (int) _dataLengthInternal).ToArray();
                 }
 
                 if (IsFree)

@@ -37,6 +37,22 @@ namespace Registry.Test
             r.RecoverDeleted = true;
             r.ParseHive();
         }
+
+        [Test]
+        public void OneOffVal()
+        {
+            var f = @"C:\Users\eric\Desktop\RegistryExplorer - Failed to Load Hives\Stack\NTUSER.DAT_clean";
+            var r = new RegistryHive(f);
+            r.RecoverDeleted = true;
+            r.ParseHive();
+
+            var k = r.GetKey("Software\\Microsoft\\Windows\\CurrentVersion\\Search\\Flighting\\1");
+
+            foreach (var rUnassociatedRegistryValue in k.SubKeys)
+            {
+                Debug.WriteLine(rUnassociatedRegistryValue.KeyName);
+            }
+        }
         
         [Test]
         [Ignore("Unknown test source file.")]

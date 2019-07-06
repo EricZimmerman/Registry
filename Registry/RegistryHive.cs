@@ -19,8 +19,8 @@ namespace Registry
         private const string wildCardChar = "*";
         internal static int HardParsingErrorsInternal;
         internal static int SoftParsingErrorsInternal;
-        private readonly Dictionary<string, RegistryKey> _keyPathKeyMap = new Dictionary<string, RegistryKey>();
-        private readonly Dictionary<long, RegistryKey> _relativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
+        private  Dictionary<string, RegistryKey> _keyPathKeyMap = new Dictionary<string, RegistryKey>();
+        private  Dictionary<long, RegistryKey> _relativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
         private bool _parsed;
 
         /// <summary>
@@ -35,20 +35,12 @@ namespace Registry
         /// </summary>
         public RegistryHive(string hivePath) : base(hivePath)
         {
-            CellRecords = new Dictionary<long, ICellTemplate>();
-            ListRecords = new Dictionary<long, IListTemplate>();
 
-            DeletedRegistryKeys = new List<RegistryKey>();
-            UnassociatedRegistryValues = new List<KeyValue>();
         }
 
         public RegistryHive(byte[] rawBytes, string filePath) : base(rawBytes, filePath)
         {
-            CellRecords = new Dictionary<long, ICellTemplate>();
-            ListRecords = new Dictionary<long, IListTemplate>();
 
-            DeletedRegistryKeys = new List<RegistryKey>();
-            UnassociatedRegistryValues = new List<KeyValue>();
         }
 
         public bool RecoverDeleted { get; set; }
@@ -58,12 +50,12 @@ namespace Registry
         /// </summary>
         public List<RegistryKey> DeletedRegistryKeys { get; private set; }
 
-        public List<KeyValue> UnassociatedRegistryValues { get; }
+        public List<KeyValue> UnassociatedRegistryValues { get;  private set;}
 
         /// <summary>
         ///     List of all NK, VK, and SK cell records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, ICellTemplate> CellRecords { get; }
+        public Dictionary<long, ICellTemplate> CellRecords { get; private set; }
 
         /// <summary>
         ///     The total number of record parsing errors where the records were IsFree == false
@@ -76,7 +68,7 @@ namespace Registry
         /// <summary>
         ///     List of all DB, LI, RI, LH, and LF list records, both in use and free, as found in the hive
         /// </summary>
-        public Dictionary<long, IListTemplate> ListRecords { get; }
+        public Dictionary<long, IListTemplate> ListRecords { get;  private set;}
 
         public RegistryKey Root { get; private set; }
 
@@ -281,6 +273,9 @@ namespace Registry
             {
                 FileBytes = bytes;
                 Initialize(); //reprocess header
+                //deal with all the new data
+                _parsed = false;
+                ParseHive();
             }
 
             return bytes;
@@ -327,8 +322,7 @@ namespace Registry
             {
                 //get bytes for file
                 var b = File.ReadAllBytes(ofFileName);
-
-
+                
                 if (b.Length == 0)
                 {
                     continue;
@@ -836,6 +830,15 @@ namespace Registry
             {
                 throw new Exception("ParseHive already called");
             }
+
+            CellRecords = new Dictionary<long, ICellTemplate>();
+            ListRecords = new Dictionary<long, IListTemplate>();
+
+            DeletedRegistryKeys = new List<RegistryKey>();
+            UnassociatedRegistryValues = new List<KeyValue>();
+
+        _keyPathKeyMap = new Dictionary<string, RegistryKey>();
+         _relativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
 
             TotalBytesRead = 0;
 

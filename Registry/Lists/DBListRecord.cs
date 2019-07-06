@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using Registry.Other;
 
@@ -22,6 +23,12 @@ namespace Registry.Lists
         {
             RelativeOffset = relativeOffset;
             RawBytes = rawBytes;
+            if (rawBytes.Length == 0)
+            {
+               
+                _size = 0;
+                return;
+            }
             _size = BitConverter.ToInt32(rawBytes, 0);
         }
 
