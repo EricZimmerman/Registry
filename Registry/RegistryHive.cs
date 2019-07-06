@@ -273,6 +273,11 @@ namespace Registry
             {
                 FileBytes = bytes;
                 Initialize(); //reprocess header
+               
+                if (!_parsed)
+                {
+                    return bytes;
+                }
                 //deal with all the new data
                 _parsed = false;
                 ParseHive();
