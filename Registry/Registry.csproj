@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Eric Zimmerman</Authors>
+    <Company>Eric Zimmerman</Company>
+    <Product>Registry parser</Product>
+    <Description>Offline Registry hive parser, including transaction log support</Description>
+    <Copyright>Eric Zimmerman</Copyright>
+    <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
