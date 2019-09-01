@@ -266,7 +266,7 @@ namespace Registry
                 Buffer.BlockCopy(newcheckBytes,0,bytes,0x1fc,4);
 
                 Logger.Info(
-                    $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}. New ChecksumL 0x{newchecksum:X}");
+                    $"At least one transaction log was applied. Sequence numbers have been updated to 0x{maximumSequenceNumber:X4}. New Checksum: 0x{newchecksum:X}");
             }
 
             if (updateExistingData)
