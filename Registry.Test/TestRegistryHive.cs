@@ -5,6 +5,7 @@ using System.Linq;
 using NFluent;
 using NLog;
 using NUnit.Framework;
+using Registry.Cells;
 using Registry.Other;
 
 namespace Registry.Test
@@ -663,12 +664,17 @@ namespace Registry.Test
         }
 
         [Test]
-        [Ignore("Unknown test source file.")]
+        
         public void OneOff()
         {
-            var r = new RegistryHive(@"C:\Users\eric\Desktop\SAM");
+            var r = new RegistryHive(@"C:\temp\SYSTEM");
             r.RecoverDeleted = true;
+            r.FlushRecordListsAfterParse = false;
             r.ParseHive();
+
+            var sss = r.CellRecords.Values.OfType<NkCellRecord>().Where(f =>
+                (f.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) == NkCellRecord.FlagEnum.HiveEntryRootKey);
+
         }
 
 

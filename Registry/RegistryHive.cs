@@ -958,7 +958,7 @@ namespace Registry
             //here we are looking for the flag
             var rootNode =
                 CellRecords.Values.OfType<NkCellRecord>()
-                    .SingleOrDefault(
+                    .FirstOrDefault(
                         f =>
                             (f.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) ==
                             NkCellRecord.FlagEnum.HiveEntryRootKey);
