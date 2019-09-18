@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using NFluent;
 using NLog;
+using NLog.Config;
+using NLog.Targets;
 using NUnit.Framework;
 using Registry.Cells;
 using Registry.Other;
@@ -667,13 +669,30 @@ namespace Registry.Test
         
         public void OneOff()
         {
-            var r = new RegistryHive(@"C:\temp\SYSTEM");
+            var config = new LoggingConfiguration();
+            var loglevel = LogLevel.Info;
+
+            var layout = @"${message}";
+
+            var consoleTarget = new ColoredConsoleTarget();
+
+            config.AddTarget("console", consoleTarget);
+
+            consoleTarget.Layout = layout;
+
+            var rule1 = new LoggingRule("*", loglevel, consoleTarget);
+            config.LoggingRules.Add(rule1);
+
+            LogManager.Configuration = config;
+
+            var r = new RegistryHive(@"C:\Users\eric\Desktop\UsrClassStudent.datUp");
             r.RecoverDeleted = true;
-            r.FlushRecordListsAfterParse = false;
+
+            
+            
             r.ParseHive();
 
-            var sss = r.CellRecords.Values.OfType<NkCellRecord>().Where(f =>
-                (f.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) == NkCellRecord.FlagEnum.HiveEntryRootKey);
+            
 
         }
 

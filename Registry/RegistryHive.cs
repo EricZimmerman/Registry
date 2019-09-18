@@ -955,13 +955,10 @@ namespace Registry
             Logger.Debug("Initial processing complete. Building tree...");
 
             //The root node can be found by either looking at Header.RootCellOffset or looking for an nk record with HiveEntryRootKey flag set.
-            //here we are looking for the flag
             var rootNode =
                 CellRecords.Values.OfType<NkCellRecord>()
-                    .FirstOrDefault(
-                        f =>
-                            (f.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) ==
-                            NkCellRecord.FlagEnum.HiveEntryRootKey);
+                    .SingleOrDefault(
+                        f => f.RelativeOffset == (long) Header.RootCellOffset);
 
             if (rootNode == null)
             {
@@ -969,8 +966,10 @@ namespace Registry
                     "Unable to find root key based on flag HiveEntryRootKey. Looking for root key via Header.RootCellOffset value...");
                 rootNode =
                     CellRecords.Values.OfType<NkCellRecord>()
-                        .SingleOrDefault(
-                            f => f.RelativeOffset == (long) Header.RootCellOffset);
+                        .FirstOrDefault(
+                            f =>
+                                (f.Flags & NkCellRecord.FlagEnum.HiveEntryRootKey) ==
+                                NkCellRecord.FlagEnum.HiveEntryRootKey);
 
                 if (rootNode == null)
                 {
