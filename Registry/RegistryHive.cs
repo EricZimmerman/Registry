@@ -1452,7 +1452,7 @@ namespace Registry
 
                 if (IsBase64String2(keyValue.ValueData))
                 {
-                    yield return new SearchHit(registryKey.Value, keyValue, keyValue.ValueData, keyValue.ValueData);
+                    yield return new SearchHit(registryKey.Value, keyValue, keyValue.ValueData, keyValue.ValueData,SearchHit.HitType.Base64);
                 }
             }
         }
@@ -1537,14 +1537,14 @@ namespace Registry
                 {
                     if (Regex.IsMatch(registryKey.Value.KeyName, searchTerm, RegexOptions.IgnoreCase))
                     {
-                        yield return new SearchHit(registryKey.Value, null, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm, searchTerm,SearchHit.HitType.KeyName);
                     }
                 }
                 else
                 {
                     if (registryKey.Value.KeyName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        yield return new SearchHit(registryKey.Value, null, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, null, searchTerm, searchTerm,SearchHit.HitType.KeyName);
                     }
                 }
             }
@@ -1558,21 +1558,21 @@ namespace Registry
                 {
                     if (start <= registryKey.Value.LastWriteTime && registryKey.Value.LastWriteTime <= end)
                     {
-                        yield return new SearchHit(registryKey.Value, null, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null, null,SearchHit.HitType.LastWrite);
                     }
                 }
                 else if (end != null)
                 {
                     if (registryKey.Value.LastWriteTime < end)
                     {
-                        yield return new SearchHit(registryKey.Value, null, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null, null,SearchHit.HitType.LastWrite);
                     }
                 }
                 else if (start != null)
                 {
                     if (registryKey.Value.LastWriteTime > start)
                     {
-                        yield return new SearchHit(registryKey.Value, null, null, null);
+                        yield return new SearchHit(registryKey.Value, null, null, null,SearchHit.HitType.LastWrite);
                     }
                 }
             }
@@ -1587,14 +1587,14 @@ namespace Registry
                 {
                     if (Regex.IsMatch(keyValue.ValueName, searchTerm, RegexOptions.IgnoreCase))
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueName);
                     }
                 }
                 else
                 {
                     if (keyValue.ValueName.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueName);
                     }
                 }
             }
@@ -1616,7 +1616,7 @@ namespace Registry
                 {
                     if (Regex.IsMatch(keyValue.ValueData, searchTerm, RegexOptions.IgnoreCase))
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueData);
                     }
                 }
                 else
@@ -1624,7 +1624,7 @@ namespace Registry
                     //plaintext matching
                     if (keyValue.ValueData.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueData);
                     }
 
                     if (literal)
@@ -1662,7 +1662,7 @@ namespace Registry
                             var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
 
                             var asciiHit = BitConverter.ToString(asciihex);
-                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString);
+                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString,SearchHit.HitType.ValueData);
                         }
 
                         hitString = string.Empty;
@@ -1687,7 +1687,7 @@ namespace Registry
                         var unicodehex = Encoding.Unicode.GetBytes(hitString);
 
                         var unicodeHit = BitConverter.ToString(unicodehex);
-                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit, hitString);
+                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit, hitString,SearchHit.HitType.ValueData);
                     }
                 }
             }
@@ -1703,7 +1703,7 @@ namespace Registry
                 {
                     if (Regex.IsMatch(keyValue.ValueSlack, searchTerm, RegexOptions.IgnoreCase))
                     {
-                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                        yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueSlack);
                     }
                 }
                 else
@@ -1712,7 +1712,7 @@ namespace Registry
                     {
                         if (keyValue.ValueSlack.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm);
+                            yield return new SearchHit(registryKey.Value, keyValue, searchTerm, searchTerm,SearchHit.HitType.ValueSlack);
                         }
                     }
                     else
@@ -1738,7 +1738,7 @@ namespace Registry
                             var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
 
                             var asciiHit = BitConverter.ToString(asciihex);
-                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString);
+                            yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString,SearchHit.HitType.ValueSlack);
                         }
 
                         hitString = string.Empty;
@@ -1759,7 +1759,7 @@ namespace Registry
                         var unicodehex = Encoding.Unicode.GetBytes(hitString);
 
                         var unicodeHit = BitConverter.ToString(unicodehex);
-                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit, hitString);
+                        yield return new SearchHit(registryKey.Value, keyValue, unicodeHit, hitString,SearchHit.HitType.ValueSlack);
                     }
                 }
             }

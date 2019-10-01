@@ -4,18 +4,30 @@ namespace Registry.Abstractions
 {
     public class SearchHit
     {
-        public SearchHit(RegistryKey key, KeyValue value, string hitstring, string decodedValue)
+        public enum HitType
+        {
+            KeyName = 0,
+            ValueName = 1,
+            ValueData = 2,
+            ValueSlack = 3,
+            LastWrite = 5,
+            Base64 = 6
+        }
+        public SearchHit(RegistryKey key, KeyValue value, string hitstring, string decodedValue, HitType hitLocation)
         {
             Key = key;
             Value = value;
             HitString = hitstring;
             DecodedValue = decodedValue;
+            HitLocation = hitLocation;
         }
 
         public RegistryKey Key { get; }
         public KeyValue Value { get; }
         public string HitString { get; }
         public string DecodedValue { get; }
+
+        public HitType HitLocation { get; set; }
 
         public bool StripRootKeyName { get; set; }
 
