@@ -735,6 +735,66 @@ namespace Registry
             }
         }
 
+        public RegistryKey GetDeletedKey(long relativeOffset, long lastwritetimestampTicks)
+        {
+           // var segs = keyPath.Split('\\');
+
+           var keys = DeletedRegistryKeys.Where(t => t.NkRecord.RelativeOffset == relativeOffset).ToList();
+
+
+            //TODO clean this up
+
+           if (!keys.Any())
+           {
+              var keys2 = CellRecords.Where(t => t.Value.RelativeOffset == relativeOffset).ToList();
+           }
+
+            //get a list that contains all matching root level unassociated keys
+            //var keys = DeletedRegistryKeys.Where(t => t.KeyPath == keyPath).ToList();
+
+            if (keys.Count() == 1)
+            {
+                return keys.First();
+            }
+
+
+            return keys.SingleOrDefault(t => t.LastWriteTime.Value.Ticks == lastwritetimestampTicks);
+
+//
+//            //drill down into each until we find the right one based on last write time
+//            foreach (var registryKey in keys)
+//            {
+//                var foo = registryKey;
+//
+//                var startKey = registryKey;
+//
+//                for (var i = 1; i < segs.Length; i++)
+//                {
+//                    foo = startKey.SubKeys.SingleOrDefault(t => t.KeyName == segs[i]);
+//                    if (foo != null)
+//                    {
+//                        startKey = foo;
+//                    }
+//                }
+//
+//                if (foo == null)
+//                {
+//                    continue;
+//                }
+//
+//                if (foo.LastWriteTime.ToString() != lastwritetimestamp)
+//                {
+//                    continue;
+//                }
+//
+//                return foo;
+//
+//                //  break;
+//            }
+//
+//            return null;
+        }
+
         public RegistryKey GetDeletedKey(string keyPath, string lastwritetimestamp)
         {
             var segs = keyPath.Split('\\');

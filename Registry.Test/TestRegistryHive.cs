@@ -685,14 +685,27 @@ namespace Registry.Test
 
             LogManager.Configuration = config;
 
-            var r = new RegistryHive(@"C:\Users\eric\Desktop\UsrClassStudent.datUp");
+            var r = new RegistryHive(@"D:\!downloads\NTUSER_recover_anon.DAT");
             r.RecoverDeleted = true;
 
             
             
             r.ParseHive();
 
-            
+            var del = r.DeletedRegistryKeys.Where(t => t.LastWriteTime.Value.Month == 2 && t.LastWriteTime.Value.Day == 13 && t.LastWriteTime.Value.Year == 2019 && t.LastWriteTime.Value.Minute == 46 && t.KeyName.Contains("Bookmarks")).ToList();
+            //var del = r.DeletedRegistryKeys.Where(t => t.NkRecord.RelativeOffset == 5313048).ToList();
+
+            //RelativeOffset = 5313184 == panels
+            //Relative offset	0x50B3B0 (5288880) == 28
+
+            var test = r.GetKey(11724520);
+
+            //"2/13/2019 7:46:59 AM -05:00"
+            //"5207632"
+
+            var t1 = r.GetDeletedKey(5288880, DateTimeOffset.Parse("2/13/2019 7:46:59 AM -05:00").Ticks);
+
+            Debug.WriteLine(del.Count);
 
         }
 
