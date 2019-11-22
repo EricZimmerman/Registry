@@ -10,9 +10,9 @@
     <Copyright>Eric Zimmerman</Copyright>
     <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
     <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
-    <AssemblyVersion>1.1.0.4</AssemblyVersion>
-    <FileVersion>1.1.0.4</FileVersion>
-    <Version>1.1.0.4</Version>
+    <AssemblyVersion>1.1.0.5</AssemblyVersion>
+    <FileVersion>1.1.0.5</FileVersion>
+    <Version>1.1.0.5</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.6.7" />
+    <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.6.0" />
   </ItemGroup>
