@@ -153,6 +153,7 @@ namespace Registry
                     HiveType = HiveTypeEnum.Bcd;
                     break;
                 case "amcache.hve":
+                case "amcache.hve.tmp":
                     HiveType = HiveTypeEnum.Amcache;
                     break;
                 case "syscache.hve":

@@ -693,7 +693,7 @@ namespace Registry.Test
             l1.Add(@"D:\temp\aaaa\amcache.hve.log1");
             l1.Add(@"D:\temp\aaaa\amcache.hve.log2");
 
-            //r.ProcessTransactionLogs(l1,true);
+            r.ProcessTransactionLogs(l1,true);
             
             r.ParseHive();
 

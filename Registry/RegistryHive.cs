@@ -161,7 +161,7 @@ namespace Registry
                 {
                     //log predates the last confirmed update, so skip  
                     Logger.Warn(
-                        $"Dropping {logFile.FileBytes} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber");
+                        $"Dropping '{logFile.FileName}' because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber");
                     continue;
                 }
 
