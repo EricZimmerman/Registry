@@ -154,6 +154,12 @@ namespace Registry.Other
                 var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
                 var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
 
+                if (cellSignature2 == LkSignature && rawRecord.Length < 0x50)
+                {
+                    //this is not an ln, its data, so update the sig
+                    cellSignature2 = 0x0;
+                }
+
                 //ncrunch: no coverage start
                 if (_registryHive.Logger.IsDebugEnabled)
                 {
@@ -203,6 +209,7 @@ namespace Registry.Other
                             break;
 
                         case LkSignature:
+                            
                             cellRecord = new LkCellRecord(rawRecord, offsetInHbin + RelativeOffset);
                             break; //ncrunch: no coverage
 

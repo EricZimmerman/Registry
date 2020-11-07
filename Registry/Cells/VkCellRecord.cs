@@ -214,7 +214,16 @@ namespace Registry.Cells
                     // in some rare cases the bytes returned from above are all zeros, so make sure we get something but all zeros
                     if (datablockSizeRaw.Length == 4)
                     {
-                        dataBlockSize = Math.Abs(BitConverter.ToInt32(datablockSizeRaw, 0));
+                        try
+                        {
+                            dataBlockSize = Math.Abs(BitConverter.ToInt32(datablockSizeRaw, 0));
+                        }
+                        catch (Exception e)
+                        {
+                           // Console.WriteLine(e);
+                            dataBlockSize = Int32.MaxValue;
+                        }
+                        
                     }
 
                     if (IsFree && dataBlockSize > DataLength * 100)

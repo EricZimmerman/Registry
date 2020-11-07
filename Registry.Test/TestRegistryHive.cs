@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -685,8 +686,14 @@ namespace Registry.Test
 
             LogManager.Configuration = config;
 
-            var r = new RegistryHive(@"C:\Users\eric\Desktop\SOFTWARE_clean");
+            var r = new RegistryHive(@"D:\temp\aaaa\amcache.hve");
             r.RecoverDeleted = true;
+
+            var l1 = new List<string>();
+            l1.Add(@"D:\temp\aaaa\amcache.hve.log1");
+            l1.Add(@"D:\temp\aaaa\amcache.hve.log2");
+
+            //r.ProcessTransactionLogs(l1,true);
             
             r.ParseHive();
 
@@ -698,6 +705,48 @@ namespace Registry.Test
             {
                 l.Info(searchHit);
             }
+
+        }
+
+        [Test]
+        
+        public void OneOff2()
+        {
+            var config = new LoggingConfiguration();
+            var loglevel = LogLevel.Info;
+
+            var layout = @"${message}";
+
+            var consoleTarget = new ColoredConsoleTarget();
+
+            config.AddTarget("console", consoleTarget);
+
+            consoleTarget.Layout = layout;
+
+            var rule1 = new LoggingRule("*", loglevel, consoleTarget);
+            config.LoggingRules.Add(rule1);
+
+            LogManager.Configuration = config;
+
+            var r = new RegistryHive(@"D:\temp\aaaa\components_github");
+            r.RecoverDeleted = true;
+
+            var l1 = new List<string>();
+            l1.Add(@"D:\temp\aaaa\amcache.hve.log1");
+            l1.Add(@"D:\temp\aaaa\amcache.hve.log2");
+
+            //r.ProcessTransactionLogs(l1,true);
+            
+            r.ParseHive();
+
+            var l = LogManager.GetCurrentClassLogger();
+
+            // var foo = r.FindInValueDataSlack("info.exe", false, false);
+            //
+            // foreach (var searchHit in foo)
+            // {
+            //     l.Info(searchHit);
+            // }
 
         }
 
