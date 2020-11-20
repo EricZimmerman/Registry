@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using NLog;
 using Registry.Abstractions;
 using Registry.Cells;
 using Registry.Lists;
@@ -346,7 +347,33 @@ namespace Registry
         {
             _relativeOffsetKeyMap.Add(key.NkRecord.RelativeOffset, key);
 
-            _keyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);
+
+            if (_keyPathKeyMap.ContainsKey(key.KeyPath.ToLowerInvariant()))
+            {
+                var _logger = LogManager.GetLogger("GetSubKeysAndValues");
+
+                //does the incoming key have activeparent set? if no, warn and ignore
+                if ((key.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) ==
+                    RegistryKey.KeyFlagsEnum.HasActiveParent == false)
+                {
+                    _logger.Warn($"Key '{key.KeyPath}' at absolute offset 0x{key.NkRecord.AbsoluteOffset:X0} appears to be an old reference as one was already found with HasActiveParent set. Ignoring...");
+                }
+                else
+                {
+                    if ((_keyPathKeyMap[key.KeyPath.ToLowerInvariant()].KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent)
+                    {
+                        // the existing one does NOT have activeParent set, so replace it
+                        _logger.Warn($"Key '{key.KeyPath}' at absolute offset 0x{key.NkRecord.AbsoluteOffset:X0} appears to be a more recent reference as it has HasActiveParent set. Updating existing key");
+                        _keyPathKeyMap[key.KeyPath.ToLowerInvariant()] = key;
+                    }
+                }
+            }
+            else
+            {
+                _keyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);    
+            }
+
+            
 
             //    Logger.Trace("Getting subkeys for {0}", key.KeyPath);
 

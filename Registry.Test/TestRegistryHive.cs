@@ -728,14 +728,14 @@ namespace Registry.Test
 
             LogManager.Configuration = config;
 
-            var r = new RegistryHive(@"D:\temp\aaaa\components_github");
+            var r = new RegistryHive(@"D:\OneDrive\Desktop\a\SOFTWARE");
             r.RecoverDeleted = true;
 
             var l1 = new List<string>();
-            l1.Add(@"D:\temp\aaaa\amcache.hve.log1");
-            l1.Add(@"D:\temp\aaaa\amcache.hve.log2");
+            l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log1");
+            l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log2");
 
-            //r.ProcessTransactionLogs(l1,true);
+            r.ProcessTransactionLogs(l1,true);
             
             r.ParseHive();
 
