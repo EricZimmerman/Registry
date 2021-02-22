@@ -218,7 +218,7 @@ namespace Registry.Cells
                         {
                             dataBlockSize = Math.Abs(BitConverter.ToInt32(datablockSizeRaw, 0));
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                            // Console.WriteLine(e);
                             dataBlockSize = Int32.MaxValue;
