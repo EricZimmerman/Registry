@@ -98,9 +98,8 @@ namespace Registry
 
                 keyCount += 1;
 
-                sw.WriteLine("key|{0}|{1}|{2}|{3}", subkey.NkRecord.IsFree ? "U" : "A",
-                    subkey.NkRecord.AbsoluteOffset, subkey.KeyPath,
-                    subkey.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                sw.WriteLine("key|{0}|{1}|{2}|{3:o}", subkey.NkRecord.IsFree ? "U" : "A",
+                    subkey.NkRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime?.UtcDateTime);
 
                 foreach (var val in subkey.Values)
                 {
