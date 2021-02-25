@@ -98,15 +98,15 @@ namespace Registry
 
                 keyCount += 1;
 
-                sw.WriteLine("key|{0}|{1}|{2}|{3:o}", subkey.NkRecord.IsFree ? "U" : "A",
-                    subkey.NkRecord.AbsoluteOffset, subkey.KeyPath, subkey.LastWriteTime?.UtcDateTime);
+                sw.WriteLine("key,{0},{1},{2},,,,{3:o}", subkey.NkRecord.IsFree ? "U" : "A",
+                    subkey.NkRecord.AbsoluteOffset, GetCsvValue(subkey.KeyPath), subkey.LastWriteTime?.UtcDateTime);
 
                 foreach (var val in subkey.Values)
                 {
                     valueCount += 1;
 
-                    sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VkRecord.IsFree ? "U" : "A",
-                        val.VkRecord.AbsoluteOffset, subkey.KeyName, val.ValueName, (int) val.VkRecord.DataType,
+                    sw.WriteLine(@"value,{0},{1},{2},{3},{4},{5},", val.VkRecord.IsFree ? "U" : "A",
+                        val.VkRecord.AbsoluteOffset, GetCsvValue(subkey.KeyName), GetCsvValue(val.ValueName), (int) val.VkRecord.DataType,
                         BitConverter.ToString(val.VkRecord.ValueDataRaw).Replace("-", " "));
                 }
 
@@ -664,10 +664,10 @@ namespace Registry
             header.AppendLine("## Registry common export format");
             header.AppendLine("## Key format");
             header.AppendLine(
-                "## key|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|LastWriteTime in UTC");
+                "## key,Is Free (A for in use, U for unused),Absolute offset in decimal,KeyPath,,,,LastWriteTime in UTC");
             header.AppendLine("## Value format");
             header.AppendLine(
-                "## value|Is Free (A for in use, U for unused)|Absolute offset in decimal|KeyPath|Value name|Data type (as decimal integer)|Value data as bytes separated by a singe space");
+                "## value,Is Free (A for in use, U for unused),Absolute offset in decimal,KeyPath,Value name,Data type (as decimal integer),Value data as bytes separated by a singe space,");
             header.AppendLine("##");
             header.AppendLine(
                 "## Comparison of deleted keys/values is done to compare recovery of vk and nk records, not the algorithm used to associate deleted keys to other keys and their values.");
@@ -677,10 +677,10 @@ namespace Registry
             header.AppendLine("##");
             header.AppendLine("## The following totals should also be included");
             header.AppendLine("##");
-            header.AppendLine("## total_keys|total in use key count");
-            header.AppendLine("## total_values|total in use value count");
-            header.AppendLine("## total_deleted_keys|total recovered free key count");
-            header.AppendLine("## total_deleted_values|total recovered free value count");
+            header.AppendLine("## total_keys: total in use key count");
+            header.AppendLine("## total_values: total in use value count");
+            header.AppendLine("## total_deleted_keys: total recovered free key count");
+            header.AppendLine("## total_deleted_values: total recovered free value count");
             header.AppendLine("##");
             header.AppendLine(
                 "## Before comparison with other common export implementations, the files should be sorted");
@@ -698,16 +698,16 @@ namespace Registry
                     if (Root.LastWriteTime != null)
                     {
                         keyCount = 1;
-                        sw.WriteLine("key|{0}|{1}|{2}|{3}", Root.NkRecord.IsFree ? "U" : "A",
+                        sw.WriteLine("key,{0},{1},{2},,,,{3:o}", Root.NkRecord.IsFree ? "U" : "A",
                             Root.NkRecord.AbsoluteOffset,
-                            Root.KeyPath, Root.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                            GetCsvValue(Root.KeyPath), Root.LastWriteTime.Value?.UtcDateTime);
                     }
 
                     foreach (var val in Root.Values)
                     {
                         valueCount += 1;
-                        sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.VkRecord.IsFree ? "U" : "A",
-                            val.VkRecord.AbsoluteOffset, Root.KeyPath, val.ValueName, (int) val.VkRecord.DataType,
+                        sw.WriteLine(@"value,{0},{1},{2},{3},{4},{5},", val.VkRecord.IsFree ? "U" : "A",
+                            val.VkRecord.AbsoluteOffset, GetCsvValue(Root.KeyPath), GetCsvValue(val.ValueName), (int) val.VkRecord.DataType,
                             BitConverter.ToString(val.VkRecord.ValueDataRaw).Replace("-", " "));
                     }
 
@@ -726,9 +726,9 @@ namespace Registry
                             valueCountDeleted += 1;
                             var val = keyValuePair.Value as VkCellRecord;
 
-                            sw.WriteLine(@"value|{0}|{1}|{2}|{3}|{4}|{5}", val.IsFree ? "U" : "A", val.AbsoluteOffset,
-                                "",
-                                val.ValueName, (int) val.DataType,
+                            sw.WriteLine(@"value,{0},{1},{2},{3},{4},{5},", val.IsFree ? "U" : "A", val.AbsoluteOffset,
+                                string.Empty,
+                                GetCsvValue(val.ValueName), (int) val.DataType,
                                 BitConverter.ToString(val.ValueDataRaw).Replace("-", " "));
                         }
 
@@ -740,9 +740,9 @@ namespace Registry
                             var nk = keyValuePair.Value as NkCellRecord;
                             var key = new RegistryKey(nk, null);
 
-                            sw.WriteLine("key|{0}|{1}|{2}|{3}", key.NkRecord.IsFree ? "U" : "A",
-                                key.NkRecord.AbsoluteOffset, key.KeyName,
-                                key.LastWriteTime.Value.UtcDateTime.ToString("o"));
+                            sw.WriteLine("key,{0},{1},{2},,,,{3:o}", key.NkRecord.IsFree ? "U" : "A",
+                                key.NkRecord.AbsoluteOffset, GetCsvValue(key.KeyName),
+                                key.LastWriteTime.Value?.UtcDateTime);
 
                             DumpKeyCommonFormat(key, sw, ref keyCountDeleted, ref valueCountDeleted);
                         }
@@ -754,11 +754,21 @@ namespace Registry
                     }
                 }
 
-                sw.WriteLine("total_keys|{0}", keyCount);
-                sw.WriteLine("total_values|{0}", valueCount);
-                sw.WriteLine("total_deleted_keys|{0}", keyCountDeleted);
-                sw.WriteLine("total_deleted_values|{0}", valueCountDeleted);
+                sw.WriteLine("## total_keys: {0}", keyCount);
+                sw.WriteLine("## total_values: {0}", valueCount);
+                sw.WriteLine("## total_deleted_keys: {0}", keyCountDeleted);
+                sw.WriteLine("## total_deleted_values: {0}", valueCountDeleted);
             }
+        }
+
+        private static readonly string quote = "\"";
+        private static readonly string doublequote = "\"\"";
+
+        private string GetCsvValue(string value)
+        {
+            if (value.Any(x => x == ',' || x == '"' || x == '\n'))
+                value = string.Concat(quote, value.Replace(quote, doublequote), quote);
+            return value;
         }
 
         public RegistryKey GetDeletedKey(long relativeOffset, long lastwritetimestampTicks)
