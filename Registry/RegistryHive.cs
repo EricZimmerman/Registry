@@ -700,7 +700,7 @@ namespace Registry
                         keyCount = 1;
                         sw.WriteLine("key,{0},{1},{2},,,,{3:o}", Root.NkRecord.IsFree ? "U" : "A",
                             Root.NkRecord.AbsoluteOffset,
-                            GetCsvValue(Root.KeyPath), Root.LastWriteTime.Value?.UtcDateTime);
+                            GetCsvValue(Root.KeyPath), Root.LastWriteTime.Value.UtcDateTime);
                     }
 
                     foreach (var val in Root.Values)
@@ -742,7 +742,7 @@ namespace Registry
 
                             sw.WriteLine("key,{0},{1},{2},,,,{3:o}", key.NkRecord.IsFree ? "U" : "A",
                                 key.NkRecord.AbsoluteOffset, GetCsvValue(key.KeyName),
-                                key.LastWriteTime.Value?.UtcDateTime);
+                                key.LastWriteTime.Value.UtcDateTime);
 
                             DumpKeyCommonFormat(key, sw, ref keyCountDeleted, ref valueCountDeleted);
                         }
