@@ -971,9 +971,10 @@ namespace Registry
 
                 if (hbinSize == 0)
                 {
-                    Logger.Debug("Found hbin with size 0 at absolute offset 0x{0:X}", offsetInHive);
+                    Logger.Debug("Found hbin with size 0 at absolute offset 0x{0:X}. Skipping 0x1000 bytes...", offsetInHive);
                     // Go to end if we find a 0 size block (padding?)
-                    offsetInHive = HiveLength();
+                    offsetInHive += 4096;//HiveLength();
+                    TotalBytesRead += 4096;
                     continue;
                 }
 

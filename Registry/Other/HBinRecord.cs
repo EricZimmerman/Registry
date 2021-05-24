@@ -147,6 +147,9 @@ namespace Registry.Other
      //           _registryHive.Logger.Trace(
      //               $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
 
+
+     _registryHive.Logger.Debug($"Processing hbin at relative offset 0x{RelativeOffset:X} (Absolute offset: 0x{AbsoluteOffset:X}");
+
                 var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
 
                 _registryHive.TotalBytesRead += readSize;

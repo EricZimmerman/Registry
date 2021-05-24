@@ -728,18 +728,23 @@ namespace Registry.Test
 
             LogManager.Configuration = config;
 
-            var r = new RegistryHive(@"D:\OneDrive\Desktop\a\SOFTWARE");
+            var r = new RegistryHive(@"D:\Temp\0xffffd18a4cc4b000-SYSTEM-MACHINE_SYSTEM.reghive");
             r.RecoverDeleted = true;
 
-            var l1 = new List<string>();
-            l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log1");
-            l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log2");
+            // var l1 = new List<string>();
+            // l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log1");
+            // l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log2");
 
-            r.ProcessTransactionLogs(l1,true);
+          //  r.ProcessTransactionLogs(l1,true);
             
             r.ParseHive();
 
             var l = LogManager.GetCurrentClassLogger();
+
+            l.Info(r.Root);
+            l.Info(r.Root.SubKeys.Count);
+            l.Info(r.Root.SubKeys.First().KeyPath);
+            l.Info(r.Root.SubKeys.First());
 
             // var foo = r.FindInValueDataSlack("info.exe", false, false);
             //
