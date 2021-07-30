@@ -1465,6 +1465,8 @@ namespace Registry
 
             var unreferencedVk = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is VkCellRecord);
 
+            Logger.Debug("Iterating unreferenced VK records");
+
             foreach (var keyValuePair in unreferencedVk)
             {
                 if (associatedVkRecordOffsets.Contains(keyValuePair.Key) == false)
