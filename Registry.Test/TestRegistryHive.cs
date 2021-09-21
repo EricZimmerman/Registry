@@ -729,7 +729,7 @@ namespace Registry.Test
             LogManager.Configuration = config;
 
           //  var r = new RegistryHive(@"D:\Temp\0xffffd18a4cc4b000-SYSTEM-MACHINE_SYSTEM.reghive");
-            var r = new RegistryHive(@"C:\temp\Amcache_Files\Amcache.hve");
+            var r = new RegistryHive(@"C:\temp\Amcache.hve");
             r.RecoverDeleted = true;
 
             // var l1 = new List<string>();

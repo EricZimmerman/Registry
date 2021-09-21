@@ -1191,7 +1191,7 @@ namespace Registry
 
             var unreferencedNkCells = CellRecords.Where(t => t.Value.IsReferenced == false && t.Value is NkCellRecord);
 
-            var associatedVkRecordOffsets = new List<long>();
+            var associatedVkRecordOffsets = new HashSet<long>();
 
             var deletedRegistryKeys = new Dictionary<long, RegistryKey>();
 
@@ -1372,7 +1372,7 @@ namespace Registry
             var matchFound = true;
             while (matchFound)
             {
-                var keysToRemove = new List<long>();
+                var keysToRemove = new HashSet<long>();
                 matchFound = false;
 
                 foreach (var deletedRegistryKey in deletedRegistryKeys)
