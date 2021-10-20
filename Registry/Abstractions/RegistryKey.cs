@@ -310,5 +310,17 @@ namespace Registry.Abstractions
 
             return sb.ToString();
         }
+
+        public object GetValue(string keyName)
+        {
+            return Values
+                ?.FirstOrDefault(v => v.ValueName.Equals(keyName, StringComparison.OrdinalIgnoreCase))
+                ?.ValueData;
+        }
+
+        public object GetValue(string keyName, object defaultValue)
+        {
+            return GetValue(keyName) ?? defaultValue;
+        }
     }
 }
