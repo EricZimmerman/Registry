@@ -1,35 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard20;net5.0;net6.0</TargetFrameworks>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net462;net6.0</TargetFrameworks>
+        <LangVersion>10</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="NFluent" Version="2.7.2" />
+        <PackageReference Include="Serilog" Version="2.10.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+        <PackageReference Include="NUnit" Version="3.13.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Registry\Registry.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NFluent" Version="2.7.2" />
-    <PackageReference Include="NLog" Version="4.7.11" />
-	  <PackageReference Include="NUnit" Version="3.13.2" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="Hives\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Registry\Registry.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Hives\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-   
 </Project>
 

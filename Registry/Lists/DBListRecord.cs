@@ -1,85 +1,83 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
 using Registry.Other;
 
 // namespaces...
 
-namespace Registry.Lists
+namespace Registry.Lists;
+
+// internal classes...
+public class DbListRecord : IListTemplate, IRecordBase
 {
-    // internal classes...
-    public class DbListRecord : IListTemplate, IRecordBase
+    // private fields...
+    private readonly int _size;
+
+    // public constructors...
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DbListRecord" />  class.
+    /// </summary>
+    /// <param name="rawBytes"></param>
+    /// <param name="relativeOffset"></param>
+    public DbListRecord(byte[] rawBytes, long relativeOffset)
     {
-        // private fields...
-        private readonly int _size;
-
-        // public constructors...
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="DbListRecord" />  class.
-        /// </summary>
-        /// <param name="rawBytes"></param>
-        /// <param name="relativeOffset"></param>
-        public DbListRecord(byte[] rawBytes, long relativeOffset)
+        RelativeOffset = relativeOffset;
+        RawBytes = rawBytes;
+        if (rawBytes.Length == 0)
         {
-            RelativeOffset = relativeOffset;
-            RawBytes = rawBytes;
-            if (rawBytes.Length == 0)
-            {
-               
-                _size = 0;
-                return;
-            }
-            _size = BitConverter.ToInt32(rawBytes, 0);
+            _size = 0;
+            return;
         }
 
-        /// <summary>
-        ///     The relative offset to another data node that contains a list of relative offsets to data for a VK record
-        /// </summary>
-        public uint OffsetToOffsets => BitConverter.ToUInt32(RawBytes, 0x8);
+        _size = BitConverter.ToInt32(rawBytes, 0);
+    }
 
-        // public properties...
+    /// <summary>
+    ///     The relative offset to another data node that contains a list of relative offsets to data for a VK record
+    /// </summary>
+    public uint OffsetToOffsets => BitConverter.ToUInt32(RawBytes, 0x8);
 
-        public bool IsFree => _size > 0;
+    // public properties...
 
-        public bool IsReferenced { get; set; }
+    public bool IsFree => _size > 0;
 
-        public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
+    public bool IsReferenced { get; set; }
 
-        public byte[] RawBytes { get; set; }
-        public long RelativeOffset { get; set; }
+    public int NumberOfEntries => BitConverter.ToUInt16(RawBytes, 0x06);
 
-        public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
+    public byte[] RawBytes { get; set; }
+    public long RelativeOffset { get; set; }
 
-        public int Size => Math.Abs(_size);
+    public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-        // public properties...
-        public long AbsoluteOffset => RelativeOffset + 4096;
+    public int Size => Math.Abs(_size);
 
-        // public methods...
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
+    // public properties...
+    public long AbsoluteOffset => RelativeOffset + 4096;
 
-            sb.AppendLine($"Size: 0x{Size:X}");
-            sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
-            sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
+    // public methods...
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
 
-            sb.AppendLine($"Signature: {Signature}");
+        sb.AppendLine($"Size: 0x{Size:X}");
+        sb.AppendLine($"Relative Offset: 0x{RelativeOffset:X}");
+        sb.AppendLine($"Absolute Offset: 0x{AbsoluteOffset:X}");
 
-            sb.AppendLine();
+        sb.AppendLine($"Signature: {Signature}");
 
-            sb.AppendLine($"Is Free: {IsFree}");
+        sb.AppendLine();
 
-            sb.AppendLine();
+        sb.AppendLine($"Is Free: {IsFree}");
 
-            sb.AppendLine($"Number Of Entries: {NumberOfEntries:N0}");
-            sb.AppendLine();
+        sb.AppendLine();
 
-            sb.AppendLine($"Offset To Offsets: 0x{OffsetToOffsets:X}");
+        sb.AppendLine($"Number Of Entries: {NumberOfEntries:N0}");
+        sb.AppendLine();
 
-            sb.AppendLine();
+        sb.AppendLine($"Offset To Offsets: 0x{OffsetToOffsets:X}");
 
-            return sb.ToString();
-        }
+        sb.AppendLine();
+
+        return sb.ToString();
     }
 }

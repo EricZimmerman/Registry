@@ -1,49 +1,49 @@
 ﻿using System.Diagnostics;
 using NUnit.Framework;
 
-namespace Registry.Test
+namespace Registry.Test;
+
+[SetUpFixture]
+public class TestSetup
 {
-    [SetUpFixture]
-    public class TestSetup
+    //  public static RegistryHiveOnDemand SamOnDemand;
+    //   public static RegistryHiveOnDemand SamHasBigEndianOnDemand;
+    // public static RegistryHiveOnDemand SamDupeNameOnDemand;
+    //  public static RegistryHiveOnDemand SystemOnDemand;
+    //   public static RegistryHiveOnDemand NtUser1OnDemand;
+    // public static RegistryHiveOnDemand UsrClassDeletedBagsOnDemand;
+    //   public static RegistryHiveOnDemand SoftwareOnDemand;
+    //    public static RegistryHive NtUserSlack;
+    // public static RegistryHive UsrClass1;
+    // public static RegistryHiveOnDemand UsrClass1OnDemand;
+    //    public static RegistryHive UsrClassBeef;
+    //   public static RegistryHive Bcd;
+    //   public static RegistryHive UsrclassDeleted;
+    //  public static RegistryHive UsrclassAcronis;
+    //   public static RegistryHive Sam;
+    //  public static RegistryHive SamRootValue;
+    //   public static RegistryHiveOnDemand Security;
+    // public static RegistryHiveOnDemand DriversOnDemand;
+    //   public static RegistryHiveOnDemand UsrClassFtp;
+    // public static RegistryHive System;
+    //   public static RegistryHiveOnDemand SanOther;
+    //  public static RegistryHive Drivers;
+
+    //ncrunch: no coverage start
+
+    [OneTimeSetUp]
+    public void InitializeObjects()
     {
-        //  public static RegistryHiveOnDemand SamOnDemand;
-        //   public static RegistryHiveOnDemand SamHasBigEndianOnDemand;
-        // public static RegistryHiveOnDemand SamDupeNameOnDemand;
-        //  public static RegistryHiveOnDemand SystemOnDemand;
-        //   public static RegistryHiveOnDemand NtUser1OnDemand;
-        // public static RegistryHiveOnDemand UsrClassDeletedBagsOnDemand;
-        //   public static RegistryHiveOnDemand SoftwareOnDemand;
-        //    public static RegistryHive NtUserSlack;
-        // public static RegistryHive UsrClass1;
-        // public static RegistryHiveOnDemand UsrClass1OnDemand;
-        //    public static RegistryHive UsrClassBeef;
-        //   public static RegistryHive Bcd;
-        //   public static RegistryHive UsrclassDeleted;
-        //  public static RegistryHive UsrclassAcronis;
-        //   public static RegistryHive Sam;
-        //  public static RegistryHive SamRootValue;
-        //   public static RegistryHiveOnDemand Security;
-        // public static RegistryHiveOnDemand DriversOnDemand;
-        //   public static RegistryHiveOnDemand UsrClassFtp;
-        // public static RegistryHive System;
-        //   public static RegistryHiveOnDemand SanOther;
-        //  public static RegistryHive Drivers;
+        Debug.WriteLine("Initializing hives...");
+        //SamOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM");
 
-        //ncrunch: no coverage start
+        //var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_hasBigEndianDWord");
+        //   var   SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_DUPENAME");
+        //var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\NTUSER1.DAT");
 
-        [OneTimeSetUp]
-        public void InitializeObjects()
-        {
-            Debug.WriteLine("Initializing hives...");
-            //SamOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM");
-
-            //var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_hasBigEndianDWord");
-            //   var   SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_DUPENAME");
-            //var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\NTUSER1.DAT");
-
-            //var UsrClassDeletedBagsOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClassDeletedBags.dat");
-            // var SoftwareOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SOFTWARE");
-            //  var     SystemOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SYSTEM");
+        //var UsrClassDeletedBagsOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClassDeletedBags.dat");
+        // var SoftwareOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SOFTWARE");
+        //  var     SystemOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SYSTEM");
 
 //          var  Bcd = new RegistryHive(@"..\.\Hives\BCD");
 //            Bcd.FlushRecordListsAfterParse = false;
@@ -65,7 +65,7 @@ namespace Registry.Test
 //            UsrClass1.FlushRecordListsAfterParse = false;
 //            UsrClass1.ParseHive();
 
-            //var UsrClass1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClass 1.dat");
+        //var UsrClass1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClass 1.dat");
 
 //         var   UsrClassBeef = new RegistryHive(@"..\.\Hives\UsrClass BEEF000E.dat");
 //            UsrClassBeef.RecoverDeleted = true;
@@ -95,12 +95,11 @@ namespace Registry.Test
 
 //          var  SanOther = new RegistryHiveOnDemand(@"..\.\Hives\SAN(OTHER)");
 //          var  UsrClassFtp = new RegistryHiveOnDemand(@"..\.\Hives\UsrClass FTP.dat");
-        }
+    }
 
-        [OneTimeTearDown]
-        public void TearDown()
-        {
-            Debug.WriteLine("Unit testing complete. Tearing down...");
-        }
+    [OneTimeTearDown]
+    public void TearDown()
+    {
+        Debug.WriteLine("Unit testing complete. Tearing down...");
     }
 }

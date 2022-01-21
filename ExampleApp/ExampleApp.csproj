@@ -1,25 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Costura.Fody" Version="5.7.0">
-      <PrivateAssets>all</PrivateAssets>
-      
-    </PackageReference>
-    <PackageReference Include="NLog" Version="4.7.11" />
-    <PackageReference Include="Registry" Version="1.2.2" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.8.0"/>
+        <PackageReference Include="Costura.Fody" Version="5.7.0">
+            <PrivateAssets>all</PrivateAssets>
 
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+        </PackageReference>
+        <PackageReference Include="Serilog" Version="2.10.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
+        <PackageReference Include="Registry" Version="1.2.2"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Registry\Registry.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Properties\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Registry\Registry.csproj"/>
+    </ItemGroup>
 
 </Project>
