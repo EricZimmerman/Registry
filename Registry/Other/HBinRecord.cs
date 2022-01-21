@@ -140,7 +140,7 @@ public class HBinRecord
             //               $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
 
 
-            Log.Debug("Processing hbin at relative offset {RelativeOffset} (Absolute offset: {AbsoluteOffset})",
+            Log.Verbose("Processing hbin at relative offset {RelativeOffset} (Absolute offset: {AbsoluteOffset})",
                 $"0x{RelativeOffset:X}", $"0x{AbsoluteOffset:X}");
 
             var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
