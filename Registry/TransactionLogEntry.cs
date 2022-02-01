@@ -11,7 +11,7 @@ public class TransactionLogEntry
 
     public TransactionLogEntry(byte[] rawBytes)
     {
-        var sig = Encoding.GetEncoding(1252).GetString(rawBytes, 0, 4);
+        var sig = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(rawBytes, 0, 4);
 
         if (sig != "HvLE") throw new Exception("Data is not a transaction log entry (bad signature)");
 
@@ -63,7 +63,7 @@ public class TransactionLogEntry
 
         //should be sitting at hbin
 
-        var hbinsig = Encoding.GetEncoding(1252).GetString(rawBytes, index, 4);
+        var hbinsig = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(rawBytes, index, 4);
 
         if (hbinsig != "hbin") throw new Exception($"hbin header not found at offset 0x{index}");
 

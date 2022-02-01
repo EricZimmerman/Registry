@@ -1549,7 +1549,7 @@ public class RegistryHive : RegistryBase
                     //this takes the raw bytes and converts it to a string, which we can then search
                     //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
                     //and match against the raw data
-                    asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueDataRaw);
+                    asAscii = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(keyValue.ValueDataRaw);
                     asUnicode = Encoding.Unicode.GetString(keyValue.ValueDataRaw);
 
                     var hitString = string.Empty;
@@ -1566,7 +1566,7 @@ public class RegistryHive : RegistryBase
 
                     if (hitString.Length > 0)
                     {
-                        var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
+                        var asciihex = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetBytes(hitString);
 
                         var asciiHit = BitConverter.ToString(asciihex);
                         yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString,
@@ -1622,7 +1622,7 @@ public class RegistryHive : RegistryBase
                     //this takes the raw bytes and converts it to a string, which we can then search
                     //the regex will find us the hit with exact capitalization, which we can then convert to a byte string
                     //and match against the raw data
-                    var asAscii = Encoding.GetEncoding(1252).GetString(keyValue.ValueSlackRaw);
+                    var asAscii = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(keyValue.ValueSlackRaw);
                     var asUnicode = Encoding.Unicode.GetString(keyValue.ValueSlackRaw);
 
                     var hitString = string.Empty;
@@ -1637,7 +1637,7 @@ public class RegistryHive : RegistryBase
 
                     if (hitString.Length > 0)
                     {
-                        var asciihex = Encoding.GetEncoding(1252).GetBytes(hitString);
+                        var asciihex = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetBytes(hitString);
 
                         var asciiHit = BitConverter.ToString(asciihex);
                         yield return new SearchHit(registryKey.Value, keyValue, asciiHit, hitString,

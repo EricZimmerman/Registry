@@ -160,7 +160,7 @@ public class TransactionLog
 
         while (index < FileBytes.Length)
         {
-            var sig = Encoding.GetEncoding(1252).GetString(FileBytes, index, 4);
+            var sig = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(FileBytes, index, 4);
 
             if (sig != "HvLE")
                 //things arent always HvLE as logs get reused, so check to see if we have another valid header at our current offset

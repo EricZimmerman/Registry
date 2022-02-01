@@ -55,7 +55,7 @@ public class LxListRecord : IListTemplate, IRecordBase
 
                 if (Signature == "lf")
                     //first 4 chars of string
-                    hash = Encoding.GetEncoding(1252).GetString(RawBytes, index, 4);
+                    hash = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, index, 4);
                 else
                     //numerical hash
                     hash = BitConverter.ToUInt32(RawBytes, index).ToString();

@@ -572,11 +572,11 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     {
                         //make sure we have enough data
                         if (RawBytes.Length >= NameLength + 0x18)
-                            valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
+                            valName = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                     }
                     else
                     {
-                        valName = Encoding.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
+                        valName = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                     }
                 }
                 else

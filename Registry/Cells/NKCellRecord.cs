@@ -148,13 +148,13 @@ public class NkCellRecord : ICellTemplate, IRecordBase
                 if (IsFree)
                 {
                     if (RawBytes.Length >= 0x50 + NameLength)
-                        name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                        name = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                     else
                         name = "(Unable to determine name)";
                 }
                 else
                 {
-                    name = Encoding.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                    name = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
                 }
             }
             else
@@ -316,7 +316,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
 
     public long RelativeOffset { get; }
 
-    public string Signature => Encoding.GetEncoding(1252).GetString(RawBytes, 4, 2);
+    public string Signature => CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 4, 2);
 
     public int Size => Math.Abs(BitConverter.ToInt32(RawBytes, 0));
 
