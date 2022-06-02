@@ -15,6 +15,7 @@ internal class TestRegistryHive
     [OneTimeSetUp]
     public void PreTestSetup()
     {
+        Log.Logger = new LoggerConfiguration().WriteTo.Console().MinimumLevel.Debug().CreateLogger();
     }
 
     [Test]
@@ -31,7 +32,7 @@ internal class TestRegistryHive
     [Test]
     public void PoohTest()
     {
-        var f = @"D:\SynologyDrive\Registry\Pooh\Pooh.hve";
+        var f = @"\\192.168.1.17\home\Drive\Registry\UsrClassDeletedBags.dat";
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
         r.ParseHive();

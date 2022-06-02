@@ -54,9 +54,9 @@ public class TransactionLog
 
         if (!HasValidSignature())
         {
-            Log.Error("'{LogFile}' is not a Registry transaction log (bad signature)", logFile);
+            Log.Error("{LogFile} is not a Registry transaction log (bad signature)", logFile);
 
-            throw new Exception($"'{logFile}' is not a Registry transaction log (bad signature)");
+            throw new Exception($"{logFile} is not a Registry transaction log (bad signature)");
         }
 
         LogPath = logFile;
@@ -96,13 +96,14 @@ public class TransactionLog
     {
         var header = ReadBytesFromHive(0, 4096);
 
-        //   Logger.Trace("Getting header");
-
         Header = new RegistryHeader(header);
 
-        //    Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
+        var fileNameSegs = Header.FileName.Split('\\');
 
-        var fNameBase = Path.GetFileName(Header.FileName).ToLowerInvariant();
+        var fNameBase = fileNameSegs.Last();
+        
+        Log.Debug("Got transaction log header. Embedded file name {FileName}. Base Name {Base}", Header.FileName,fNameBase);
+
 
         switch (fNameBase)
         {

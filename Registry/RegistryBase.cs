@@ -58,9 +58,9 @@ public class RegistryBase : IRegistry
 
         if (!HasValidSignature())
         {
-            Log.Error("'{HivePath}' is not a Registry hive (bad signature)", hivePath);
+            Log.Error("{HivePath} is not a Registry hive (bad signature)", hivePath);
 
-            throw new Exception($"'{hivePath}' is not a Registry hive (bad signature)");
+            throw new Exception($"{hivePath} is not a Registry hive (bad signature)");
         }
 
         HivePath = hivePath;
@@ -104,9 +104,11 @@ public class RegistryBase : IRegistry
 
         Header = new RegistryHeader(header);
 
-        //    Logger.Trace("Got header. Embedded file name {0}", Header.FileName);
+        var fileNameSegs = Header.FileName.Split('\\');
 
-        var fNameBase = Path.GetFileName(Header.FileName).ToLowerInvariant();
+        var fNameBase = fileNameSegs.Last();
+        
+        Log.Debug("Got hive header. Embedded file name {FileName}. Base Name {Base}", Header.FileName,fNameBase);
 
         switch (fNameBase)
         {

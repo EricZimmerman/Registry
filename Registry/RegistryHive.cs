@@ -149,7 +149,7 @@ public class RegistryHive : RegistryBase
             {
                 //log predates the last confirmed update, so skip  
                 Log.Warning(
-                    "Dropping '{FileName}' because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber",
+                    "Dropping {FileName} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber",
                     logFile.FileName);
                 continue;
             }
@@ -332,7 +332,7 @@ public class RegistryHive : RegistryBase
                 RegistryKey.KeyFlagsEnum.HasActiveParent == false)
             {
                 Log.Warning(
-                    "Key '{KeyPath}' at absolute offset {AbsoluteOffset} appears to be an old reference as one was already found with HasActiveParent set. Ignoring...",
+                    "Key {KeyPath} at absolute offset {AbsoluteOffset} appears to be an old reference as one was already found with HasActiveParent set. Ignoring...",
                     key.KeyPath, $"0x{key.NkRecord.AbsoluteOffset:X0}");
             }
             else
@@ -342,7 +342,7 @@ public class RegistryHive : RegistryBase
                 {
                     // the existing one does NOT have activeParent set, so replace it
                     Log.Warning(
-                        "Key '{KeyPath}' at absolute offset {AbsoluteOffset} appears to be a more recent reference as it has HasActiveParent set. Updating existing key",
+                        "Key {KeyPath} at absolute offset {AbsoluteOffset} appears to be a more recent reference as it has HasActiveParent set. Updating existing key",
                         key.KeyPath, $"0x{key.NkRecord.AbsoluteOffset:X0}");
                     _keyPathKeyMap[key.KeyPath.ToLowerInvariant()] = key;
                 }
