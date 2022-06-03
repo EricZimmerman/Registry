@@ -100,7 +100,7 @@ public class TransactionLog
 
         var fileNameSegs = Header.FileName.Split('\\');
 
-        var fNameBase = fileNameSegs.Last();
+        var fNameBase = fileNameSegs.Last().ToLowerInvariant();;
         
         Log.Debug("Got transaction log header. Embedded file name {FileName}. Base Name {Base}", Header.FileName,fNameBase);
 

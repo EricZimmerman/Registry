@@ -106,7 +106,7 @@ public class RegistryBase : IRegistry
 
         var fileNameSegs = Header.FileName.Split('\\');
 
-        var fNameBase = fileNameSegs.Last();
+        var fNameBase = fileNameSegs.Last().ToLowerInvariant();
         
         Log.Debug("Got hive header. Embedded file name {FileName}. Base Name {Base}", Header.FileName,fNameBase);
 

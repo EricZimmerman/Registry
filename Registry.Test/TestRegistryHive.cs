@@ -32,7 +32,7 @@ internal class TestRegistryHive
     [Test]
     public void PoohTest()
     {
-        var f = @"\\192.168.1.17\home\Drive\Registry\UsrClassDeletedBags.dat";
+        var f = @"/home/eric/RiderProjects/UsrClassDeletedBags.dat";
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
         r.ParseHive();
