@@ -496,17 +496,25 @@ public class RegistryHive : RegistryBase
                     var cell = CellRecords[offset.Key];
 
                     var nk = cell as NkCellRecord;
-                    nk.IsReferenced = true;
+                    if (nk != null)
+                    {
+                        nk.IsReferenced = true;
 
-                    //          Logger.Trace("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
-                    //     nk.Name);
+                        //          Logger.Trace("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
+                        //     nk.Name);
 
-                    var tempKey = new RegistryKey(nk, key);
+                        var tempKey = new RegistryKey(nk, key);
 
-                    var sks = GetSubKeysAndValues(tempKey);
-                    tempKey.SubKeys.AddRange(sks);
+                        var sks = GetSubKeysAndValues(tempKey);
+                        tempKey.SubKeys.AddRange(sks);
 
-                    keys.Add(tempKey);
+                        keys.Add(tempKey);
+                    }
+                    else
+                    {
+                        Log.Warning("NK record at relative offset {Key} is NULL! Skipping", $"0x{offset.Key}");
+                        continue;
+                    }
                 }
 
                 break;
