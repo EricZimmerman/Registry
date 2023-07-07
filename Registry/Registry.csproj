@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        
         <Authors>Eric Zimmerman</Authors>
         <Company>Eric Zimmerman</Company>
         <Product>Registry parser</Product>
@@ -11,12 +11,31 @@
         <Copyright>Eric Zimmerman</Copyright>
         <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
         <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
-        <Version>1.3.3.2</Version>
+        <Version>1.3.4</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+        <PackageTags>registry, regf</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <!-- If all members are not documented, you can disable the compiler warnings -->
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Serilog" Version="3.0.1" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+
+
+        <None Include="../README.md" Pack="true" PackagePath=""/>
+        <None Include="../icon.png" Pack="true" PackagePath=""/>
+        <PackageReference Include="DotNet.ReproducibleBuilds" Version="1.1.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MinVer" Version="4.3.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 </Project>
