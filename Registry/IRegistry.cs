@@ -27,7 +27,7 @@ public enum HiveTypeEnum
     [Description("USRCLASS")] UsrClass = 6,
     [Description("COMPONENTS")] Components = 7,
     [Description("DRIVERS")] Drivers = 8,
-    [Description("BCD")] Bcd = 8,
     [Description("AMCACHE")] Amcache = 9,
     [Description("SYSCACHE")] Syscache = 10
+    [Description("BCD")] Bcd = 11,
 }
