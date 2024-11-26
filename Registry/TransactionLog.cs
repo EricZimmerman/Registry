@@ -141,6 +141,24 @@ public class TransactionLog
             case "syscache.hve":
                 HiveType = HiveTypeEnum.Syscache;
                 break;
+            case "elam": 
+                HiveType = HiveTypeEnum.Elam;
+                break;
+            case "default": 
+                HiveType = HiveTypeEnum.Default;
+                break;
+            case "Vsmidk": 
+                HiveType = HiveTypeEnum.Vsmidk;
+                break;
+            case "BcdTemplate":
+                HiveType = HiveTypeEnum.BcdTemplate;
+                break;
+            case "bbi": 
+                HiveType = HiveTypeEnum.Bbi;
+                break;
+            case "userdiff": 
+                HiveType = HiveTypeEnum.Userdiff;
+                break;
             default:
                 HiveType = HiveTypeEnum.Other;
                 break;
