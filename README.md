@@ -8,7 +8,7 @@ For discussion and design decisions, see http://binaryforay.blogspot.com/.
 
 ## The goals of this project are:  ##
 
-1. full parsing of all known Registry structures
+1. Full parsing of all known Registry structures
 2. Make Registry value slack space accessible
 3. Deleted key/value support
 4. Easy access to underlying data structures and their raw data as byte arrays
