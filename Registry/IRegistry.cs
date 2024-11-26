@@ -32,8 +32,8 @@ public enum HiveTypeEnum
     [Description("BCD")] Bcd = 11,
     [Description("BCD-Template")] BcdTemplate = 12,
     [Description("ELAM")] Elam= 13,
-    [Description("userdiff")] userdiff = 14,
+    [Description("userdiff")] Userdiff = 14,
     [Description("BBI")] Bbi = 15,
     [Description("VSMIDK")] Vsmidk = 16,
-    [Description("DEFAULT")] Default = 17,
+    [Description("DEFAULT")] Default = 17
 }
