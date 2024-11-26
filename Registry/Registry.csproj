@@ -11,7 +11,7 @@
         <Copyright>Eric Zimmerman</Copyright>
         <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
         <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
-        <Version>1.4.1</Version>
+        <Version>1.4.2</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
         <PackageTags>registry, regf</PackageTags>
