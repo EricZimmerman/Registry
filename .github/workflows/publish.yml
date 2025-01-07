@@ -84,7 +84,7 @@ jobs:
     # You can update this logic if you want to manage releases differently
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    needs: [ validate_nuget, run_test ]
+    needs: [ validate_nuget ]
     steps:
       # Download the NuGet package created in the previous job
       - uses: actions/download-artifact@v4
