@@ -164,6 +164,15 @@ public class RegistryBase : IRegistry
             case "userdiff": 
                 HiveType = HiveTypeEnum.Userdiff;
                 break;
+            case "user.dat": 
+                HiveType = HiveTypeEnum.User;
+                break;
+            case "userclasses.dat": 
+                HiveType = HiveTypeEnum.UserClasses;
+                break;
+            case "settings.dat": 
+                HiveType = HiveTypeEnum.settings;
+                break;
             default:
                 HiveType = HiveTypeEnum.Other;
                 break;
