@@ -38,5 +38,6 @@ public enum HiveTypeEnum
     [Description("DEFAULT")] Default = 17,
     [Description("User")] User = 18,
     [Description("UserClasses")] UserClasses = 19,
-    [Description("settings")] settings = 20
+    [Description("settings")] settings = 20,
+    [Description("Registry")] Registry = 21
 }

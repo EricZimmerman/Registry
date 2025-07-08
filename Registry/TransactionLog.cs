@@ -168,6 +168,9 @@ public class TransactionLog
             case "settings.dat": 
                 HiveType = HiveTypeEnum.settings;
                 break;
+            case "registry.dat": 
+                HiveType = HiveTypeEnum.Registry;
+                break;
             default:
                 HiveType = HiveTypeEnum.Other;
                 break;
