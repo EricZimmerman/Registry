@@ -71,7 +71,45 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
         [Description("A string value, normally stored and exposed in UTF-16LE")]
         RegSz = 0x0001,
-        [Description("Unknown data type")] RegUnknown = 999
+        [Description("Unknown data type")] RegUnknown = 999,
+
+        [Description("UWP Byte")] RegUwpByte = 257,
+        [Description("UWP Int16")] RegUwpInt16 = 258,
+        [Description("UWP Uint16")] RegUwpUint16 = 259,
+        [Description("UWP Int32")] RegUwpInt32 = 260,
+        [Description("UWP Uint32")] RegUwpUint32 = 261,
+        [Description("UWP Int64")] RegUwpInt64 = 262,
+        [Description("UWP Uint64")] RegUwpUint64 = 263,
+        [Description("UWP Single")] RegUwpSingle = 264,
+        [Description("UWP Double")] RegUwpDouble = 265,
+        [Description("UWP Char")] RegUwpChar = 266,
+        [Description("UWP Boolean")] RegUwpBoolean = 267,
+        [Description("UWP String")] RegUwpString = 268,
+        [Description("UWP Composite Value")] RegUwpCompositeValue = 269,
+        [Description("UWP DateTimeOffset")] RegUwpDateTimeOffset = 270,
+        [Description("UWP TimeSpan")] RegUwpTimeSpan = 271,
+        [Description("UWP Guid")] RegUwpGuid = 272,
+        [Description("UWP Point")] RegUwpPoint = 273,
+        [Description("UWP Size")] RegUwpSize = 274,
+        [Description("UWP Rect")] RegUwpRect = 275,
+        [Description("UWP Array of Bytes")] RegUwpArrayByte = 276,
+        [Description("UWP Array of Int16")] RegUwpArrayInt16 = 277,
+        [Description("UWP Array of Uint16")] RegUwpArrayUint16 = 278,
+        [Description("UWP Array of Int32")] RegUwpArrayInt32 = 279,
+        [Description("UWP Array of Uint32")] RegUwpArrayUint32 = 280,
+        [Description("UWP Array of Int64")] RegUwpArrayInt64 = 281,
+        [Description("UWP Array of Uint64")] RegUwpArrayUint64 = 282,
+        [Description("UWP Array of Single")] RegUwpArraySingle = 283,
+        [Description("UWP Array of Double")] RegUwpArrayDouble = 284,
+        [Description("UWP Array of Char")] RegUwpArrayChar = 285,
+        [Description("UWP Array of Boolean")] RegUwpArrayBoolean = 286,
+        [Description("UWP Array of String")] RegUwpArrayString = 287,
+        [Description("UWP Array of DateTimeOffset")] RegUwpArrayDateTimeOffset = 288,
+        [Description("UWP Array of TimeSpan")] RegUwpArrayTimeSpan = 289,
+        [Description("UWP Array of Guid")] RegUwpArrayGuid = 290,
+        [Description("UWP Array of Point")] RegUwpArrayPoint = 291,
+        [Description("UWP Array of Size")] RegUwpArraySize = 292,
+        [Description("UWP Array of Rect")] RegUwpArrayRect = 293
     }
 
     private const uint DwordSignMask = 0x80000000;
@@ -149,7 +187,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
         //force to a known datatype 
         var dataTypeInternal = DataTypeRaw;
 
-        if (dataTypeInternal > (ulong) DataTypeEnum.RegFileTime) dataTypeInternal = 999;
+        if (dataTypeInternal > (ulong) DataTypeEnum.RegUwpArrayRect) dataTypeInternal = 999;
 
         DataType = (DataTypeEnum) dataTypeInternal;
     }
@@ -455,15 +493,262 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         val = _dataLengthInternal == 8 ? BitConverter.ToUInt64(localDbl, _internalDataOffset) : 0;
                         break;
 
-                    case DataTypeEnum.RegUnknown:
-                        val = localDbl;
-                        break;
-
                     case DataTypeEnum.RegLink:
                         val =
                             Encoding.Unicode.GetString(localDbl, _internalDataOffset, (int) _dataLengthInternal)
                                 .Replace("\0", " ")
                                 .Trim();
+                        break;
+                        
+                    case DataTypeEnum.RegUwpByte:
+                        val = $"0x{localDbl[_internalDataOffset]:X2}";
+                        break;
+                    case DataTypeEnum.RegUwpInt16:
+                        val = BitConverter.ToInt16(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpUint16:
+                        val = BitConverter.ToUInt16(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpInt32:
+                        val = BitConverter.ToInt32(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpUint32:
+                        val = BitConverter.ToUInt32(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpInt64:
+                        val = BitConverter.ToInt64(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpUint64:
+                        val = BitConverter.ToUInt64(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpSingle:
+                        val = BitConverter.ToSingle(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpDouble:
+                        val = BitConverter.ToDouble(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpChar:
+                        val = BitConverter.ToChar(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpBoolean:
+                        val = BitConverter.ToBoolean(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpString:
+                        var end = _internalDataOffset;
+                        while (end + 1 < localDbl.Length)
+                        {
+                            if (localDbl[end] == 0x00 && localDbl[end + 1] == 0x00)
+                                break;
+                            end += 2;
+                        }
+
+                        val = Encoding.Unicode.GetString(localDbl, _internalDataOffset, end - _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpCompositeValue://TODO: Decipher this. For now we just output the raw bytes
+                        var numRecs = (int)(_dataLengthInternal - 8) / 1;
+                        var valComposite = new byte[numRecs];
+                        Array.Copy(localDbl, _internalDataOffset, valComposite, 0, numRecs);
+
+                        val = string.Format("[{0}]", string.Join(", ", valComposite.Select(b => $"0x{b:X2}")));
+                        break;
+                    case DataTypeEnum.RegUwpDateTimeOffset:
+                        val = BitConverter.ToInt64(localDbl, _internalDataOffset);
+                        break;
+                    case DataTypeEnum.RegUwpTimeSpan:
+                        val = new TimeSpan(BitConverter.ToInt64(localDbl, _internalDataOffset));
+                        break;
+                    case DataTypeEnum.RegUwpGuid:
+                        var guidBytes = new byte[16];
+                        Array.Copy(localDbl, _internalDataOffset, guidBytes, 0, 16);
+                        val = new Guid(guidBytes);
+                        break;
+                    case DataTypeEnum.RegUwpPoint:
+                        val = $"X: {BitConverter.ToSingle(localDbl, _internalDataOffset)}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + 4)}";
+                        break;
+                    case DataTypeEnum.RegUwpSize:
+                        val = $"Width: {BitConverter.ToSingle(localDbl, _internalDataOffset)}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + 4)}";
+                        break;
+                    case DataTypeEnum.RegUwpRect:
+                        val = $"X: {BitConverter.ToSingle(localDbl, _internalDataOffset)}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + 4)}, Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + 8)}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + 12)}";
+                        break;
+                    case DataTypeEnum.RegUwpArrayByte:
+                        numRecs = (int)(_dataLengthInternal - 8) / 1;
+                        var valBytes = new byte[numRecs];
+                        Array.Copy(localDbl, _internalDataOffset, valBytes, 0, numRecs);
+                        val = string.Format("[{0}]", string.Join(", ", valBytes.Select(b => $"0x{b:X2}")));
+                        break;
+                    case DataTypeEnum.RegUwpArrayInt16:
+                        numRecs = (int)(_dataLengthInternal - 8) / 2;
+                        var valInt16 = new short[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valInt16[i] = BitConverter.ToInt16(localDbl, _internalDataOffset + (i * 2));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valInt16));
+                        break;
+                    case DataTypeEnum.RegUwpArrayUint16:
+                        numRecs = (int)(_dataLengthInternal - 8) / 2;
+                        var valUint16 = new ushort[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valUint16[i] = BitConverter.ToUInt16(localDbl, _internalDataOffset + (i * 2));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valUint16));
+                        break;
+                    case DataTypeEnum.RegUwpArrayInt32:
+                        numRecs = (int)(_dataLengthInternal - 8) / 4;
+                        var valInt32 = new int[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valInt32[i] = BitConverter.ToInt32(localDbl, _internalDataOffset + (i * 4));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valInt32));
+                        break;
+                    case DataTypeEnum.RegUwpArrayUint32:
+                        numRecs = (int)(_dataLengthInternal - 8) / 4;
+                        var valUint32 = new uint[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valUint32[i] = BitConverter.ToUInt32(localDbl, _internalDataOffset + (i * 4));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valUint32));
+                        break;
+                    case DataTypeEnum.RegUwpArrayInt64:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valInt64 = new long[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valInt64[i] = BitConverter.ToInt64(localDbl, _internalDataOffset + (i * 8));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valInt64));
+                        break;
+                    case DataTypeEnum.RegUwpArrayUint64:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valUint64 = new ulong[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valUint64[i] = BitConverter.ToUInt64(localDbl, _internalDataOffset + (i * 8));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valUint64));
+                        break;
+                    case DataTypeEnum.RegUwpArraySingle:
+                        numRecs = (int)(_dataLengthInternal - 8) / 4;
+                        var valSingle = new float[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valSingle[i] = BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 4));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valSingle));
+                        break;
+                    case DataTypeEnum.RegUwpArrayDouble:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valDouble = new double[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valDouble[i] = BitConverter.ToDouble(localDbl, _internalDataOffset + (i * 8));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valDouble));
+                        break;
+                    case DataTypeEnum.RegUwpArrayChar:
+                        numRecs = (int)(_dataLengthInternal - 8) / 2;
+                        var valChar = new char[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valChar[i] = BitConverter.ToChar(localDbl, _internalDataOffset + (i * 2));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valChar));
+                        break;
+                    case DataTypeEnum.RegUwpArrayBoolean:
+                        numRecs = (int)(_dataLengthInternal - 8);
+                        var valBool = new bool[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valBool[i] = BitConverter.ToBoolean(localDbl, _internalDataOffset + i);
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valBool));
+                        break;
+                    case DataTypeEnum.RegUwpArrayString:
+                        var check = _internalDataOffset;
+                        var elStrings = new List<string>();
+                        var dataLen = _dataLengthInternal - 8;
+
+                        while (check < dataLen)
+                        {
+                            var lengthString = BitConverter.ToInt32(localDbl, check);
+                            if (check + 4 + lengthString > localDbl.Length)
+                            {
+                                // if data is truncated, get what we can
+                                lengthString = localDbl.Length - (check + 4);
+                                if (lengthString < 0)
+                                {
+                                    break;
+                                }
+                            }
+                            var elementString = Encoding.Unicode.GetString(localDbl, check + 4, lengthString - 2);
+                            elStrings.Add(elementString);
+                            check = check + lengthString + 4;
+                        }
+                        val = string.Format("[{0}]", string.Join(",", elStrings));
+                        break;
+                    case DataTypeEnum.RegUwpArrayDateTimeOffset:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valDateTimeOffset = new long[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valDateTimeOffset[i] = BitConverter.ToInt64(localDbl, _internalDataOffset + (i * 8));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valDateTimeOffset));
+                        break;
+                    case DataTypeEnum.RegUwpArrayTimeSpan:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valTimeSpan = new TimeSpan[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valTimeSpan[i] = new TimeSpan(BitConverter.ToInt64(localDbl, _internalDataOffset + (i * 8)));
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valTimeSpan));
+                        break;
+                    case DataTypeEnum.RegUwpArrayGuid:
+                        numRecs = (int)(_dataLengthInternal - 8) / 16;
+                        var valGUID = new Guid[numRecs];
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            var gBytes = new byte[16];
+                            Array.Copy(localDbl, _internalDataOffset + (i * 16), gBytes, 0, 16);
+                            valGUID[i] = new Guid(gBytes);
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valGUID));
+                        break;
+                    case DataTypeEnum.RegUwpArrayPoint:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valPoint = new List<string>();
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valPoint.Add($"X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}");
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valPoint));
+                        break;
+                    case DataTypeEnum.RegUwpArraySize:
+                        numRecs = (int)(_dataLengthInternal - 8) / 8;
+                        var valSize = new List<string>();
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valSize.Add($"Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}");
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valSize));
+                        break;
+                    case DataTypeEnum.RegUwpArrayRect:
+                        numRecs = (int)(_dataLengthInternal - 8) / 16;
+                        var valRect = new List<string>();
+                        for (var i = 0; i < numRecs; i++)
+                        {
+                            valRect.Add($"X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*16))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 4)}, Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 8)}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 12)}");
+                        }
+                        val = string.Format("[{0}]", string.Join(",", valRect));
+                        break;
+
+                    case DataTypeEnum.RegUnknown:
+                        val = localDbl;
                         break;
 
                     default:
