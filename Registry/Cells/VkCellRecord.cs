@@ -724,7 +724,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         var valPoint = new List<string>();
                         for (var i = 0; i < numRecs; i++)
                         {
-                            valPoint.Add($"X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}");
+                            valPoint.Add($"{{X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}}}");
                         }
                         val = string.Format("[{0}]", string.Join(",", valPoint));
                         break;
@@ -733,7 +733,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         var valSize = new List<string>();
                         for (var i = 0; i < numRecs; i++)
                         {
-                            valSize.Add($"Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}");
+                            valSize.Add($"{{Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}}}");
                         }
                         val = string.Format("[{0}]", string.Join(",", valSize));
                         break;
@@ -742,7 +742,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         var valRect = new List<string>();
                         for (var i = 0; i < numRecs; i++)
                         {
-                            valRect.Add($"X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*16))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 4)}, Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 8)}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 16) + 12)}");
+                            valRect.Add($"{{X: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i*8))}, Y: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 4)}, Width: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 8)}, Height: {BitConverter.ToSingle(localDbl, _internalDataOffset + (i * 8) + 12)}}}");
                         }
                         val = string.Format("[{0}]", string.Join(",", valRect));
                         break;
