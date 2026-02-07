@@ -45,6 +45,23 @@ public class TransactionLog
         binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
 
         FileBytes = binaryReader.ReadBytes((int) binaryReader.BaseStream.Length);
+        
+        var header = ReadBytesFromHive(0, 4096);
+
+        var h = new RegistryHeader(header);
+        
+        if (h.Length > FileBytes.Length)
+        {
+            var diff = Header.Length - FileBytes.Length;
+            //we need to add some bytes so the size is the same
+            Log.Debug("Log size exceeds hive size. Adding {Diff} bytes to hive bytes",diff);
+
+            var local = FileBytes;
+            
+            Array.Resize(ref local,(int)(local.Length+diff));
+
+            FileBytes = local;
+        }
 
         binaryReader.Close();
         fileStream.Close();
@@ -236,9 +253,14 @@ public class TransactionLog
             NewSequenceNumber = transactionLogEntry.SequenceNumber;
 
             foreach (var dirtyPage in transactionLogEntry.DirtyPages)
-                //     Logger.Trace($"Processing dirty page: {dirtyPage}");
+            {
+               
 
                 Buffer.BlockCopy(dirtyPage.PageBytes, 0, hiveBytes, dirtyPage.Offset + baseOffset, dirtyPage.Size);
+            }
+                
+            
+                
         }
 
         return hiveBytes;

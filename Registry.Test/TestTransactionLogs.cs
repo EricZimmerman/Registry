@@ -6,8 +6,15 @@ using Serilog;
 
 namespace Registry.Test;
 
+
+
+
 public class TestTransactionLogs
 {
+   
+    
+    
+    
     [Test]
     [Ignore("Unknown test source file.")]
     public void HiveTestAmcache()
@@ -60,6 +67,12 @@ public class TestTransactionLogs
 //            }
 //
 //        }
+
+    [Test]
+    public void OneOff2()
+    {
+
+    }
 
     [Test]
     public void OneOff()
