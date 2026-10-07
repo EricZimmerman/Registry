@@ -864,6 +864,13 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         valName = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
                     }
                 }
+                else if (!IsFree)
+                {
+                    // An allocated record without the ASCII flag stores its name in UTF-16LE. The check below looks
+                    // for a 0x00 byte, which a name made only of characters above U+00FF (Japanese, Chinese, Cyrillic, ...)
+                    // does not have, so it is not applied here.
+                    valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                }
                 else
                 {
                     // in very rare cases, the ValueName is in ascii even when it should be in Unicode.
