@@ -986,4 +986,27 @@ internal class TestVkCellRecord
         Check.That(val.VkRecord.ValueDataSlack.Length).IsEqualTo(0);
         Check.That(val.VkRecord.ToString()).IsNotEmpty();
     }
+
+    [Test]
+    public void ShouldReadUnicodeValueNamesWithoutLatinCharacters()
+    {
+        // Saved with reg.exe: each value name is stored in UTF-16LE (no ASCII flag). Names made only of characters
+        // above U+00FF have no 0x00 byte in their UTF-16LE form.
+        var hive = new RegistryHiveOnDemand(@".\Hives\UnicodeValueNames");
+        var key = hive.GetKey(@"ApUnicodeValueNames\日本語キー");
+
+        Check.That(key).IsNotNull();
+
+        var names = key.Values.Select(v => v.ValueName).ToList();
+
+        Check.That(names).Contains("値の名前", "中文名称", "Полиморфизм", "Abc値");
+        Check.That(names).Not.Contains("(Unable to determine name)");
+
+        var val = key.Values.Single(v => v.ValueName == "値の名前");
+
+        Check.That(val.VkRecord.IsFree).IsFalse();
+        Check.That(val.VkRecord.NamePresentFlag).IsEqualTo(0x0);
+        Check.That(val.VkRecord.NameLength).IsEqualTo(8);
+        Check.That(val.ValueData).IsEqualTo("データ");
+    }
 }
