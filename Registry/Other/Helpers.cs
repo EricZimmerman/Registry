@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -12,6 +12,36 @@ namespace Registry.Other;
 // public classes...
 public static class Helpers
 {
+    /// <summary>
+    ///     A name stored with one byte per character (the compressed name flag): Windows widens each byte to a UTF-16
+    ///     character, so it is Latin-1, not Windows-1252 (0x80-0x9F are control characters there, not letters)
+    /// </summary>
+    /// <summary>
+    ///     A copy of <paramref name="length" /> bytes of <paramref name="bytes" /> from <paramref name="offset" />.
+    ///     (new ArraySegment&lt;byte&gt;(...).ToArray() is LINQ's ToArray on netstandard2.0: it boxes the segment and
+    ///     copies a byte at a time)
+    /// </summary>
+    internal static byte[] Slice(byte[] bytes, int offset, int length)
+    {
+        if (offset < 0 || length < 0 || offset + (long) length > bytes.Length)
+            throw new ArgumentOutOfRangeException(nameof(length), $"0x{length:X} bytes at 0x{offset:X} is outside the 0x{bytes.Length:X} bytes available");
+
+        var r = new byte[length];
+        Buffer.BlockCopy(bytes, offset, r, 0, length);
+        return r;
+    }
+
+    internal static string Latin1(byte[] bytes, int offset, int length)
+    {
+        if (offset < 0 || length <= 0 || offset >= bytes.Length) return string.Empty;
+        if (offset + length > bytes.Length) length = bytes.Length - offset;
+
+        var chars = new char[length];
+        for (var i = 0; i < length; i++) chars[i] = (char) bytes[offset + i];
+
+        return new string(chars);
+    }
+
     // public enums...
     //http://msdn.microsoft.com/en-us/library/cc980032.aspx
     public enum SidTypeEnum

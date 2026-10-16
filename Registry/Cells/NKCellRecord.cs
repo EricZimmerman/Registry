@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,6 +60,16 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     }
 
     private readonly int _rawBytesLength;
+
+    // Fields are read where they are in the hive, rather than from a copy of the record (RawBytes) per read, which
+    // was most of the time and allocations of a parse. A read past the record (or the file) uses RawBytes, as before
+    private bool InPlace(int offset, int length) => offset >= 0 && offset + length <= _rawBytesLength && AbsoluteOffset + offset + length <= _registryHive.FileBytes.Length;
+    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt16(RawBytes, offset);
+    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt16(RawBytes, offset);
+    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt32(RawBytes, offset);
+    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt32(RawBytes, offset);
+    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt64(RawBytes, offset);
+    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : RawBytes[offset];
     private readonly IRegistry _registryHive;
 
     // public fields...
@@ -90,7 +100,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var num = BitConverter.ToUInt32(RawBytes, 0x34);
+            var num = U32(0x34);
 
             if (num == 0xFFFFFFFF) return 0;
 
@@ -101,17 +111,17 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     The length of the classname in the data node referenced by ClassCellIndex.
     /// </summary>
-    public ushort ClassLength => BitConverter.ToUInt16(RawBytes, 0x4e);
+    public ushort ClassLength => U16(0x4e);
 
     /// <summary>
     ///     This is a Flags based enum, but is disabled in retail versions of Windows, so the flags are not broken down here.
     /// </summary>
-    public byte Debug => RawBytes[0x3b];
+    public byte Debug => B(0x3b);
 
     //TODO Layer semantics?
-    public AccessFlag Access => (AccessFlag) BitConverter.ToInt32(RawBytes, 0x10);
+    public AccessFlag Access => (AccessFlag) I32(0x10);
 
-    public FlagEnum Flags => (FlagEnum) BitConverter.ToUInt16(RawBytes, 6);
+    public FlagEnum Flags => (FlagEnum) U16(6);
 
     /// <summary>
     ///     The last write time of this key
@@ -120,26 +130,30 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var ts = BitConverter.ToInt64(RawBytes, 0x8);
+            var ts = I64(0x8);
 
             return DateTimeOffset.FromFileTime(ts).ToUniversalTime();
         }
     }
 
-    public uint MaximumClassLength => BitConverter.ToUInt32(RawBytes, 0x3c);
+    public uint MaximumClassLength => U32(0x3c);
 
-    public ushort MaximumNameLength => BitConverter.ToUInt16(RawBytes, 0x38);
+    public ushort MaximumNameLength => U16(0x38);
 
-    public uint MaximumValueDataLength => BitConverter.ToUInt32(RawBytes, 0x44);
+    public uint MaximumValueDataLength => U32(0x44);
 
-    public uint MaximumValueNameLength => BitConverter.ToUInt32(RawBytes, 0x40);
+    public uint MaximumValueNameLength => U32(0x40);
 
     /// <summary>
     ///     The name of this key. This is what is shown on the left side of RegEdit in the key and subkey tree.
     /// </summary>
-    public string Name
+    private string _name;
+
+    /// <summary>The key's name (decoded once; the hive's bytes don't change after a record is created)</summary>
+    public string Name => _name ??= DecodeName();
+
+    private string DecodeName()
     {
-        get
         {
             string name;
 
@@ -148,13 +162,13 @@ public class NkCellRecord : ICellTemplate, IRecordBase
                 if (IsFree)
                 {
                     if (RawBytes.Length >= 0x50 + NameLength)
-                        name = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                        name = Helpers.Latin1(RawBytes, 0x50, NameLength);
                     else
                         name = "(Unable to determine name)";
                 }
                 else
                 {
-                    name = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x50, NameLength);
+                    name = Helpers.Latin1(RawBytes, 0x50, NameLength);
                 }
             }
             else
@@ -176,7 +190,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
         }
     }
 
-    public ushort NameLength => BitConverter.ToUInt16(RawBytes, 0x4c);
+    public ushort NameLength => U16(0x4c);
 
     public byte[] Padding
     {
@@ -193,7 +207,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
             var paddingLength = actualPaddingOffset - paddingOffset;
 
             if (paddingLength > 0 && paddingOffset + paddingLength <= RawBytes.Length)
-                return new ArraySegment<byte>(RawBytes, paddingOffset, paddingLength).ToArray();
+                return Helpers.Slice(RawBytes, paddingOffset, paddingLength);
 
             return new byte[0];
         }
@@ -202,12 +216,12 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     The relative offset to the parent key for this record
     /// </summary>
-    public uint ParentCellIndex => BitConverter.ToUInt32(RawBytes, 0x14);
+    public uint ParentCellIndex => U32(0x14);
 
     /// <summary>
     ///     The relative offset to the security record for this record
     /// </summary>
-    public uint SecurityCellIndex => BitConverter.ToUInt32(RawBytes, 0x30);
+    public uint SecurityCellIndex => U32(0x30);
 
     /// <summary>
     ///     When true, this key has been deleted
@@ -221,9 +235,9 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     The number of subkeys this key contains
     /// </summary>
-    public uint SubkeyCountsStable => BitConverter.ToUInt32(RawBytes, 0x18);
+    public uint SubkeyCountsStable => U32(0x18);
 
-    public uint SubkeyCountsVolatile => BitConverter.ToUInt32(RawBytes, 0x1c);
+    public uint SubkeyCountsVolatile => U32(0x1c);
 
     /// <summary>
     ///     The relative offset to a list (or list of lists) that points to other NKRecords. These records are subkeys of this
@@ -233,7 +247,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var num = BitConverter.ToUInt32(RawBytes, 0x20);
+            var num = U32(0x20);
 
             if (num == 0xFFFFFFFF) return 0;
 
@@ -245,7 +259,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var num = BitConverter.ToUInt32(RawBytes, 0x24);
+            var num = U32(0x24);
 
             if (num == 0xFFFFFFFF) num = 0;
 
@@ -257,7 +271,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
+            var rawFlags = Convert.ToString(B(0x3a), 2).PadLeft(8, '0');
 
             return (UserFlag) Convert.ToInt32(rawFlags.Substring(0, 4));
         }
@@ -270,7 +284,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     {
         get
         {
-            var num = BitConverter.ToUInt32(RawBytes, 0x2c);
+            var num = U32(0x2c);
 
             if (num == 0xFFFFFFFF) return 0;
 
@@ -281,13 +295,13 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     The number of values this key contains
     /// </summary>
-    public uint ValueListCount => BitConverter.ToUInt32(RawBytes, 0x28);
+    public uint ValueListCount => U32(0x28);
 
     public VirtualizationControlFlag VirtualControlFlags
     {
         get
         {
-            var rawFlags = Convert.ToString(RawBytes[0x3a], 2).PadLeft(8, '0');
+            var rawFlags = Convert.ToString(B(0x3a), 2).PadLeft(8, '0');
 
             return (VirtualizationControlFlag) Convert.ToInt32(rawFlags.Substring(4, 4));
         }
@@ -296,12 +310,12 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     Unused starting with Windows XP
     /// </summary>
-    public uint WorkVar => BitConverter.ToUInt32(RawBytes, 0x48);
+    public uint WorkVar => U32(0x48);
 
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;
 
-    public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
+    public bool IsFree => I32(0) > 0;
 
     public bool IsReferenced { get; internal set; }
 
@@ -316,9 +330,9 @@ public class NkCellRecord : ICellTemplate, IRecordBase
 
     public long RelativeOffset { get; }
 
-    public string Signature => CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 4, 2);
+    public string Signature => InPlace(4, 2) ? Encoding.ASCII.GetString(_registryHive.FileBytes, (int) AbsoluteOffset + 4, 2) : Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(BitConverter.ToInt32(RawBytes, 0));
+    public int Size => Math.Abs(I32(0));
 
     // public methods...
     public override string ToString()

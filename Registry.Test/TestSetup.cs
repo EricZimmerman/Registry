@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using NUnit.Framework;
 
 namespace Registry.Test;
@@ -35,66 +35,66 @@ public class TestSetup
     public void InitializeObjects()
     {
         Debug.WriteLine("Initializing hives...");
-        //SamOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM");
+        //SamOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
 
-        //var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_hasBigEndianDWord");
-        //   var   SamDupeNameOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SAM_DUPENAME");
-        //var NtUser1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\NTUSER1.DAT");
+        //var SamHasBigEndianOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM_hasBigEndianDWord"));
+        //   var   SamDupeNameOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM_DUPENAME"));
+        //var NtUser1OnDemand = new RegistryHiveOnDemand(TestHives.Path(@"NTUSER1.DAT"));
 
-        //var UsrClassDeletedBagsOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClassDeletedBags.dat");
-        // var SoftwareOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SOFTWARE");
-        //  var     SystemOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\SYSTEM");
+        //var UsrClassDeletedBagsOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"UsrClassDeletedBags.dat"));
+        // var SoftwareOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SOFTWARE"));
+        //  var     SystemOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SYSTEM"));
 
-//          var  Bcd = new RegistryHive(@"..\.\Hives\BCD");
+//          var  Bcd = new RegistryHive(TestHives.Path(@"BCD"));
 //            Bcd.FlushRecordListsAfterParse = false;
 //            Bcd.RecoverDeleted = true;
 //            Bcd.ParseHive();
 
-//          var  UsrclassDeleted = new RegistryHive(@"..\.\Hives\UsrClassDeletedBags.dat");
+//          var  UsrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
 //            UsrclassDeleted.RecoverDeleted = true;
 //            UsrclassDeleted.FlushRecordListsAfterParse = false;
 //            UsrclassDeleted.ParseHive();
 
-//            var UsrclassAcronis = new RegistryHive(@"..\.\Hives\Acronis_0x52_Usrclass.dat");
+//            var UsrclassAcronis = new RegistryHive(TestHives.Path(@"Acronis_0x52_Usrclass.dat"));
 //            UsrclassAcronis.RecoverDeleted = true;
 //            UsrclassAcronis.FlushRecordListsAfterParse = false;
 //            UsrclassAcronis.ParseHive();
 
-//           var UsrClass1 = new RegistryHive(@"..\.\Hives\UsrClass 1.dat");
+//           var UsrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
 //            UsrClass1.RecoverDeleted = true;
 //            UsrClass1.FlushRecordListsAfterParse = false;
 //            UsrClass1.ParseHive();
 
-        //var UsrClass1OnDemand = new RegistryHiveOnDemand(@"..\.\Hives\UsrClass 1.dat");
+        //var UsrClass1OnDemand = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass 1.dat"));
 
-//         var   UsrClassBeef = new RegistryHive(@"..\.\Hives\UsrClass BEEF000E.dat");
+//         var   UsrClassBeef = new RegistryHive(TestHives.Path(@"UsrClass BEEF000E.dat"));
 //            UsrClassBeef.RecoverDeleted = true;
 //            UsrClassBeef.FlushRecordListsAfterParse = false;
 //            UsrClassBeef.ParseHive();
 
-//           var NtUserSlack = new RegistryHive(@"..\.\Hives\NTUSER slack.DAT");
+//           var NtUserSlack = new RegistryHive(TestHives.Path(@"NTUSER slack.DAT"));
 //            NtUserSlack.FlushRecordListsAfterParse = false;
 //            NtUserSlack.ParseHive();
 
-//            Sam = new RegistryHive(@"..\.\Hives\SAM");
+//            Sam = new RegistryHive(TestHives.Path(@"SAM"));
 //            Sam.FlushRecordListsAfterParse = false;
 //            Sam.ParseHive();
 
 
-//           var  Security = new RegistryHiveOnDemand(@"..\.\Hives\SECURITY");
-//           var DriversOnDemand = new RegistryHiveOnDemand(@"..\.\Hives\DRIVERS");
+//           var  Security = new RegistryHiveOnDemand(TestHives.Path(@"SECURITY"));
+//           var DriversOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"DRIVERS"));
 
-//           var Drivers = new RegistryHive(@"..\.\Hives\DRIVERS");
+//           var Drivers = new RegistryHive(TestHives.Path(@"DRIVERS"));
 //            Drivers.FlushRecordListsAfterParse = false;
 //            Drivers.RecoverDeleted = true;
 //            Drivers.ParseHive();
 
-//          var  System = new RegistryHive(@"..\.\Hives\System");
+//          var  System = new RegistryHive(TestHives.Path(@"System"));
 //            System.FlushRecordListsAfterParse = false;
 //            System.ParseHive();
 
-//          var  SanOther = new RegistryHiveOnDemand(@"..\.\Hives\SAN(OTHER)");
-//          var  UsrClassFtp = new RegistryHiveOnDemand(@"..\.\Hives\UsrClass FTP.dat");
+//          var  SanOther = new RegistryHiveOnDemand(TestHives.Path(@"SAN(OTHER)"));
+//          var  UsrClassFtp = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass FTP.dat"));
     }
 
     [OneTimeTearDown]

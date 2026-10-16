@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Registry.Cells;
 
@@ -20,14 +20,15 @@ public class KeyValue
     public KeyValue(VkCellRecord vk)
     {
         VkRecord = vk;
-        InternalGuid = Guid.NewGuid().ToString();
     }
 
     // public properties...
+    private string _internalGuid;
+
     /// <summary>
-    ///     A unique value that can be used to find this key in a collection
+    ///     A unique value that can be used to find this key in a collection (made when it is first read)
     /// </summary>
-    public string InternalGuid { get; }
+    public string InternalGuid => _internalGuid ??= Guid.NewGuid().ToString();
 
     /// <summary>
     ///     The normalized representation of the value's value.

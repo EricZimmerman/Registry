@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,9 +91,7 @@ public class RegistryBase : IRegistry
 
         if (readLength > remaining) readLength = (int) remaining;
 
-        var r = new ArraySegment<byte>(FileBytes, (int) offset, readLength);
-
-        return r.ToArray();
+        return Helpers.Slice(FileBytes, (int) offset, readLength);
     }
 
     internal void Initialize()
@@ -152,10 +150,10 @@ public class RegistryBase : IRegistry
             case "default": 
                 HiveType = HiveTypeEnum.Default;
                 break;
-            case "Vsmidk": 
+            case "vsmidk":
                 HiveType = HiveTypeEnum.Vsmidk;
                 break;
-            case "BcdTemplate":
+            case "bcd-template":
                 HiveType = HiveTypeEnum.BcdTemplate;
                 break;
             case "bbi": 

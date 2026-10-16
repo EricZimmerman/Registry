@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Registry.Other;
@@ -109,7 +109,7 @@ public class LkCellRecord : ICellTemplate, IRecordBase
 
         //  if (Flags.ToString().Contains(FlagEnum.CompressedName.ToString()))
         if ((Flags & FlagEnum.CompressedName) == FlagEnum.CompressedName)
-            Name = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(rawBytes, 0x50, NameLength);
+            Name = Helpers.Latin1(rawBytes, 0x50, NameLength);
         else
             Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
 

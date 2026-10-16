@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Registry.Cells;
 using Registry.Lists;
 using Serilog;
+using Serilog.Events;
 using static Registry.Other.Helpers;
 
 // namespaces...
@@ -136,44 +137,44 @@ public class HBinRecord
             // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
             readSize = Math.Abs(readSize);
 
-            //           _registryHive.Logger.Trace(
-            //               $"Getting rawRecord at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X}). readsize: {readSize}");
+            if (readSize < 8 || offsetInHbin + (long) readSize > _rawBytes.Length)
+            {
+                //cells are at least 8 bytes (and 8 byte aligned), and in the hbin; anything else means this hbin is damaged here
+                Log.Warning("Cell at absolute offset 0x{Offset:X} has an invalid size (0x{Size:X}). Skipping the rest of the hbin",
+                    offsetInHbin + RelativeOffset + 0x1000, recordSize);
+                RegistryHive.SoftParsingErrorsInternal += 1;
+                break;
+            }
 
-
-            Log.Verbose("Processing hbin at relative offset {RelativeOffset} (Absolute offset: {AbsoluteOffset})",
-                $"0x{RelativeOffset:X}", $"0x{AbsoluteOffset:X}");
-
-            var rawRecord = new ArraySegment<byte>(_rawBytes, offsetInHbin, readSize).ToArray();
+            if (Log.IsEnabled(LogEventLevel.Verbose))
+                Log.Verbose("Processing hbin at relative offset {RelativeOffset} (Absolute offset: {AbsoluteOffset})",
+                    $"0x{RelativeOffset:X}", $"0x{AbsoluteOffset:X}");
 
             _registryHive.TotalBytesRead += readSize;
 
-            var cellSignature = Encoding.ASCII.GetString(rawRecord, 4, 2);
-            var cellSignature2 = BitConverter.ToInt16(rawRecord, 4);
+            var cellSignature2 = BitConverter.ToInt16(_rawBytes, offsetInHbin + 4);
 
-            if (cellSignature2 == LkSignature && rawRecord.Length < 0x50)
+            if (cellSignature2 == LkSignature && readSize < 0x50)
                 //this is not an ln, its data, so update the sig
                 cellSignature2 = 0x0;
 
-            // //ncrunch: no coverage start
-            // if (_registryHive.Logger.IsDebugEnabled)
-            // {
-            //     var foundMatch = false;
-            //
-            //     foundMatch = Regex.IsMatch(cellSignature, @"\A[a-z]{2}\z");
-            //
-            //     //only process records with 2 letter signatures. this avoids crazy output for data cells
-            //     if (foundMatch)
-            //     {
-            //         //                 _registryHive.Logger.Trace(
-            //         //                      $"Processing {cellSignature} record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
-            //     }
-            //     else
-            //     {
-            //         //                 _registryHive.Logger.Trace(
-            //         //                      $"Processing data record at hbin relative offset 0x{offsetInHbin:X} (Absolute offset: 0x{offsetInHbin + RelativeOffset + 0x1000:X})");
-            //     }
-            // }
-            // //ncrunch: no coverage end
+            //nk and vk records read themselves from the hive, and data cells are only needed to recover deleted records,
+            //so only the others are copied
+            var needsCopy = cellSignature2 switch
+            {
+                NkSignature or VkSignature => false,
+                LfSignature or LhSignature or LiSignature or RiSignature or DbSignature or LkSignature or SkSignature => true,
+                _ => _recoverDeleted
+            };
+
+            if (needsCopy == false && cellSignature2 != NkSignature && cellSignature2 != VkSignature)
+            {
+                offsetInHbin += readSize;
+                continue;
+            }
+
+            var rawRecord = needsCopy ? Helpers.Slice(_rawBytes, offsetInHbin, readSize) : null;
+            var cellSignature = Encoding.ASCII.GetString(_rawBytes, offsetInHbin + 4, 2);
 
             ICellTemplate cellRecord = null;
             IListTemplate listRecord = null;
@@ -206,20 +207,20 @@ public class HBinRecord
                         break; //ncrunch: no coverage
 
                     case NkSignature:
-                        if (rawRecord.Length >= 0x30) // the minimum length for a recoverable record
-                            cellRecord = new NkCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
+                        if (readSize >= 0x30) // the minimum length for a recoverable record
+                            cellRecord = new NkCellRecord(readSize, offsetInHbin + RelativeOffset,
                                 _registryHive);
 
                         break;
                     case SkSignature:
-                        if (rawRecord.Length >= 0x14) // the minimum length for a recoverable record
+                        if (readSize >= 0x14) // the minimum length for a recoverable record
                             cellRecord = new SkCellRecord(rawRecord, offsetInHbin + RelativeOffset);
 
                         break;
 
                     case VkSignature:
-                        if (rawRecord.Length >= 0x18) // the minimum length for a recoverable record
-                            cellRecord = new VkCellRecord(rawRecord.Length, offsetInHbin + RelativeOffset,
+                        if (readSize >= 0x18) // the minimum length for a recoverable record
+                            cellRecord = new VkCellRecord(readSize, offsetInHbin + RelativeOffset,
                                 _minorVersion, _registryHive);
 
                         break;
@@ -233,7 +234,8 @@ public class HBinRecord
             {
                 //check size and see if its free. if so, dont worry about it. too small to be of value, but store it somewhere else?
 
-                var size = BitConverter.ToInt32(rawRecord, 0);
+                var size = BitConverter.ToInt32(_rawBytes, offsetInHbin);
+                rawRecord ??= Helpers.Slice(_rawBytes, offsetInHbin, readSize);
 
                 if (size < 0)
                 {
@@ -305,7 +307,7 @@ public class HBinRecord
         //   _registryHive.Logger.Trace("Looking for cell signatures at absolute offset 0x{0:X}",
         //          relativeoffset + 0x1000);
 
-        for (var i = 0; i < remainingData.Length; i++)
+        for (var i = 5; i < remainingData.Length; i++)
             if (remainingData[i] == 0x6b) //6b == k
                 if (remainingData[i - 1] == 0x6e || remainingData[i - 1] == 0x76) //6e = n, 76 = v
                     //if we are here we have a good signature, nk or vk
@@ -322,11 +324,28 @@ public class HBinRecord
 
                 var size = BitConverter.ToInt32(remainingData, actualStart);
 
-                if (Math.Abs(size) <= 3 || remainingData.Length - actualStart < size)
-                    //if its empty or the size is beyond the data that is left, move on
+                if (Math.Abs(size) <= 3)
+                    //if its empty, move on
                     continue;
 
-                raw = new ArraySegment<byte>(remainingData, actualStart, Math.Abs(size)).ToArray();
+                var declared = Math.Abs(size);
+                var pastCell = remainingData.Length - actualStart < declared;
+                if (pastCell)
+                {
+                    //issue #20: a remnant whose size goes past the end of this cell. When a deleted key's cell was merged
+                    //with the one before it, and the result split again to hold (say) a subkeys list, the remnant is in
+                    //the slack of that list, and its data goes on in the hive past the list's cell. Read it from the hive
+                    //(the records read their bytes from there), when it is in the file
+                    var absolute = relativeoffset + actualStart + 0x1000;
+                    if (absolute + declared > _registryHive.FileBytes.Length || declared > 0x10000)
+                        continue;
+
+                    raw = _registryHive.ReadBytesFromHive(absolute, declared);
+                }
+                else
+                {
+                    raw = Helpers.Slice(remainingData, actualStart, declared);
+                }
 
                 if (raw.Length < 6) continue;
                 // since we need 4 bytes for the size and 2 for sig, if its smaller than 6, go to next one
@@ -336,7 +355,9 @@ public class HBinRecord
                 switch (sig2)
                 {
                     case NkSignature:
-                        if (raw.Length <= 0x30) continue;
+                        //read past its cell (issue #20), it has to be a whole key node, name included; inside the cell, a
+                        //remnant whose name is gone is kept ("(Unable to determine name)"), as it always was
+                        if (raw.Length <= 0x30 || (pastCell && (raw.Length <= 0x50 || 0x50 + BitConverter.ToUInt16(raw, 0x4C) > raw.Length))) continue;
 
                         var nk = new NkCellRecord(raw.Length, relativeoffset + actualStart, _registryHive);
                         if (nk.LastWriteTimestamp.Year > 1900)
@@ -346,7 +367,7 @@ public class HBinRecord
 
                         break;
                     case VkSignature:
-                        if (raw.Length < 0x18)
+                        if (raw.Length < 0x18 || (pastCell && 0x18 + BitConverter.ToUInt16(raw, 0x6) > raw.Length))
                             //cant have a record shorter than this, even when no name is present
                             continue;
 

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Registry/Registry.csproj" />
+  <Project Path="Registry.Test/Registry.Test.csproj" />
+  <Project Path="ExampleApp/ExampleApp.csproj" />
+</Solution>

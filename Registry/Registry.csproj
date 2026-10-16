@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,7 +11,6 @@
         <Copyright>Eric Zimmerman</Copyright>
         <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
         <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
-        <Version>2026.5.0</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
         <PackageTags>registry, regf</PackageTags>
@@ -19,21 +18,22 @@
         <PackageIcon>icon.png</PackageIcon>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <!-- If all members are not documented, you can disable the compiler warnings -->
-        <NoWarn>$(NoWarn);CS1591</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Serilog" Version="4.3.1" />
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.7" />
+        <InternalsVisibleTo Include="Registry.Test" />
+        <PackageReference Include="Serilog" Version="4.4.0" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.13" />
 
 
         <None Include="../README.md" Pack="true" PackagePath=""/>
         <None Include="../icon.png" Pack="true" PackagePath=""/>
-        <PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.2">
+        <PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.5">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="MinVer" Version="7.0.0">
+        <PackageReference Include="MinVer" Version="8.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

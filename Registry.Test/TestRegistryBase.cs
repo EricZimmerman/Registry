@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
-using NFluent;
+using FluentAssertions;
 using NUnit.Framework;
 using Registry.Other;
 
@@ -17,91 +17,90 @@ public class TestRegistryBase
     [Test]
     public void BcdHiveShouldHaveBcdHiveType()
     {
-        var r = new RegistryBase(@".\Hives\BCD");
-        Check.That(HiveTypeEnum.Bcd).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"BCD"));
+        HiveTypeEnum.Bcd.Should().Be(r.HiveType);
     }
 
     [Test]
     public void DriversHiveShouldHaveDriversHiveType()
     {
-        var r = new RegistryBase(@".\Hives\Drivers");
-        Check.That(HiveTypeEnum.Drivers).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"Drivers"));
+        HiveTypeEnum.Drivers.Should().Be(r.HiveType);
     }
 
     [Test]
     public void FileNameNotFoundShouldThrowFileNotFoundException()
     {
-        Check.ThatCode(() => { new RegistryBase(@"c:\this\file\does\not\exist.reg"); })
-            .Throws<FileNotFoundException>();
+        FluentActions.Invoking(() => { new RegistryBase(@"c:\this\file\does\not\exist.reg"); }).Should().Throw<FileNotFoundException>();
     }
 
     [Test]
     public void FileNameNotFoundShouldThrowNotSupportedException()
     {
-        Check.ThatCode(() => { new RegistryBase(); }).Throws<NotSupportedException>();
+        FluentActions.Invoking(() => { new RegistryBase(); }).Should().Throw<NotSupportedException>();
     }
 
     [Test]
     public void HivePathShouldReflectWhatIsPassedIn()
     {
-        var security = new RegistryHiveOnDemand(@".\Hives\SECURITY");
+        var security = new RegistryHiveOnDemand(TestHives.Path(@"SECURITY"));
 
-        Check.That(security.HivePath).IsEqualTo(@".\Hives\SECURITY");
+        security.HivePath.Should().Be(TestHives.Path(@"SECURITY"));
     }
 
     [Test]
     public void InvalidRegistryHiveShouldThrowException()
     {
-        Check.ThatCode(() => { new RegistryBase(@".\Hives\NotAHive"); }).Throws<Exception>();
+        FluentActions.Invoking(() => { new RegistryBase(TestHives.Path(@"NotAHive")); }).Should().Throw<Exception>();
     }
 
 
     [Test]
     public void NtuserHiveShouldHaveNtuserHiveType()
     {
-        var r = new RegistryBase(@".\Hives\NTUSER.DAT");
-        Check.That(HiveTypeEnum.NtUser).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"NTUSER.DAT"));
+        HiveTypeEnum.NtUser.Should().Be(r.HiveType);
     }
 
     [Test]
     public void NullByteArrayShouldThrowEArgumentNullException()
     {
         byte[] nullBytes = null;
-        Check.ThatCode(() => { new RegistryBase(nullBytes, null); }).Throws<ArgumentNullException>();
+        FluentActions.Invoking(() => { new RegistryBase(nullBytes, null); }).Should().Throw<ArgumentNullException>();
     }
 
     [Test]
     public void NullFileNameShouldThrowEArgumentNullException()
     {
         string nullFileName = null;
-        Check.ThatCode(() => { new RegistryBase(nullFileName); }).Throws<ArgumentNullException>();
+        FluentActions.Invoking(() => { new RegistryBase(nullFileName); }).Should().Throw<ArgumentNullException>();
     }
 
     [Test]
     public void OtherHiveShouldHaveOtherHiveType()
     {
-        var r = new RegistryBase(@".\Hives\SAN(OTHER)");
-        Check.That(HiveTypeEnum.Other).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"SAN(OTHER)"));
+        HiveTypeEnum.Other.Should().Be(r.HiveType);
     }
 
     [Test]
     public void SamHiveShouldHaveSamHiveType()
     {
-        var r = new RegistryBase(@".\Hives\SAM");
-        Check.That(HiveTypeEnum.Sam).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"SAM"));
+        HiveTypeEnum.Sam.Should().Be(r.HiveType);
     }
 
     [Test]
     public void SecurityHiveShouldHaveSecurityHiveType()
     {
-        var r = new RegistryBase(@".\Hives\Security");
-        Check.That(HiveTypeEnum.Security).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"Security"));
+        HiveTypeEnum.Security.Should().Be(r.HiveType);
     }
 
     [Test]
     public void ShouldTakeByteArrayInConstructor()
     {
-        var fileStream = new FileStream(@".\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
+        var fileStream = new FileStream(TestHives.Path(@"SAM"), FileMode.Open, FileAccess.Read, FileShare.Read);
         var binaryReader = new BinaryReader(fileStream);
 
         binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -111,17 +110,17 @@ public class TestRegistryBase
         binaryReader.Close();
         fileStream.Close();
 
-        var r = new RegistryBase(fileBytes, @".\Hives\SAM");
+        var r = new RegistryBase(fileBytes, TestHives.Path(@"SAM"));
 
-        Check.That(r.Header).IsNotNull();
-        Check.That(r.HivePath).IsEqualTo(@".\Hives\SAM");
-        Check.That(r.HiveType).IsEqualTo(HiveTypeEnum.Sam);
+        r.Header.Should().NotBeNull();
+        r.HivePath.Should().Be(TestHives.Path(@"SAM"));
+        r.HiveType.Should().Be(HiveTypeEnum.Sam);
     }
 
     [Test]
     public void ShouldThrowExceptionWhenNotRegistryHiveAndByteArray()
     {
-        var fileStream = new FileStream(@".\Hives\NotAHive", FileMode.Open, FileAccess.Read, FileShare.Read);
+        var fileStream = new FileStream(TestHives.Path(@"NotAHive"), FileMode.Open, FileAccess.Read, FileShare.Read);
         var binaryReader = new BinaryReader(fileStream);
 
         binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -131,40 +130,38 @@ public class TestRegistryBase
         binaryReader.Close();
         fileStream.Close();
 
-        Check.ThatCode(() =>
+        FluentActions.Invoking(() =>
             {
-                var rb = new RegistryBase(fileBytes, @".\Hives\NotAHive");
-            })
-            .Throws<ArgumentException>();
+                var rb = new RegistryBase(fileBytes, TestHives.Path(@"NotAHive"));
+            }).Should().Throw<ArgumentException>();
     }
 
     [Test]
     public void SoftwareHiveShouldHaveSoftwareHiveType()
     {
-        var r = new RegistryBase(@".\Hives\software");
-        Check.That(HiveTypeEnum.Software).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"software"));
+        HiveTypeEnum.Software.Should().Be(r.HiveType);
     }
 
     [Test]
     public void SystemHiveShouldHaveSystemHiveType()
     {
-        var r = new RegistryBase(@".\Hives\system");
-        Check.That(HiveTypeEnum.System).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"system"));
+        HiveTypeEnum.System.Should().Be(r.HiveType);
     }
 
     [Test]
     public void UsrclassHiveShouldHaveUsrclassHiveType()
     {
-        var r = new RegistryBase(@".\Hives\UsrClass 1.dat");
-        Check.That(HiveTypeEnum.UsrClass).IsEqualTo(r.HiveType);
+        var r = new RegistryBase(TestHives.Path(@"UsrClass 1.dat"));
+        HiveTypeEnum.UsrClass.Should().Be(r.HiveType);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void Windows10ExtraData()
     {
-        var r = new RegistryBase(@"D:\SynologyDrive\Registry\SOFTWARE_win10");
-        Check.That(r.Header.KtmFlags).IsEqualTo(KtmFlag.Unset);
-        Check.That(r.Header.LastReorganizedTimestamp.HasValue).IsTrue();
+        var r = new RegistryBase(TestHives.Corpus(@"SOFTWARE_win10"));
+        r.Header.KtmFlags.Should().Be(KtmFlag.Unset);
+        r.Header.LastReorganizedTimestamp.HasValue.Should().BeTrue();
     }
 }

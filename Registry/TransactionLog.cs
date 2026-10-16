@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,23 +45,6 @@ public class TransactionLog
         binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
 
         FileBytes = binaryReader.ReadBytes((int) binaryReader.BaseStream.Length);
-        
-        var header = ReadBytesFromHive(0, 4096);
-
-        var h = new RegistryHeader(header);
-        
-        if (h.Length > FileBytes.Length)
-        {
-            var diff = Header.Length - FileBytes.Length;
-            //we need to add some bytes so the size is the same
-            Log.Debug("Log size exceeds hive size. Adding {Diff} bytes to hive bytes",diff);
-
-            var local = FileBytes;
-            
-            Array.Resize(ref local,(int)(local.Length+diff));
-
-            FileBytes = local;
-        }
 
         binaryReader.Close();
         fileStream.Close();
@@ -104,9 +87,7 @@ public class TransactionLog
 
         if (readLength > remaining) readLength = (int) remaining;
 
-        var r = new ArraySegment<byte>(FileBytes, (int) offset, readLength);
-
-        return r.ToArray();
+        return Helpers.Slice(FileBytes, (int) offset, readLength);
     }
 
     private void Initialize()
@@ -164,10 +145,10 @@ public class TransactionLog
             case "default": 
                 HiveType = HiveTypeEnum.Default;
                 break;
-            case "Vsmidk": 
+            case "vsmidk":
                 HiveType = HiveTypeEnum.Vsmidk;
                 break;
-            case "BcdTemplate":
+            case "bcd-template":
                 HiveType = HiveTypeEnum.BcdTemplate;
                 break;
             case "bbi": 
@@ -200,27 +181,41 @@ public class TransactionLog
         //    Logger.Trace($"Hive version is {version}");
     }
 
+    /// <summary>Reads the log entries (HvLE) into <see cref="TransactionLogEntries" />, up to the first one that can't be read</summary>
     public bool ParseLog()
     {
         if (_parsed) throw new Exception("ParseLog already called");
 
         var index = 0x200; //data starts at offset 512 decimal
 
-        while (index < FileBytes.Length)
+        while (index + 40 <= FileBytes.Length)
         {
-            var sig = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(FileBytes, index, 4);
+            var sig = Encoding.ASCII.GetString(FileBytes, index, 4);
 
             if (sig != "HvLE")
                 //things arent always HvLE as logs get reused, so check to see if we have another valid header at our current offset
                 break;
 
             var size = BitConverter.ToInt32(FileBytes, index + 4);
+            if (size < 512 || size % 512 != 0 || index + (long) size > FileBytes.Length)
+            {
+                Log.Debug("Log entry at offset 0x{Index:X} has an invalid size (0x{Size:X}). Stopping", index, size);
+                break;
+            }
+
             var buff = new byte[size];
 
             Buffer.BlockCopy(FileBytes, index, buff, 0, size);
 
-            var tle = new TransactionLogEntry(buff);
-            TransactionLogEntries.Add(tle);
+            try
+            {
+                TransactionLogEntries.Add(new TransactionLogEntry(buff));
+            }
+            catch (Exception e)
+            {
+                Log.Debug("Log entry at offset 0x{Index:X} could not be read: {Message}. Stopping", index, e.Message);
+                break;
+            }
 
             index += size;
         }
@@ -231,39 +226,25 @@ public class TransactionLog
     }
 
     /// <summary>
-    ///     For the given transaction log, update original hive bytes with the bytes contained in the dirty pages
+    ///     Applies this log's entries to <paramref name="hiveBytes" /> from the sequence number in its base block on, until
+    ///     one is invalid (hashes, size) or out of sequence; the hive grows to the hive bins data size of the entries
     /// </summary>
-    /// <param name="hiveBytes"></param>
-    /// <remarks>This method does nothing to determine IF the data should be overwritten</remarks>
-    /// <returns>Byte array containing the updated hive</returns>
+    /// <remarks>
+    ///     This does not check whether the log should be applied to the hive (see
+    ///     <see cref="RegistryHive.ProcessTransactionLogs(System.Collections.Generic.List{TransactionLogFileInfo},bool)" />)
+    /// </remarks>
+    /// <returns>The updated hive: <paramref name="hiveBytes" />, or a bigger copy when the hive had to grow</returns>
     public byte[] UpdateHiveBytes(byte[] hiveBytes)
     {
-        const int baseOffset = 0x1000; //hbins start at 4096 bytes
+        var state = LogReplay.StateFor(hiveBytes);
+        LogReplay.ApplyEntries(state, FileBytes, Header.PrimarySequenceNumber, LogPath);
 
-        foreach (var transactionLogEntry in TransactionLogEntries)
+        if (state.LastSequence.HasValue)
         {
-            if (transactionLogEntry.HasValidHashes() == false)
-            {
-                Log.Debug("Skipping transaction log entry with sequence # {SequenceNumber}. Hash verification failed",
-                    $"0x{transactionLogEntry.SequenceNumber:X}");
-                continue;
-            }
-            //     Logger.Trace($"Processing log entry: {transactionLogEntry}");
-
-            NewSequenceNumber = transactionLogEntry.SequenceNumber;
-
-            foreach (var dirtyPage in transactionLogEntry.DirtyPages)
-            {
-               
-
-                Buffer.BlockCopy(dirtyPage.PageBytes, 0, hiveBytes, dirtyPage.Offset + baseOffset, dirtyPage.Size);
-            }
-                
-            
-                
+            NewSequenceNumber = unchecked((int) state.LastSequence.Value);
         }
 
-        return hiveBytes;
+        return state.Bytes;
     }
 
     public bool HasValidSignature()

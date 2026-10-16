@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -27,7 +27,7 @@ public class DataNode : IRecordBase
     }
 
     // public properties...
-    public byte[] Data => new ArraySegment<byte>(RawBytes, 4, RawBytes.Length - 4).ToArray();
+    public byte[] Data => Helpers.Slice(RawBytes, 4, RawBytes.Length - 4);
 
     public bool IsFree => _size > 0;
 

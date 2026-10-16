@@ -1,5 +1,5 @@
-﻿using System.IO;
-using NFluent;
+using System.IO;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace Registry.Test;
@@ -10,58 +10,58 @@ internal class TestRegistryHiveOnDemand
     [Test]
     public void GetKeyShouldBeNullWithNonExistentPath()
     {
-        var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
+        var samOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
         var key = samOnDemand.GetKey(@"SAM\Domains\Account\This\Does\Not\Exist");
 
-        Check.That(key).IsNull();
+        key.Should().BeNull();
     }
 
     [Test]
     public void GetKeyShouldNotBeNullWithFullPath()
     {
-        var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
+        var samOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
         var key =
             samOnDemand.GetKey(
                 @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\SAM\Domains\Account");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void GetKeyShouldNotBeNullWithShortPath()
     {
-        var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
+        var samOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
         var key = samOnDemand.GetKey(@"SAM\Domains\Account");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void GetKeyShouldNotBeNullWithShortPathMixedSpelling()
     {
-        var samOnDemand = new RegistryHiveOnDemand(@".\Hives\SAM");
+        var samOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
         var key = samOnDemand.GetKey(@"SAM\DomAins\AccoUnt");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldProcessLiListRecord()
     {
-        var usrClass1OnDemand = new RegistryHiveOnDemand(@".\Hives\UsrClass 1.dat");
+        var usrClass1OnDemand = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass 1.dat"));
 
         var key =
             usrClass1OnDemand.GetKey(
                 @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\\ActivatableClasses\\Package\\Microsoft.BingSports_3.0.4.244_x64__8wekyb3d8bbwe\\ActivatableClassId");
 
-        Check.That(key).IsNotNull();
-        Check.That(key.NkRecord.SubkeyCountsStable).IsEqualTo(0x224);
+        key.Should().NotBeNull();
+        key.NkRecord.SubkeyCountsStable.Should().Be(0x224);
     }
 
     [Test]
     public void ShouldTakeByteArrayInConstructor()
     {
-        var fileStream = new FileStream(@".\Hives\SAM", FileMode.Open, FileAccess.Read, FileShare.Read);
+        var fileStream = new FileStream(TestHives.Path(@"SAM"), FileMode.Open, FileAccess.Read, FileShare.Read);
         var binaryReader = new BinaryReader(fileStream);
 
         binaryReader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -71,55 +71,55 @@ internal class TestRegistryHiveOnDemand
         binaryReader.Close();
         fileStream.Close();
 
-        var r = new RegistryHiveOnDemand(fileBytes, @".\Hives\SAM");
+        var r = new RegistryHiveOnDemand(fileBytes, TestHives.Path(@"SAM"));
 
-        Check.That(r.Header).IsNotNull();
-        Check.That(r.HivePath).IsEqualTo(@".\Hives\SAM");
-        Check.That(r.HiveType).IsEqualTo(HiveTypeEnum.Sam);
+        r.Header.Should().NotBeNull();
+        r.HivePath.Should().Be(TestHives.Path(@"SAM"));
+        r.HiveType.Should().Be(HiveTypeEnum.Sam);
     }
 
     [Test]
     public void TestFileNameConstructor()
     {
-        var r = new RegistryHiveOnDemand(@".\Hives\SAM");
+        var r = new RegistryHiveOnDemand(TestHives.Path(@"SAM"));
 
-        Check.That(r.Header).IsNotNull();
+        r.Header.Should().NotBeNull();
     }
 
     [Test]
     public void TestsListRecords()
     {
-        var driversOnDemand = new RegistryHiveOnDemand(@".\Hives\DRIVERS");
+        var driversOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"DRIVERS"));
 
         var key =
             driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}\DriverDatabase\DeviceIds");
 
-        Check.That(key).IsNotNull();
-        Check.That(key.SubKeys.Count).IsEqualTo(3878);
+        key.Should().NotBeNull();
+        key.SubKeys.Count.Should().Be(3878);
     }
 
     [Test]
     public void TestsListRecordsContinued()
     {
-        var driversOnDemand = new RegistryHiveOnDemand(@".\Hives\DRIVERS");
+        var driversOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"DRIVERS"));
 
 
         var key = driversOnDemand.GetKey(@"{15a87b70-bc78-114a-95b7-b90ca5d0ec00}");
 
-        Check.That(key).IsNotNull();
-        Check.That(key.SubKeys.Count).IsEqualTo(1);
+        key.Should().NotBeNull();
+        key.SubKeys.Count.Should().Be(1);
     }
 
     [Test]
     public void TestsListRecordsContinued3()
     {
-        var usrClassFtp = new RegistryHiveOnDemand(@".\Hives\UsrClass FTP.dat");
+        var usrClassFtp = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass FTP.dat"));
 
         var key =
             usrClassFtp.GetKey(
                 @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\ActivatableClasses\CLSID");
 
-        Check.That(key).IsNotNull();
-        Check.That(key.SubKeys.Count).IsEqualTo(2811);
+        key.Should().NotBeNull();
+        key.SubKeys.Count.Should().Be(2811);
     }
 }

@@ -15,7 +15,7 @@ public class LxListRecord : IListTemplate, IRecordBase
 
     // public constructors...
     /// <summary>
-    ///     Initializes a new instance of the <see cref="LFListRecord" /> or <see cref="LHListRecord" />  class.
+    ///     Initializes a new instance of the lf or lh  class.
     ///     <remarks>The signature determines how the hash is calculated/verified</remarks>
     /// </summary>
     /// <param name="rawBytes"></param>

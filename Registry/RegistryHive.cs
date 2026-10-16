@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,7 +23,8 @@ public class RegistryHive : RegistryBase
 
     private static readonly string quote = "\"";
     private static readonly string doublequote = "\"\"";
-    private Dictionary<string, RegistryKey> _keyPathKeyMap = new();
+    //keyed by path, ignoring case (as Windows compares key names: upper case); the paths are the keys' own strings
+    private Dictionary<string, RegistryKey> _keyPathKeyMap = new(StringComparer.OrdinalIgnoreCase);
     private bool _parsed;
     private Dictionary<long, RegistryKey> _relativeOffsetKeyMap = new();
 
@@ -112,152 +113,59 @@ public class RegistryHive : RegistryBase
         }
     }
 
+    /// <summary>The cell at <paramref name="relativeOffset" />, or null when it isn't in the file</summary>
     private DataNode GetDataNodeFromOffset(long relativeOffset)
     {
         var dataLenBytes = ReadBytesFromHive(relativeOffset + 4096, 4);
-        var dataLen = BitConverter.ToUInt32(dataLenBytes, 0);
-        var size = (int) dataLen;
-        size = Math.Abs(size);
+        if (dataLenBytes.Length < 4) return null;
+
+        var size = Math.Abs(BitConverter.ToInt32(dataLenBytes, 0));
+        if (size < 4) return null;
 
         var dn = new DataNode(ReadBytesFromHive(relativeOffset + 4096, size), relativeOffset);
 
         return dn;
     }
 
+    /// <summary>
+    ///     Applies the transaction logs (*.LOG, *.LOG1, *.LOG2) of a dirty hive, as Windows does: see <see cref="LogReplay" />
+    /// </summary>
+    /// <param name="logFileInfos">The logs, named as on disk (the extension says which log a file is)</param>
+    /// <param name="updateExistingData">Use the recovered bytes for this hive (and parse them again if it was parsed)</param>
+    /// <returns>The recovered hive (the hive's bytes when nothing could be applied)</returns>
+    /// <remarks>Hat tip: https://github.com/msuhanov</remarks>
     public byte[] ProcessTransactionLogs(List<TransactionLogFileInfo> logFileInfos, bool updateExistingData = false)
     {
         if (logFileInfos.Count == 0) throw new Exception("No logs were supplied");
 
-        if (Header.PrimarySequenceNumber == Header.SecondarySequenceNumber)
+        if (Header.PrimarySequenceNumber == Header.SecondarySequenceNumber && Header.ValidateCheckSum())
             throw new Exception("Sequence numbers match! Hive is not dirty");
 
-        var bytes = FileBytes;
-
-        var logs = new List<TransactionLog>();
-
-        foreach (var logFile in logFileInfos)
+        foreach (var logFile in logFileInfos.Where(t => t.FileBytes.Length >= 4096))
         {
-            if (logFile.FileBytes.Length == 0) continue;
-
             var transLog = new TransactionLog(logFile.FileBytes, logFile.FileName);
-
             if (HiveType != transLog.HiveType)
                 throw new Exception(
                     $"Transaction log contains a type ({transLog.HiveType}) that is different from the Registry hive ({HiveType})");
-
-            if (transLog.Header.PrimarySequenceNumber < Header.SecondarySequenceNumber)
-            {
-                //log predates the last confirmed update, so skip  
-                Log.Warning(
-                    "Dropping {FileName} because the log's header.PrimarySequenceNumber is less than the hive's header.SecondarySequenceNumber",
-                    logFile.FileName);
-                continue;
-            }
-
-            transLog.ParseLog();
-
-            logs.Add(transLog);
         }
 
-        var wasUpdated = false;
-        var maximumSequenceNumber = 0;
-
-        //get first and second, do the compares
-
-        var logOne = logs.SingleOrDefault(t => t.LogPath.EndsWith("log1", StringComparison.OrdinalIgnoreCase));
-        var logTwo = logs.SingleOrDefault(t => t.LogPath.EndsWith("log2", StringComparison.OrdinalIgnoreCase));
-        TransactionLog soloLog = null;
-
-        if (logOne != null && logTwo != null)
+        var result = LogReplay.Replay(FileBytes, logFileInfos);
+        foreach (var message in result.Messages)
         {
-            //both sent in, compare sequence #s for higher of the two
-
-            Log.Information("Two transaction logs found. Determining primary log...");
-
-            TransactionLog firstLog;
-            TransactionLog secondLog;
-
-            //Find the one with the lower sequence numbers as it contains older data than the other one
-            if (logOne.Header.PrimarySequenceNumber >= logTwo.Header.PrimarySequenceNumber)
-            {
-                firstLog = logTwo;
-                secondLog = logOne;
-            }
-            else
-            {
-                firstLog = logOne;
-                secondLog = logTwo;
-            }
-
-            Log.Information("Primary log: {FirstLog}, secondary log: {SecondLog}", firstLog.LogPath, secondLog.LogPath);
-
-            //start with the first log and replay it.
-            //if second log's primary seq number is one more than firstLogs LAST, replay it as well
-            if (Header.ValidateCheckSum() &&
-                firstLog.Header.PrimarySequenceNumber >= Header.SecondarySequenceNumber)
-            {
-                Log.Information("Replaying log file: {LogPath}", firstLog.LogPath);
-                //we can replay the log
-                bytes = firstLog.UpdateHiveBytes(bytes);
-                wasUpdated = true;
-            }
-            else
-            {
-                bytes = secondLog.UpdateHiveBytes(bytes);
-                wasUpdated = true;
-            }
-
-            maximumSequenceNumber = firstLog.NewSequenceNumber;
-
-            if (secondLog.Header.PrimarySequenceNumber == maximumSequenceNumber + 1 &&
-                secondLog.Header.PrimarySequenceNumber > Header.SecondarySequenceNumber)
-            {
-                Log.Information("Replaying log file: {LogPath}", secondLog.LogPath);
-                bytes = secondLog.UpdateHiveBytes(bytes);
-                maximumSequenceNumber =
-                    secondLog.NewSequenceNumber; //TransactionLogEntries.Max(t => t.SequenceNumber);
-            }
+            Log.Information("{Message}", message);
         }
-        else if (logOne != null)
+
+        if (result.Recovered == false)
         {
-            soloLog = logOne;
-        }
-        else if (logTwo != null)
-        {
-            soloLog = logTwo;
+            Log.Warning("No transaction log could be applied. The hive is used as it is");
+            return FileBytes;
         }
 
-        if (soloLog != null)
-        {
-            Log.Information("Single log file available: {LogPath}", soloLog.LogPath);
+        Log.Information(
+            "Transaction logs applied: {Logs}. Sequence numbers have been updated to {MaximumSequenceNumber}. New Checksum: {NewChecksum}",
+            string.Join(", ", result.LogsApplied.Select(Path.GetFileName)), $"0x{result.LastSequenceNumber ?? Header.PrimarySequenceNumber:X4}", $"0x{BitConverter.ToUInt32(result.Bytes, 0x1FC):X}");
 
-            if (Header.ValidateCheckSum() && soloLog.Header.PrimarySequenceNumber >= Header.SecondarySequenceNumber)
-            {
-                Log.Information("Replaying log file: {LogPath}", soloLog.LogPath);
-                //we can replay the log
-                bytes = soloLog.UpdateHiveBytes(bytes);
-                maximumSequenceNumber =
-                    soloLog.NewSequenceNumber; //TransactionLogEntries.Max(t => t.SequenceNumber);
-                wasUpdated = true;
-            }
-        }
-
-        if (wasUpdated)
-        {
-            //update sequence numbers with latest available
-            var seqBytes = BitConverter.GetBytes(maximumSequenceNumber);
-
-            Buffer.BlockCopy(seqBytes, 0, bytes, 0x4, 0x4); //Primary #
-            Buffer.BlockCopy(seqBytes, 0, bytes, 0x8, 0x4); //Secondary #
-
-            var newchecksum = CalculateCheckSum(bytes);
-            var newcheckBytes = BitConverter.GetBytes(newchecksum);
-            Buffer.BlockCopy(newcheckBytes, 0, bytes, 0x1fc, 4);
-
-            Log.Information(
-                "At least one transaction log was applied. Sequence numbers have been updated to {MaximumSequenceNumber}. New Checksum: {NewChecksum}",
-                $"0x{maximumSequenceNumber:X4}", $"0x{newchecksum:X}");
-        }
+        var bytes = result.Bytes;
 
         if (updateExistingData)
         {
@@ -271,20 +179,6 @@ public class RegistryHive : RegistryBase
         }
 
         return bytes;
-    }
-
-
-    private int CalculateCheckSum(byte[] bytes)
-    {
-        var index = 0;
-        var xsum = 0;
-        while (index <= 0x1fb)
-        {
-            xsum ^= BitConverter.ToInt32(bytes, index);
-            index += 0x04;
-        }
-
-        return xsum;
     }
 
 
@@ -322,10 +216,13 @@ public class RegistryHive : RegistryBase
     //TODO this needs refactored to remove duplicated code
     private List<RegistryKey> GetSubKeysAndValues(RegistryKey key)
     {
+        //callers check that the key isn't already in the tree (a key referenced twice, or a list pointing back at an
+        //ancestor, which would never end)
         _relativeOffsetKeyMap.Add(key.NkRecord.RelativeOffset, key);
 
 
-        if (_keyPathKeyMap.ContainsKey(key.KeyPath.ToLowerInvariant()))
+        var path = key.KeyPath;
+        if (_keyPathKeyMap.ContainsKey(path))
         {
             //does the incoming key have activeparent set? if no, warn and ignore
             if ((key.KeyFlags & RegistryKey.KeyFlagsEnum.HasActiveParent) ==
@@ -337,20 +234,20 @@ public class RegistryHive : RegistryBase
             }
             else
             {
-                if ((_keyPathKeyMap[key.KeyPath.ToLowerInvariant()].KeyFlags &
+                if ((_keyPathKeyMap[path].KeyFlags &
                      RegistryKey.KeyFlagsEnum.HasActiveParent) == RegistryKey.KeyFlagsEnum.HasActiveParent)
                 {
                     // the existing one does NOT have activeParent set, so replace it
                     Log.Warning(
                         "Key {KeyPath} at absolute offset {AbsoluteOffset} appears to be a more recent reference as it has HasActiveParent set. Updating existing key",
                         key.KeyPath, $"0x{key.NkRecord.AbsoluteOffset:X0}");
-                    _keyPathKeyMap[key.KeyPath.ToLowerInvariant()] = key;
+                    _keyPathKeyMap[path] = key;
                 }
             }
         }
         else
         {
-            _keyPathKeyMap.Add(key.KeyPath.ToLowerInvariant(), key);
+            _keyPathKeyMap.Add(path, key);
         }
 
 
@@ -364,9 +261,11 @@ public class RegistryHive : RegistryBase
         {
             //         Logger.Trace("Getting Class cell information at relative offset 0x{0:X}", key.NkRecord.ClassCellIndex);
             var d = GetDataNodeFromOffset(key.NkRecord.ClassCellIndex);
-            d.IsReferenced = true;
-            var clsName = Encoding.Unicode.GetString(d.Data, 0, key.NkRecord.ClassLength);
-            key.ClassName = clsName;
+            if (d != null)
+            {
+                d.IsReferenced = true;
+                key.ClassName = Encoding.Unicode.GetString(d.Data, 0, Math.Min(key.NkRecord.ClassLength, d.Data.Length) / 2 * 2);
+            }
             //         Logger.Trace("Class name found {0}", clsName);
         }
 
@@ -379,12 +278,15 @@ public class RegistryHive : RegistryBase
             //     key.NkRecord.ValueListCellIndex, key.NkRecord.ValueListCount);
 
 
-            var offsetList = GetDataNodeFromOffset(key.NkRecord.ValueListCellIndex);
+            var offsetList = GetDataNodeFromOffset(key.NkRecord.ValueListCellIndex) ?? new DataNode(new byte[4], key.NkRecord.ValueListCellIndex);
 
             offsetList.IsReferenced = true;
 
+            if (key.NkRecord.ValueListCount * 4L > offsetList.Data.Length)
+                Log.Warning("The value list of {KeyPath} has room for {Room:N0} of its {Count:N0} values", key.KeyPath, offsetList.Data.Length / 4, key.NkRecord.ValueListCount);
+
             var lastI = 0;
-            for (var i = 0; i < key.NkRecord.ValueListCount; i++)
+            for (var i = 0; i < key.NkRecord.ValueListCount && i * 4 + 4 <= offsetList.Data.Length; i++)
             {
                 //use i * 4 so we get 4, 8, 12, 16, etc
                 var os = BitConverter.ToUInt32(offsetList.Data, i * 4);
@@ -398,7 +300,7 @@ public class RegistryHive : RegistryBase
                 //check to see if there are any other values hanging out in this list beyond what is expected
                 lastI += 1; //lastI initially points to where we left off, so add 1
                 var offsetIndex = lastI * 4; //our starting point
-                while (offsetIndex < offsetList.Data.Length)
+                while (offsetIndex + 4 <= offsetList.Data.Length)
                 {
                     var os = BitConverter.ToUInt32(offsetList.Data, offsetIndex);
 
@@ -475,129 +377,62 @@ public class RegistryHive : RegistryBase
         //         key.NkRecord.SubkeyListsStableCellIndex);
         var l = ListRecords[key.NkRecord.SubkeyListsStableCellIndex];
 
-        var sig = BitConverter.ToInt16(l.RawBytes, 4);
-
-        switch (sig)
+        void AddSubKey(long offset)
         {
-            case LfSignature:
-            case LhSignature:
-                var lxRecord = l as LxListRecord;
-                lxRecord.IsReferenced = true;
-                foreach (var offset in lxRecord.Offsets)
-                {
-                    //            Logger.Trace("In lf or lh, looking for nk record at relative offset 0x{0:X}", offset.Key);
+            if (CellRecords.TryGetValue(offset, out var cell) == false || cell is not NkCellRecord nk)
+            {
+                Log.Warning("NK record at relative offset {Key} missing! Skipping", $"0x{offset:X}");
+                return;
+            }
 
-                    if (CellRecords.ContainsKey(offset.Key) == false)
-                    {
-                        Log.Warning("NK record at relative offset {Key} missing! Skipping", $"0x{offset.Key}");
-                        continue;
-                    }
+            if (_relativeOffsetKeyMap.ContainsKey(offset))
+            {
+                Log.Warning("NK record at relative offset {Key} ({Name}) is referenced more than once (under {KeyPath}). Skipping",
+                    $"0x{offset:X}", nk.Name, key.KeyPath);
+                return;
+            }
 
-                    var cell = CellRecords[offset.Key];
+            nk.IsReferenced = true;
 
-                    var nk = cell as NkCellRecord;
-                    if (nk != null)
-                    {
-                        nk.IsReferenced = true;
+            var tempKey = new RegistryKey(nk, key);
 
-                        //          Logger.Trace("In lf or lh, found nk record at relative offset 0x{0:X}. Name: {1}", offset.Key,
-                        //     nk.Name);
+            var sks = GetSubKeysAndValues(tempKey);
+            tempKey.SubKeys.AddRange(sks);
 
-                        var tempKey = new RegistryKey(nk, key);
-
-                        var sks = GetSubKeysAndValues(tempKey);
-                        tempKey.SubKeys.AddRange(sks);
-
-                        keys.Add(tempKey);
-                    }
-                    else
-                    {
-                        Log.Warning("NK record at relative offset {Key} is NULL! Skipping", $"0x{offset.Key}");
-                        continue;
-                    }
-                }
-
-                break;
-
-            case RiSignature:
-                var riRecord = l as RiListRecord;
-                riRecord.IsReferenced = true;
-                foreach (var offset in riRecord.Offsets)
-                {
-                    //           Logger.Trace("In ri, looking for list record at relative offset 0x{0:X}", offset);
-                    var tempList = ListRecords[offset];
-
-                    //templist is now an li or lh list 
-
-                    if (tempList.Signature == "li")
-                    {
-                        var sk3 = tempList as LiListRecord;
-
-                        foreach (var offset1 in sk3.Offsets)
-                        {
-                            //                    Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}", offset1);
-                            var cell = CellRecords[offset1];
-
-                            var nk = cell as NkCellRecord;
-                            nk.IsReferenced = true;
-
-                            var tempKey = new RegistryKey(nk, key);
-
-                            var sks = GetSubKeysAndValues(tempKey);
-                            tempKey.SubKeys.AddRange(sks);
-
-                            keys.Add(tempKey);
-                        }
-                    }
-                    else
-                    {
-                        var lxRecord2 = tempList as LxListRecord;
-                        lxRecord2.IsReferenced = true;
-
-                        foreach (var offset3 in lxRecord2.Offsets)
-                        {
-                            //                  Logger.Trace("In ri/li, looking for nk record at relative offset 0x{0:X}",
-                            //            offset3.Key);
-                            var cell = CellRecords[offset3.Key];
-
-                            var nk = cell as NkCellRecord;
-                            nk.IsReferenced = true;
-
-                            var tempKey = new RegistryKey(nk, key);
-
-                            var sks = GetSubKeysAndValues(tempKey);
-                            tempKey.SubKeys.AddRange(sks);
-
-                            keys.Add(tempKey);
-                        }
-                    }
-                }
-
-                break;
-
-            case LiSignature:
-                var liRecord = l as LiListRecord;
-                liRecord.IsReferenced = true;
-                foreach (var offset in liRecord.Offsets)
-                {
-                    //           Logger.Trace("In li, looking for nk record at relative offset 0x{0:X}", offset);
-                    var cell = CellRecords[offset];
-
-                    var nk = cell as NkCellRecord;
-                    nk.IsReferenced = true;
-
-                    var tempKey = new RegistryKey(nk, key);
-
-                    var sks = GetSubKeysAndValues(tempKey);
-                    tempKey.SubKeys.AddRange(sks);
-
-                    keys.Add(tempKey);
-                }
-
-                break;
-            default:
-                throw new Exception($"Unknown subkey list type {l.Signature}!");
+            keys.Add(tempKey);
         }
+
+        void AddList(IListTemplate list, int depth)
+        {
+            switch (list)
+            {
+                case LxListRecord lx:
+                    lx.IsReferenced = true;
+                    foreach (var offset in lx.Offsets) AddSubKey(offset.Key);
+                    break;
+                case LiListRecord li:
+                    li.IsReferenced = true;
+                    foreach (var offset in li.Offsets) AddSubKey(offset);
+                    break;
+                case RiListRecord ri when depth == 0:
+                    //an index root lists leaves (li, lf, lh), not other index roots
+                    ri.IsReferenced = true;
+                    foreach (var offset in ri.Offsets)
+                    {
+                        if (ListRecords.TryGetValue(offset, out var leaf))
+                            AddList(leaf, depth + 1);
+                        else
+                            Log.Warning("Subkey list at relative offset {Offset} (in the index root of {KeyPath}) missing! Skipping", $"0x{offset:X}", key.KeyPath);
+                    }
+
+                    break;
+                default:
+                    Log.Warning("Unexpected subkey list type {Signature} for {KeyPath}. Skipping", list.Signature, key.KeyPath);
+                    break;
+            }
+        }
+
+        AddList(l, 0);
 
         return keys;
     }
@@ -834,7 +669,7 @@ public class RegistryHive : RegistryBase
 
     public RegistryKey GetKey(string keyPath)
     {
-        keyPath = keyPath.ToLowerInvariant();
+        //the map ignores case (as Windows does)
 
         //trim slashes to match the value in keyPathKeyMap
         keyPath = keyPath.Trim('\\', '/');
@@ -842,7 +677,7 @@ public class RegistryHive : RegistryBase
         if (_keyPathKeyMap.ContainsKey(keyPath)) return _keyPathKeyMap[keyPath];
 
         //handle case where someone doesn't pass in ROOT keyname
-        var newPath = $"{Root.KeyName}\\{keyPath}".ToLowerInvariant();
+        var newPath = $"{Root.KeyName}\\{keyPath}";
 
         if (_keyPathKeyMap.ContainsKey(newPath)) return _keyPathKeyMap[newPath];
 
@@ -866,7 +701,7 @@ public class RegistryHive : RegistryBase
         DeletedRegistryKeys = new List<RegistryKey>();
         UnassociatedRegistryValues = new List<KeyValue>();
 
-        _keyPathKeyMap = new Dictionary<string, RegistryKey>();
+        _keyPathKeyMap = new Dictionary<string, RegistryKey>(StringComparer.OrdinalIgnoreCase);
         _relativeOffsetKeyMap = new Dictionary<long, RegistryKey>();
 
         TotalBytesRead = 0;
@@ -890,8 +725,15 @@ public class RegistryHive : RegistryBase
             Log.Warning(
                 "Sequence numbers do not match! Hive is dirty and the transaction logs should be reviewed for relevant data!");
 
+        if (hiveLength > FileBytes.Length)
+        {
+            Log.Warning("The hive is truncated: its header says 0x{HeaderLength:X} bytes of hive bins, but the file has 0x{FileLength:X} after the header. Reading what is there",
+                Header.Length, FileBytes.Length - 0x1000);
+            hiveLength = (uint) FileBytes.Length;
+        }
+
         //keep reading the file until we reach the end
-        while (offsetInHive < hiveLength)
+        while (offsetInHive + 0x20 <= hiveLength)
         {
             var hbinSize = BitConverter.ToUInt32(ReadBytesFromHive(offsetInHive + 8, 4), 0);
 
@@ -925,6 +767,15 @@ public class RegistryHive : RegistryBase
             //        Logger.Trace(
             //              $"Processing hbin at absolute offset 0x{offsetInHive:X} with size 0x{hbinSize:X} Percent done: {(double) offsetInHive / hiveLength:P}");
 
+            if (hbinSize < 0x20 || hbinSize > int.MaxValue)
+            {
+                Log.Warning("hbin at absolute offset {OffsetInHive} has an invalid size (0x{Size:X}). Stopping", $"0x{offsetInHive:X}", hbinSize);
+                break;
+            }
+
+            if (offsetInHive + hbinSize > FileBytes.Length)
+                Log.Warning("hbin at absolute offset {OffsetInHive} (0x{Size:X} bytes) goes past the end of the file. Reading what is there", $"0x{offsetInHive:X}", hbinSize);
+
             var rawhbin = ReadBytesFromHive(offsetInHive, (int) hbinSize);
 
             try
@@ -950,7 +801,8 @@ public class RegistryHive : RegistryBase
                         case "vk":
                             //                      Logger.Trace("Adding cell record with signature {0} at absolute offset 0x{1:X}",
                             //                           record.Signature, record.AbsoluteOffset);
-                            CellRecords.Add(record.AbsoluteOffset - 4096, (ICellTemplate) record);
+                            if (CellRecords.ContainsKey(record.AbsoluteOffset - 4096) == false)
+                                CellRecords.Add(record.AbsoluteOffset - 4096, (ICellTemplate) record);
                             break;
 
                         case "db":
@@ -960,7 +812,8 @@ public class RegistryHive : RegistryBase
                         case "lf":
                             //                  Logger.Trace("Adding list record with signature {0} at absolute offset 0x{1:X}",
                             //                        record.Signature, record.AbsoluteOffset);
-                            ListRecords.Add(record.AbsoluteOffset - 4096, (IListTemplate) record);
+                            if (ListRecords.ContainsKey(record.AbsoluteOffset - 4096) == false)
+                                ListRecords.Add(record.AbsoluteOffset - 4096, (IListTemplate) record);
                             break;
                     }
 
@@ -1078,9 +931,10 @@ public class RegistryHive : RegistryBase
         var regexPattern = new Regex(pattern,
             RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
+        //lower case, as these have always been returned
         foreach (var key in _keyPathKeyMap.Keys)
             if (regexPattern.IsMatch(key))
-                keyPaths.Add(key);
+                keyPaths.Add(key.ToLowerInvariant());
 
         return keyPaths;
     }
@@ -1328,8 +1182,8 @@ public class RegistryHive : RegistryBase
                     _relativeOffsetKeyMap.Add(deletedRegistryKey.Value.NkRecord.RelativeOffset,
                         deletedRegistryKey.Value);
 
-                    if (_keyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath.ToLowerInvariant()) == false)
-                        _keyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath.ToLowerInvariant(),
+                    if (_keyPathKeyMap.ContainsKey(deletedRegistryKey.Value.KeyPath) == false)
+                        _keyPathKeyMap.Add(deletedRegistryKey.Value.KeyPath,
                             deletedRegistryKey.Value);
 
                     //           Logger.Trace(
@@ -1363,8 +1217,8 @@ public class RegistryHive : RegistryBase
 
             _relativeOffsetKeyMap.Add(sk.NkRecord.RelativeOffset, sk);
 
-            if (_keyPathKeyMap.ContainsKey(sk.KeyPath.ToLowerInvariant()) == false)
-                _keyPathKeyMap.Add(sk.KeyPath.ToLowerInvariant(), sk);
+            if (_keyPathKeyMap.ContainsKey(sk.KeyPath) == false)
+                _keyPathKeyMap.Add(sk.KeyPath, sk);
 
             UpdateChildPaths(sk);
         }

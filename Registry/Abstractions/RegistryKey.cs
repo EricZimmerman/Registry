@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,9 @@ public class RegistryKey
     }
 
     private string _keyPath;
+    private string _builtPath;
+    private RegistryKey _builtParent;
+    private string _builtParentPath;
 
     // public constructors...
     public RegistryKey(NkCellRecord nk, RegistryKey parent)
@@ -30,8 +33,6 @@ public class RegistryKey
         NkRecord = nk;
 
         Parent = parent;
-
-        InternalGuid = Guid.NewGuid().ToString();
 
         SubKeys = new List<RegistryKey>();
         Values = new List<KeyValue>();
@@ -44,10 +45,16 @@ public class RegistryKey
 
     public RegistryKey Parent { get; set; }
 
+    private string _internalGuid;
+
     /// <summary>
-    ///     A unique value that can be used to find this key in a collection
+    ///     A unique value that can be used to find this key in a collection (made when it is first read)
     /// </summary>
-    public string InternalGuid { get; set; }
+    public string InternalGuid
+    {
+        get => _internalGuid ??= Guid.NewGuid().ToString();
+        set => _internalGuid = value;
+    }
 
     public KeyFlagsEnum KeyFlags { get; set; }
 
@@ -69,9 +76,19 @@ public class RegistryKey
 
             if (Parent == null)
                 //This is the root key
-                return $"{KeyName}";
+                return KeyName;
 
-            return $@"{Parent.KeyPath}\{KeyName}";
+            //built once, and again only when the parent (or its path) changes; it used to be built from the root on
+            //every read, which was most of the strings a parse made
+            var parentPath = Parent.KeyPath;
+            if (_builtPath == null || ReferenceEquals(_builtParent, Parent) == false || ReferenceEquals(_builtParentPath, parentPath) == false)
+            {
+                _builtPath = $@"{parentPath}\{KeyName}";
+                _builtParent = Parent;
+                _builtParentPath = parentPath;
+            }
+
+            return _builtPath;
         }
 
         set => _keyPath = value;

@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Linq;
-using NFluent;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace Registry.Test;
@@ -10,30 +10,29 @@ internal class TestRegistrySkeleton
     [Test]
     public void ShouldCreateRegistrySkeleton()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
 
         var rs = new RegistrySkeleton(usrclassDeleted);
 
-        Check.That(rs).IsNotNull();
+        rs.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldThrowNullRefExtensionOnNullHive()
     {
-        Check.ThatCode(() =>
+        FluentActions.Invoking(() =>
             {
                 var rs = new RegistrySkeleton(null);
-            })
-            .Throws<NullReferenceException>();
+            }).Should().Throw<NullReferenceException>();
     }
 
     [Test]
     public void ShouldReturnTrueOnAddMuiCacheSubkeyToSkeletonList()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -44,21 +43,21 @@ internal class TestRegistrySkeleton
 
         var added = rs.AddEntry(sk);
 
-        Check.That(added).IsTrue();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeTrue();
+        rs.Keys.Count.Should().Be(1);
 
         sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
         added = rs.AddEntry(sk);
 
-        Check.That(added).IsFalse();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeFalse();
+        rs.Keys.Count.Should().Be(1);
     }
 
     [Test]
     public void ShouldReturnFalseOnRemovingNonExistentKey()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -69,14 +68,14 @@ internal class TestRegistrySkeleton
 
         var added = rs.RemoveEntry(sk);
 
-        Check.That(added).IsFalse();
-        Check.That(rs.Keys.Count).IsEqualTo(0);
+        added.Should().BeFalse();
+        rs.Keys.Count.Should().Be(0);
     }
 
     [Test]
     public void ShouldntAddDuplicateSkeletonKeys()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -87,28 +86,28 @@ internal class TestRegistrySkeleton
 
         var added = rs.AddEntry(sk);
 
-        Check.That(added).IsTrue();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeTrue();
+        rs.Keys.Count.Should().Be(1);
 
         sk = new SkeletonKeyRoot(@"path\does\not\exist", false, false);
 
         added = rs.AddEntry(sk);
 
-        Check.That(added).IsFalse();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeFalse();
+        rs.Keys.Count.Should().Be(1);
 
         var sk1 = new SkeletonKeyRoot(@"Local Settings\MuiCache\6\52C64B7E", true, false);
 
         added = rs.AddEntry(sk1);
 
-        Check.That(added).IsTrue();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeTrue();
+        rs.Keys.Count.Should().Be(1);
     }
 
     [Test]
     public void KeysCountShouldBeZeroAfterAddRemove()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -119,20 +118,20 @@ internal class TestRegistrySkeleton
 
         var added = rs.AddEntry(sk);
 
-        Check.That(added).IsTrue();
-        Check.That(rs.Keys.Count).IsEqualTo(1);
+        added.Should().BeTrue();
+        rs.Keys.Count.Should().Be(1);
 
         var removed = rs.RemoveEntry(sk);
 
-        Check.That(removed).IsTrue();
-        Check.That(rs.Keys.Count).IsEqualTo(0);
+        removed.Should().BeTrue();
+        rs.Keys.Count.Should().Be(0);
     }
 
 
     [Test]
     public void ShouldReturnFalseOnAddNonExistentSubkeyToSkeletonList()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -143,30 +142,29 @@ internal class TestRegistrySkeleton
 
         var added = rs.AddEntry(sk);
 
-        Check.That(added).IsFalse();
-        Check.That(rs.Keys.Count).IsEqualTo(0);
+        added.Should().BeFalse();
+        rs.Keys.Count.Should().Be(0);
     }
 
     [Test]
     public void ShouldThrowExceptionIfWriteCalledWithNoKeysAdded()
     {
-        Check.ThatCode(() =>
+        FluentActions.Invoking(() =>
             {
-                var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+                var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
                 usrclassDeleted.RecoverDeleted = true;
                 usrclassDeleted.FlushRecordListsAfterParse = false;
                 usrclassDeleted.ParseHive();
 
                 var rs = new RegistrySkeleton(usrclassDeleted);
                 rs.Write(@"foo.reg");
-            })
-            .Throws<InvalidOperationException>(); //ncrunch: no coverage
+            }).Should().Throw<InvalidOperationException>(); //ncrunch: no coverage
     }
 
     [Test]
     public void ShouldReturnTrueWhenWriteCalledWithKeyAdded()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -179,13 +177,13 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(@"onekeytest.hve");
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
     }
 
     [Test]
     public void BigRecursiveWithRegUnknown()
     {
-        var system = new RegistryHive(@".\Hives\System");
+        var system = new RegistryHive(TestHives.Path(@"System"));
         system.FlushRecordListsAfterParse = false;
         system.ParseHive();
 
@@ -201,7 +199,7 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(@"bigrecursive.hve");
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
 
         var newReg = new RegistryHive(@"bigrecursive.hve");
 
@@ -209,17 +207,17 @@ internal class TestRegistrySkeleton
 
         var key = newReg.GetKey(@"ControlSet001\Control");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         key = newReg.GetKey(@"Select");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void BigDataCase()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -235,26 +233,26 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(outPath);
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
 
         var newReg = new RegistryHive(outPath);
         newReg.ParseHive();
 
         var key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         var val = key.Values.Single(t => t.ValueName == "PastIconsStream");
 
-        Check.That(val).IsNotNull();
-        Check.That(val.ValueDataRaw.Length).IsEqualTo(52526);
-        Check.That(val.ValueSlackRaw.Length).IsEqualTo(13014);
+        val.Should().NotBeNull();
+        val.ValueDataRaw.Length.Should().Be(52526);
+        val.ValueSlackRaw.Length.Should().Be(13014);
     }
 
     [Test]
     public void RecursiveCase()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -269,7 +267,7 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(outPath);
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
 
         var newReg = new RegistryHive(outPath);
 
@@ -279,26 +277,26 @@ internal class TestRegistrySkeleton
             newReg.GetKey(
                 @"Local Settings\Software\Microsoft\Windows\Shell\Bags\3\Shell\{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         var val = key.Values.Single(t => t.ValueName == "FFlags");
 
-        Check.That(val).IsNotNull();
+        val.Should().NotBeNull();
 
         key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\Bags\AllFolders\Shell");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         val = key.Values.Single(t => t.ValueName == "ShowCmd");
 
-        Check.That(val).IsNotNull();
-        Check.That(val.ValueDataRaw.Length).IsEqualTo(4);
+        val.Should().NotBeNull();
+        val.ValueDataRaw.Length.Should().Be(4);
     }
 
     [Test]
     public void DeletedCase()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -313,7 +311,7 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(outPath);
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
 
         var newReg = new RegistryHive(outPath)
         {
@@ -325,26 +323,26 @@ internal class TestRegistrySkeleton
             newReg.GetKey(
                 @"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\0\0");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         var val = key.Values.Single(t => t.ValueName == "MRUListEx");
 
-        Check.That(val).IsNotNull();
+        val.Should().NotBeNull();
 
         key = newReg.GetKey(@"Local Settings\Software\Microsoft\Windows\Shell\BagMRU\1\0\0");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
         val = key.Values.Single(t => t.ValueName == "0");
 
-        Check.That(val).IsNotNull();
-        Check.That(val.ValueDataRaw.Length).IsEqualTo(281);
+        val.Should().NotBeNull();
+        val.ValueDataRaw.Length.Should().Be(281);
     }
 
     [Test]
     public void WrittenHiveShouldContain163ValuesInMuiCacheSubkey()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -371,26 +369,26 @@ internal class TestRegistrySkeleton
 
         var write = rs.Write(outPath);
 
-        Check.That(write).IsTrue();
+        write.Should().BeTrue();
 
         var newReg = new RegistryHive(outPath);
         newReg.ParseHive();
 
         var key = newReg.GetKey(@"Local Settings\MuiCache\6");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
-        Check.That(key.LastWriteTime.Value.Year).IsEqualTo(2011);
-        Check.That(key.LastWriteTime.Value.Month).IsEqualTo(9);
-        Check.That(key.LastWriteTime.Value.Day).IsEqualTo(19);
-        Check.That(key.LastWriteTime.Value.Hour).IsEqualTo(19);
-        Check.That(key.LastWriteTime.Value.Minute).IsEqualTo(2);
-        Check.That(key.LastWriteTime.Value.Second).IsEqualTo(8);
+        key.LastWriteTime.Value.Year.Should().Be(2011);
+        key.LastWriteTime.Value.Month.Should().Be(9);
+        key.LastWriteTime.Value.Day.Should().Be(19);
+        key.LastWriteTime.Value.Hour.Should().Be(19);
+        key.LastWriteTime.Value.Minute.Should().Be(2);
+        key.LastWriteTime.Value.Second.Should().Be(8);
 
         key = newReg.GetKey(@"Local Settings\MuiCache\6\52C64B7E");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
 
-        Check.That(key.Values.Count).IsEqualTo(163);
+        key.Values.Count.Should().Be(163);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -120,6 +120,16 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
     private readonly int _rawBytesLength;
 
+    // Fields are read where they are in the hive, rather than from a copy of the record (RawBytes) per read, which
+    // was most of the time and allocations of a parse. A read past the record (or the file) uses RawBytes, as before
+    private bool InPlace(int offset, int length) => offset >= 0 && offset + length <= _rawBytesLength && AbsoluteOffset + offset + length <= _registryHive.FileBytes.Length;
+    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt16(RawBytes, offset);
+    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt16(RawBytes, offset);
+    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt32(RawBytes, offset);
+    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt32(RawBytes, offset);
+    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt64(RawBytes, offset);
+    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : RawBytes[offset];
+
     private readonly IRegistry _registryHive;
 
     private uint _dataLengthInternal;
@@ -140,7 +150,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
         DataOffsets = new HashSet<ulong>();
 
-        OffsetToData = BitConverter.ToUInt32(RawBytes, 0x0c);
+        OffsetToData = U32(0x0c);
 
         _dataLengthInternal = DataLength;
 
@@ -192,24 +202,23 @@ public class VkCellRecord : ICellTemplate, IRecordBase
         DataType = (DataTypeEnum) dataTypeInternal;
     }
 
-    private byte[] DataBlockRaw
+    private byte[] _dataBlockRaw;
+
+    /// <summary>The value's data cell (or the data, when it is resident or big data), worked out once</summary>
+    private byte[] DataBlockRaw => _dataBlockRaw ??= ReadDataBlock();
+
+    private byte[] ReadDataBlock()
     {
-        get
         {
             var dataBlockSize = 0;
             byte[] datablockRaw;
 
             if (_dataIsResident)
             {
-                if (DataType == DataTypeEnum.RegDwordBigEndian)
-                    //this is a special case where the data length shows up as 2, but a dword needs 4 bytes, so adjust
-                    _dataLengthInternal = 4;
-                //Since its resident, the data lives in the OffsetToData.
-
-                datablockRaw = new ArraySegment<byte>(RawBytes, 0xC, (int) _dataLengthInternal).ToArray();
-
-                //set our data length to what is available since its resident and unknown. it can be used for anything
-                if (DataType == DataTypeEnum.RegUnknown) _dataLengthInternal = 4;
+                //Since its resident, the data lives in the OffsetToData: as many bytes as the data length says (0 to 4).
+                //This used to be 4 bytes for big endian dwords (device property INT16 values, type 0xFFFF0005, have 2)
+                //and unknown types (SAM's RID values have 0), the rest of the field being shown as data
+                datablockRaw = Helpers.Slice(RawBytes, 0xC, (int) Math.Min(_dataLengthInternal, 4));
             }
             else
             {
@@ -304,7 +313,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     //data block Raw now contains our list of pointers to fragmented Data
 
                     //make a place to reassemble things
-                    var bigDataRaw = new ArrayList((int) _dataLengthInternal);
+                    var bigDataRaw = new System.IO.MemoryStream((int) Math.Min(_dataLengthInternal, 0x1000000));
 
                     for (var i = 1; i <= db.NumberOfEntries; i++)
                     {
@@ -326,7 +335,8 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
                             // since the data is prefixed with its length (4 bytes), skip that so we do not include it in the final data 
                             //we read 16344 bytes as the rest is padding and jacks things up if you use the whole range of bytes
-                            bigDataRaw.AddRange(tempDataRaw.Skip(4).Take(16344).ToArray());
+                            if (tempDataRaw.Length > 4)
+                                bigDataRaw.Write(tempDataRaw, 4, Math.Min(16344, tempDataRaw.Length - 4));
                         }
                         catch (Exception e)
                         {
@@ -336,7 +346,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         }
                     }
 
-                    datablockRaw = (byte[]) bigDataRaw.ToArray(typeof(byte));
+                    datablockRaw = bigDataRaw.ToArray();
 
                     //reset this so slack calculation works
                     //dataBlockSize = data block Raw.Length;
@@ -365,7 +375,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
             var paddingLength = actualPaddingOffset - paddingOffset;
 
             if (paddingLength > 0 && paddingOffset + paddingLength <= RawBytes.Length)
-                return new ArraySegment<byte>(RawBytes, paddingOffset, paddingLength).ToArray();
+                return Helpers.Slice(RawBytes, paddingOffset, paddingLength);
 
             return Array.Empty<byte>();
         }
@@ -378,20 +388,20 @@ public class VkCellRecord : ICellTemplate, IRecordBase
     public HashSet<ulong> DataOffsets { get; }
 
     // public properties...
-    public uint DataLength => BitConverter.ToUInt32(RawBytes, 0x08);
+    public uint DataLength => U32(0x08);
 
     public DataTypeEnum DataType { get; set; }
 
     //we need to preserve the datatype as it exists (so we can see unsupported types easily)
-    public uint DataTypeRaw => BitConverter.ToUInt32(RawBytes, 0x10) & DevpropMaskType;
+    public uint DataTypeRaw => U32(0x10) & DevpropMaskType;
 
-    public ushort NameLength => BitConverter.ToUInt16(RawBytes, 0x06);
+    public ushort NameLength => U16(0x06);
 
     //TODO IsTombstone?
     /// <summary>
     ///     Used to determine if the name is stored in ASCII (> 0) or Unicode (== 0)
     /// </summary>
-    public ushort NamePresentFlag => BitConverter.ToUInt16(RawBytes, 0x14);
+    public ushort NamePresentFlag => U16(0x14);
 
     /// <summary>
     ///     The relative offset to the data for this record. If the high bit is set, the data is resident in the offset itself.
@@ -468,9 +478,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     case DataTypeEnum.RegResourceList:
                     case DataTypeEnum.RegFullResourceDescription:
                         val =
-                            new ArraySegment<byte>(localDbl, _internalDataOffset,
-                                    (int) _dataLengthInternal)
-                                .ToArray();
+                            Helpers.Slice(localDbl, _internalDataOffset, (int) _dataLengthInternal);
                         break;
 
                     case DataTypeEnum.RegDword:
@@ -478,13 +486,12 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                         break;
 
                     case DataTypeEnum.RegDwordBigEndian:
-                        if (localDbl.Length > 0)
                         {
-                            var reversedBlock = localDbl;
+                            //big endian: as many bytes as there are (device property INT16 values have 2)
+                            uint be = 0;
+                            for (var i = 0; i < Math.Min(localDbl.Length, 4); i++) be = (be << 8) | localDbl[i];
 
-                            Array.Reverse(reversedBlock);
-
-                            val = BitConverter.ToUInt32(reversedBlock, 0);
+                            val = be;
                         }
 
                         break;
@@ -788,15 +795,17 @@ public class VkCellRecord : ICellTemplate, IRecordBase
         {
             var ret = Array.Empty<byte>();
 
-            if (_dataLengthInternal + _internalDataOffset > DataBlockRaw.Length)
+            //first, as reading it sets _internalDataOffset (big data)
+            var dataBlock = DataBlockRaw;
+
+            if (_dataLengthInternal + _internalDataOffset > dataBlock.Length)
             {
                 //we don't have enough data to copy, so take what we can get
 
                 if (DataBlockRaw.Length > 0)
                     try
                     {
-                        return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
-                            DataBlockRaw.Length - _internalDataOffset).ToArray();
+                        return Helpers.Slice(DataBlockRaw, _internalDataOffset, DataBlockRaw.Length - _internalDataOffset);
                     }
                     catch (Exception)
                     {
@@ -806,8 +815,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
             }
             else
             {
-                return new ArraySegment<byte>(DataBlockRaw, _internalDataOffset,
-                    (int) _dataLengthInternal).ToArray();
+                return Helpers.Slice(DataBlockRaw, _internalDataOffset, (int) _dataLengthInternal);
             }
 
             if (IsFree) return Array.Empty<byte>();
@@ -829,7 +837,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                 var slackLen = dbRaw.Length - slackStart;
 
                 return
-                    new ArraySegment<byte>(DataBlockRaw, slackStart, slackLen).ToArray();
+                    Helpers.Slice(DataBlockRaw, slackStart, slackLen);
             }
 
             return Array.Empty<byte>();
@@ -839,9 +847,13 @@ public class VkCellRecord : ICellTemplate, IRecordBase
     /// <summary>
     ///     The name of the value. This is what is visible under the 'Name' column in RegEdit.
     /// </summary>
-    public string ValueName
+    private string _valueName;
+
+    /// <summary>The value's name (decoded once)</summary>
+    public string ValueName => _valueName ??= DecodeValueName();
+
+    private string DecodeValueName()
     {
-        get
         {
             var valName = "(Unable to determine name)";
 
@@ -857,11 +869,11 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     {
                         //make sure we have enough data
                         if (RawBytes.Length >= NameLength + 0x18)
-                            valName = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
+                            valName = Helpers.Latin1(RawBytes, 0x18, NameLength);
                     }
                     else
                     {
-                        valName = CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(RawBytes, 0x18, NameLength);
+                        valName = Helpers.Latin1(RawBytes, 0x18, NameLength);
                     }
                 }
                 else if (!IsFree)
@@ -901,7 +913,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;
 
-    public bool IsFree => BitConverter.ToInt32(RawBytes, 0) > 0;
+    public bool IsFree => I32(0) > 0;
 
     public bool IsReferenced { get; internal set; }
 
@@ -917,9 +929,9 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
     public long RelativeOffset { get; }
 
-    public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
+    public string Signature => InPlace(4, 2) ? Encoding.ASCII.GetString(_registryHive.FileBytes, (int) AbsoluteOffset + 4, 2) : Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => BitConverter.ToInt32(RawBytes, 0);
+    public int Size => I32(0);
 
     // public methods...
     public override string ToString()

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NFluent;
+using FluentAssertions;
 using NUnit.Framework;
 using Serilog;
 
@@ -21,79 +21,22 @@ internal class TestRegistryHive
     [Test]
     public void CheckHardAndSoftParsingErrors()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
-        Check.That(sam.SoftParsingErrors).IsEqualTo(0);
-        Check.That(sam.HardParsingErrors).IsEqualTo(0);
+        sam.SoftParsingErrors.Should().Be(0);
+        sam.HardParsingErrors.Should().Be(0);
     }
 
-    [Test]
-    public void PoohTest()
-    {
-        var f = @"/home/eric/RiderProjects/UsrClassDeletedBags.dat";
-        var r = new RegistryHive(f);
-        r.RecoverDeleted = true;
-        r.ParseHive();
-    }
+
+
+
 
     [Test]
-    public void OneOffVal()
-    {
-        var f = @"C:\Users\eric\Desktop\RegistryExplorer - Failed to Load Hives\Stack\NTUSER.DAT_clean";
-        var r = new RegistryHive(f);
-        r.RecoverDeleted = true;
-        r.ParseHive();
-
-        var k = r.GetKey("Software\\Microsoft\\Windows\\CurrentVersion\\Search\\Flighting\\1");
-
-        foreach (var rUnassociatedRegistryValue in k.SubKeys) Debug.WriteLine(rUnassociatedRegistryValue.KeyName);
-    }
-
-    [Test]
-    [Ignore("Unknown test source file.")]
-    public void LockedFileTest()
-    {
-        var f = @"C:\Windows\appcompat\Programs\Amcache.hve";
-        var r = new RegistryHive(f);
-        r.RecoverDeleted = true;
-        r.ParseHive();
-
-        var ts = "2014-12-08 13:39:33 +00:00";
-
-        var td = DateTimeOffset.Parse(ts);
-
-        var t = r.GetDeletedKey(@"Software\Microsoft\VisualStudio\12.0_Config\Debugger", td.ToString());
-
-        Check.That(t).IsNotNull();
-        Check.That(t.NkRecord.IsDeleted).IsTrue();
-    }
-
-    [Test]
-    [Ignore("Unknown test source file.")]
-    public void DeletedFindTest()
-    {
-        var f = @"D:\Sync\RegistryHives\NTUSER.DAT";
-        var r = new RegistryHive(f);
-        r.RecoverDeleted = true;
-        r.ParseHive();
-
-        var ts = "2014-12-08 13:39:33 +00:00";
-
-        var td = DateTimeOffset.Parse(ts);
-
-        var t = r.GetDeletedKey(@"Software\Microsoft\VisualStudio\12.0_Config\Debugger", td.ToString());
-
-        Check.That(t).IsNotNull();
-        Check.That(t.NkRecord.IsDeleted).IsTrue();
-    }
-
-    [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest00()
     {
-        var f = @"D:\SynologyDrive\Registry\system_registry_hive";
+        var f = TestHives.Corpus(@"system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -101,17 +44,16 @@ internal class TestRegistryHive
 
         var oneKey = r.ExpandKeyPath("ControlSet001\\Services");
 
-        Check.That(oneKey.Count).IsEqualTo(1);
+        oneKey.Count.Should().Be(1);
     }
 
     //  private const string wildCardChar = "¿";
     private const string wildCardChar = "*";
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\AdminUsrClass.dat";
+        var f = TestHives.Corpus(@"ExpandoTestHives\AdminUsrClass.dat");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -120,23 +62,20 @@ internal class TestRegistryHive
         var keys = r.ExpandKeyPath(
             $"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\{wildCardChar}\\0\\0");
 
-        Check.That(keys.Count).IsEqualTo(3);
-        Check.That(keys.First())
-            .IsEqualTo(
+        keys.Count.Should().Be(3);
+        keys.First().Should().Be(
                 "S-1-5-21-2036804247-3058324640-2116585241-500_Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0\\0\\0"
                     .ToLowerInvariant());
-        Check.That(keys.Last())
-            .IsEqualTo(
+        keys.Last().Should().Be(
                 @"S-1-5-21-2036804247-3058324640-2116585241-500_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\3\0\0"
                     .ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff2()
     {
         //Local Settings\Software\Microsoft\Windows\Shell\BagMRU\2\0\0
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
+        var f = TestHives.Corpus(@"ExpandoTestHives\SOFTWARE_win10");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -144,17 +83,16 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"Classes\\{wildCardChar}\\OpenWithProgIds");
 
-        Check.That(keys.Count).IsEqualTo(95);
-        Check.That(keys.First()).IsEqualTo("ROOT\\Classes\\.3g2\\OpenWithProgIds".ToLowerInvariant());
-        Check.That(keys.Last()).IsEqualTo("ROOT\\Classes\\.zip\\OpenWithProgIds".ToLowerInvariant());
+        keys.Count.Should().Be(95);
+        keys.First().Should().Be("ROOT\\Classes\\.3g2\\OpenWithProgIds".ToLowerInvariant());
+        keys.Last().Should().Be("ROOT\\Classes\\.zip\\OpenWithProgIds".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff3()
     {
         //Local Settings\Software\Microsoft\Windows\Shell\BagMRU\2\0\0
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
+        var f = TestHives.Corpus(@"ExpandoTestHives\SOFTWARE_win10");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -162,16 +100,15 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"Classes\\{wildCardChar}\\ShellEx");
 
-        Check.That(keys.Count).IsEqualTo(187);
-        Check.That(keys.First()).IsEqualTo("root\\classes\\*\\shellex".ToLowerInvariant());
-        Check.That(keys.Last()).IsEqualTo("root\\classes\\wshfile\\shellex".ToLowerInvariant());
+        keys.Count.Should().Be(187);
+        keys.First().Should().Be("root\\classes\\*\\shellex".ToLowerInvariant());
+        keys.Last().Should().Be("root\\classes\\wshfile\\shellex".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff4()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\AdminUsrClass.dat";
+        var f = TestHives.Corpus(@"ExpandoTestHives\AdminUsrClass.dat");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -181,14 +118,13 @@ internal class TestRegistryHive
             $"Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\{wildCardChar}\\Shell\\" +
             "{5C4F28B5-F869-4E84-8E60-F11DB97C5CC7}");
 
-        Check.That(keys.Count).IsEqualTo(15);
+        keys.Count.Should().Be(15);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff5()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
+        var f = TestHives.Corpus(@"ExpandoTestHives\NTUSER_Loveall.DAT");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -196,14 +132,13 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\System{wildCardChar}");
 
-        Check.That(keys.Count).IsEqualTo(7);
+        keys.Count.Should().Be(7);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff6()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
+        var f = TestHives.Corpus(@"ExpandoTestHives\NTUSER_Loveall.DAT");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -211,14 +146,13 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\{wildCardChar}up");
 
-        Check.That(keys.Count).IsEqualTo(2);
+        keys.Count.Should().Be(2);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff7()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\NTUSER_Loveall.DAT";
+        var f = TestHives.Corpus(@"ExpandoTestHives\NTUSER_Loveall.DAT");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -226,14 +160,13 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"AppEvents\\EventLabels\\System{wildCardChar}tion");
 
-        Check.That(keys.Count).IsEqualTo(3);
+        keys.Count.Should().Be(3);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff8()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\UsrClassXWFPath.dat";
+        var f = TestHives.Corpus(@"ExpandoTestHives\UsrClassXWFPath.dat");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -241,19 +174,16 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"{wildCardChar}\\shell\\{wildCardChar}\\command");
 
-        Check.That(keys.Count).IsEqualTo(224);
+        keys.Count.Should().Be(224);
 
-        Check.That(keys.First())
-            .IsEqualTo("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\*\\shell\\editpad\\command");
-        Check.That(keys.Last())
-            .IsEqualTo("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\zoomrecording\\shell\\open\\command");
+        keys.First().Should().Be("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\*\\shell\\editpad\\command");
+        keys.Last().Should().Be("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\zoomrecording\\shell\\open\\command");
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestOneOff9()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\UsrClassXWFPath.dat";
+        var f = TestHives.Corpus(@"ExpandoTestHives\UsrClassXWFPath.dat");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -262,14 +192,13 @@ internal class TestRegistryHive
         var keys = r.ExpandKeyPath(
             $"Extensions\\ContractId\\Windows.Launch\\PackageId\\{wildCardChar}\\ActivatableClassId");
 
-        Check.That(keys.Count).IsEqualTo(73);
+        keys.Count.Should().Be(73);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTestRedux01()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\UsrClassXWFPath.dat";
+        var f = TestHives.Corpus(@"ExpandoTestHives\UsrClassXWFPath.dat");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -277,22 +206,19 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"{wildCardChar}\\shell\\{wildCardChar}\\command");
 
-        Check.That(keys.Count).IsEqualTo(224);
+        keys.Count.Should().Be(224);
 
-        Check.That(keys.First())
-            .IsEqualTo("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\*\\shell\\editpad\\command"
+        keys.First().Should().Be("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\*\\shell\\editpad\\command"
                 .ToLowerInvariant());
-        Check.That(keys.Last())
-            .IsEqualTo("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\zoomrecording\\shell\\open\\command"
+        keys.Last().Should().Be("s-1-5-21-238543598-4054144643-4261915534-1114_classes\\zoomrecording\\shell\\open\\command"
                 .ToLowerInvariant());
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest01()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -300,16 +226,15 @@ internal class TestRegistryHive
 
         var keys = r.ExpandKeyPath($"ControlSet00{wildCardChar}\\Services");
 
-        Check.That(keys.Count).IsEqualTo(2);
-        Check.That(keys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Services".ToLowerInvariant());
-        Check.That(keys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services".ToLowerInvariant());
+        keys.Count.Should().Be(2);
+        keys.First().Should().Be("$$$PROTO.HIV\\ControlSet001\\Services".ToLowerInvariant());
+        keys.Last().Should().Be("$$$PROTO.HIV\\ControlSet002\\Services".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest02()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -317,34 +242,30 @@ internal class TestRegistryHive
 
 
         var otherKeys = r.ExpandKeyPath($"ControlSet002\\Services\\aic{wildCardChar}");
-        Check.That(otherKeys.Count).IsEqualTo(2);
-        Check.That(otherKeys.First()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services\\aic78u2".ToLowerInvariant());
-        Check.That(otherKeys.Last()).IsEqualTo("$$$PROTO.HIV\\ControlSet002\\Services\\aic78xx".ToLowerInvariant());
+        otherKeys.Count.Should().Be(2);
+        otherKeys.First().Should().Be("$$$PROTO.HIV\\ControlSet002\\Services\\aic78u2".ToLowerInvariant());
+        otherKeys.Last().Should().Be("$$$PROTO.HIV\\ControlSet002\\Services\\aic78xx".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest03()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
         r.ParseHive();
 
         var evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0001");
-        Check.That(evenMoreKeys.Count).IsEqualTo(2);
-        Check.That(evenMoreKeys.First())
-            .IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001".ToLowerInvariant());
-        Check.That(evenMoreKeys.Last())
-            .IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001".ToLowerInvariant());
+        evenMoreKeys.Count.Should().Be(2);
+        evenMoreKeys.First().Should().Be("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001".ToLowerInvariant());
+        evenMoreKeys.Last().Should().Be("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest03a()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -352,81 +273,74 @@ internal class TestRegistryHive
 
 
         var evenMoreKeys = r.ExpandKeyPath($"ControlSet001\\Control\\IDConfigDB\\{wildCardChar}\\0{wildCardChar}");
-        Check.That(evenMoreKeys.Count).IsEqualTo(3);
-        Check.That(evenMoreKeys.First())
-            .IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001".ToLowerInvariant());
-        Check.That(evenMoreKeys.Last())
-            .IsEqualTo("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001".ToLowerInvariant());
+        evenMoreKeys.Count.Should().Be(3);
+        evenMoreKeys.First().Should().Be("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Alias\\0001".ToLowerInvariant());
+        evenMoreKeys.Last().Should().Be("$$$PROTO.HIV\\ControlSet001\\Control\\IDConfigDB\\Hardware Profiles\\0001".ToLowerInvariant());
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest04()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
         r.ParseHive();
 
         var otherKeys2 = r.ExpandKeyPath($"ControlSet002\\Services\\Avg{wildCardChar}x86");
-        Check.That(otherKeys2.Count).IsEqualTo(3);
-        //  Check.That(otherKeys2[0]).IsEqualTo(@"ControlSet002\Services\Avgldx86");
-        //    Check.That(otherKeys2[1]).IsEqualTo(@"ControlSet002\Services\Avgmfx86");
-        //    Check.That(otherKeys2[2]).IsEqualTo(@"ControlSet002\Services\Avgrkx86");
+        otherKeys2.Count.Should().Be(3);
+        //  otherKeys2[0].Should().Be(@"ControlSet002\Services\Avgldx86");
+        //    otherKeys2[1].Should().Be(@"ControlSet002\Services\Avgmfx86");
+        //    otherKeys2[2].Should().Be(@"ControlSet002\Services\Avgrkx86");
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest05()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
         r.ParseHive();
 
         var shouldNotExist = r.ExpandKeyPath($"ControlSet002\\Services\\Avg{wildCardChar}x86\\DoesNotExist");
-        Check.That(shouldNotExist.Count).IsEqualTo(0);
+        shouldNotExist.Count.Should().Be(0);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest06()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
         r.ParseHive();
 
         var endCheck = r.ExpandKeyPath($"Setup\\AllowStart\\{wildCardChar}ss");
-        Check.That(endCheck.Count).IsEqualTo(2);
-        Check.That(endCheck.First()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\Rpcss".ToLowerInvariant());
-        Check.That(endCheck.Last()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs".ToLowerInvariant());
+        endCheck.Count.Should().Be(2);
+        endCheck.First().Should().Be("$$$PROTO.HIV\\Setup\\AllowStart\\Rpcss".ToLowerInvariant());
+        endCheck.Last().Should().Be("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest07()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
         r.ParseHive();
 
         var endCheck2 = r.ExpandKeyPath($"Setup\\AllowStart\\{wildCardChar}mss");
-        Check.That(endCheck2.Count).IsEqualTo(1);
-        Check.That(endCheck2.First()).IsEqualTo("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs".ToLowerInvariant());
+        endCheck2.Count.Should().Be(1);
+        endCheck2.First().Should().Be("$$$PROTO.HIV\\Setup\\AllowStart\\SamSs".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest08()
     {
-        var f = @"D:\SynologyDrive\Registry\ExpandoTestHives\system_registry_hive";
+        var f = TestHives.Corpus(@"ExpandoTestHives\system_registry_hive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
 
@@ -434,15 +348,14 @@ internal class TestRegistryHive
 
         var endCheck3 = r.ExpandKeyPath($"ControlSet002\\Services\\{wildCardChar}\\Parameters".ToLowerInvariant());
 
-        Check.That(endCheck3.Count).IsEqualTo(127);
+        endCheck3.Count.Should().Be(127);
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest09()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\ntuser.dat");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -451,19 +364,17 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath($"Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\{wildCardChar}\\File MRU"
             .ToLowerInvariant());
 
-        Check.That(keys2.Count).IsEqualTo(1);
-        Check.That(keys2.First())
-            .IsEqualTo(
+        keys2.Count.Should().Be(1);
+        keys2.First().Should().Be(
                 "ROOT\\Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\File MRU"
                     .ToLowerInvariant());
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest10()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\ntuser.dat");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -471,15 +382,14 @@ internal class TestRegistryHive
 
         var keys2 = r2.ExpandKeyPath($"SOFTWARE\\Microsoft\\Office\\{wildCardChar}\\{wildCardChar}\\User MRU");
 
-        Check.That(keys2.Count).IsEqualTo(3);
-        Check.That(keys2.First()).IsEqualTo(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU".ToLowerInvariant());
+        keys2.Count.Should().Be(3);
+        keys2.First().Should().Be(@"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest11()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SOFTWARE_win10";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\SOFTWARE_win10");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -487,16 +397,14 @@ internal class TestRegistryHive
 
         var keys2 = r2.ExpandKeyPath("WOW6432Node\\ODBC\\ODBCINST.INI\\Microsoft dBase Driver (*.dbf)");
 
-        Check.That(keys2.Count).IsEqualTo(1);
-        Check.That(keys2.First())
-            .IsEqualTo(@"ROOT\WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)".ToLowerInvariant());
+        keys2.Count.Should().Be(1);
+        keys2.First().Should().Be(@"ROOT\WOW6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)".ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest12()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\ntuser.dat");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -505,19 +413,17 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath(
             $"SOFTWARE\\Microsoft\\Office\\{wildCardChar}\\{wildCardChar}\\User MRU\\{wildCardChar}");
 
-        Check.That(keys2.Count).IsEqualTo(3);
-        Check.That(keys2.First())
-            .IsEqualTo(
+        keys2.Count.Should().Be(3);
+        keys2.First().Should().Be(
                 @"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4"
                     .ToLowerInvariant());
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest13()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\ntuser.dat");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -526,22 +432,19 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath(
             $"Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\{wildCardChar}");
 
-        Check.That(keys2.Count).IsEqualTo(2);
-        Check.That(keys2.First())
-            .IsEqualTo(
+        keys2.Count.Should().Be(2);
+        keys2.First().Should().Be(
                 @"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\File MRU"
                     .ToLowerInvariant());
-        Check.That(keys2.Last())
-            .IsEqualTo(
+        keys2.Last().Should().Be(
                 @"ROOT\Software\Microsoft\Office\16.0\Excel\User MRU\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\Place MRU"
                     .ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest14()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\ntuser.dat";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\ntuser.dat");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -551,14 +454,13 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath(
             "Software\\Microsoft\\Office\\16.0\\Excel\\User MRU\\AD_B8387EDCD97012482021633037177683B71660DC7C410BE924536ACDF94CD5B4\\");
 
-        Check.That(keys2.Count).IsEqualTo(1);
+        keys2.Count.Should().Be(1);
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest15()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SYSTEM_loneWolf";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\SYSTEM_loneWolf");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -567,18 +469,16 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath("ControlSet001\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}" +
                                      $"\\0001\\Ndi\\Params\\{wildCardChar}FlowControl");
 
-        Check.That(keys2.Count).IsEqualTo(1);
-        Check.That(keys2.First())
-            .IsEqualTo(
+        keys2.Count.Should().Be(1);
+        keys2.First().Should().Be(
                 @"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl"
                     .ToLowerInvariant());
     }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ExpandoTest16()
     {
-        var f2 = @"D:\SynologyDrive\Registry\ExpandoTestHives\SYSTEM_loneWolf";
+        var f2 = TestHives.Corpus(@"ExpandoTestHives\SYSTEM_loneWolf");
         var r2 = new RegistryHive(f2);
         r2.RecoverDeleted = true;
 
@@ -588,19 +488,17 @@ internal class TestRegistryHive
         var keys2 = r2.ExpandKeyPath("ControlSet001\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}" +
                                      $"\\0001\\Ndi\\Params\\*FlowControl\\{wildCardChar}");
 
-        Check.That(keys2.Count).IsEqualTo(1);
-        Check.That(keys2.Last())
-            .IsEqualTo(
+        keys2.Count.Should().Be(1);
+        keys2.Last().Should().Be(
                 @"ROOT\ControlSet001\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Ndi\Params\*FlowControl\Enum"
                     .ToLowerInvariant());
     }
 
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void ReallocTest()
     {
-        var f = @"D:\SynologyDrive\Registry\ReallocValueDataHive";
+        var f = TestHives.Corpus(@"ReallocValueDataHive");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
         r.ParseHive();
@@ -611,39 +509,19 @@ internal class TestRegistryHive
 
         var t = r.GetDeletedKey(@"2", td.ToString());
 
-        Check.That(t).IsNotNull();
-        Check.That(t.NkRecord.IsDeleted).IsTrue();
+        t.Should().NotBeNull();
+        t.NkRecord.IsDeleted.Should().BeTrue();
 
 
-        Check.That(t.Values[0].VkRecord.DataRecordAllocated).IsEqualTo(true);
-        //   Check.That(t.Values[0].ValueData).IsNotEqualTo("1111");
+        t.Values[0].VkRecord.DataRecordAllocated.Should().Be(true);
+        //   t.Values[0].ValueData.Should().NotBe("1111");
     }
 
-    [Test]
-    [Ignore("Unknown test source file.")]
-    public void DeletedFindTestValue()
-    {
-        var f = @"D:\!downloads\yarp-master\hives_for_tests\DeletedDataHive";
-        var r = new RegistryHive(f);
-        r.RecoverDeleted = true;
-        r.ParseHive();
-
-        var k = r.GetKey("123");
-
-        Check.That(k.Values[0].VkRecord.IsFree).IsFalse();
-
-        Check.That(k.Values.Count).IsEqualTo(2);
-
-        Check.That(k.Values[1].VkRecord.IsFree).IsTrue();
-
-        foreach (var keyValue in k.Values) Debug.WriteLine(keyValue);
-    }
 
     [Test]
-    [Ignore("Unknown test source file.")]
     public void OneOffParse()
     {
-        var f = @"D:\SynologyDrive\Registry\NTUSER_MarkElliot_RecentApps.DAT";
+        var f = TestHives.Corpus(@"NTUSER_MarkElliot_RecentApps.DAT");
         var r = new RegistryHive(f);
         r.RecoverDeleted = true;
         r.ParseHive();
@@ -653,92 +531,35 @@ internal class TestRegistryHive
     [Test]
     public void HBinSizeShouldMatchReadSize()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
-        Check.That(sam.Header.Length).IsEqualTo(sam.HBinRecordTotalSize);
+        sam.Header.Length.Should().Be(sam.HBinRecordTotalSize);
     }
 
     [Test]
     public void HBinSizeShouldNotMatchReadSize()
     {
-        var r = new RegistryHive(@".\Hives\SAM_DUPENAME");
+        var r = new RegistryHive(TestHives.Path(@"SAM_DUPENAME"));
         //if you don't call parse, it wont match
 
-        Check.That(r.Header.Length).IsNotEqualTo(r.HBinRecordTotalSize);
+        r.Header.Length.Should().NotBe(r.HBinRecordTotalSize);
     }
 
-    [Test]
-    public void OneOff()
-    {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Information()
-            .CreateLogger();
 
-        var r = new RegistryHive(@"D:\temp\aaaa\amcache.hve");
-        r.RecoverDeleted = true;
-
-        var l1 = new List<string>();
-        l1.Add(@"D:\temp\aaaa\amcache.hve.log1");
-        l1.Add(@"D:\temp\aaaa\amcache.hve.log2");
-
-        r.ProcessTransactionLogs(l1, true);
-
-        r.ParseHive();
-
-
-        var foo = r.FindInValueDataSlack("info.exe");
-
-        foreach (var searchHit in foo) Log.Information("{Hit}", searchHit);
-    }
-
-    [Test]
-    public void OneOff2()
-    {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Information()
-            .CreateLogger();
-
-        //  var r = new RegistryHive(@"D:\Temp\0xffffd18a4cc4b000-SYSTEM-MACHINE_SYSTEM.reghive");
-        var r = new RegistryHive(@"C:\temp\Amcache.hve");
-        r.RecoverDeleted = true;
-
-        // var l1 = new List<string>();
-        // l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log1");
-        // l1.Add(@"D:\OneDrive\Desktop\a\SOFTWARE.log2");
-
-        //  r.ProcessTransactionLogs(l1,true);
-
-        r.ParseHive();
-
-
-        Log.Information("{Thing}", r.Root);
-        Log.Information("{Thing}", r.Root.SubKeys.Count);
-        Log.Information("{Thing}", r.Root.SubKeys.First().KeyPath);
-        Log.Information("{Thing}", r.Root.SubKeys.First());
-
-        // var foo = r.FindInValueDataSlack("info.exe", false, false);
-        //
-        // foreach (var searchHit in foo)
-        // {
-        //     l.Info(searchHit);
-        // }
-    }
 
 
     [Test]
     public void RecoverDeletedShouldBeTrue()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
         sam.RecoverDeleted = true;
 
-        Check.That(sam.RecoverDeleted).IsEqualTo(true);
+        sam.RecoverDeleted.Should().Be(true);
         sam.RecoverDeleted = false;
     }
 
@@ -746,34 +567,34 @@ internal class TestRegistryHive
     [Test]
     public void ShouldExportFileAllRecords()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
 
         usrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedNoDeletedStuff.txt", false);
 
-        Check.That(usrclassDeleted.Header.Length).IsEqualTo(usrclassDeleted.HBinRecordTotalSize);
+        usrclassDeleted.Header.Length.Should().Be(usrclassDeleted.HBinRecordTotalSize);
     }
 
 
     [Test]
     public void ShouldExportFileDeletedRecords()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
 
         usrclassDeleted.ExportDataToCommonFormat(@"UsrclassDeletedDeletedStuff.txt", true);
 
-        Check.That(usrclassDeleted.Header.Length).IsEqualTo(usrclassDeleted.HBinRecordTotalSize);
+        usrclassDeleted.Header.Length.Should().Be(usrclassDeleted.HBinRecordTotalSize);
     }
 
     [Test]
     public void ShouldExportHiveWithRootValues()
     {
-        var samRootValue = new RegistryHive(@".\Hives\SAM_RootValue");
+        var samRootValue = new RegistryHive(TestHives.Path(@"SAM_RootValue"));
         samRootValue.FlushRecordListsAfterParse = false;
         samRootValue.ParseHive();
 
@@ -784,7 +605,7 @@ internal class TestRegistryHive
     [Test]
     public void ShouldExportValuesToFile()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -795,30 +616,30 @@ internal class TestRegistryHive
         {
             File.WriteAllBytes($"{valueBySizeInfo.Value.ValueName}.bin", valueBySizeInfo.Value.ValueDataRaw);
 
-            Check.That(File.Exists($"{valueBySizeInfo.Value.ValueName}.bin")).IsTrue();
+            File.Exists($"{valueBySizeInfo.Value.ValueName}.bin").Should().BeTrue();
         }
     }
 
     [Test]
     public void ShouldFind100HitsForUrlInKeyAndValueName()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
         var keyHits = usrClass1.FindInKeyName("URL").ToList();
 
-        Check.That(keyHits.Count).IsEqualTo(21);
+        keyHits.Count.Should().Be(21);
 
         var valHits = usrClass1.FindInValueName("URL").ToList();
 
-        Check.That(valHits.Count).IsEqualTo(79);
+        valHits.Count.Should().Be(79);
     }
 
     [Test]
     public void ShouldFind1248AfterTimeStamp()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -827,13 +648,13 @@ internal class TestRegistryHive
         var dt = new DateTimeOffset(2014, 11, 13, 15, 51, 17, TimeSpan.FromSeconds(0));
         var hits = usrClass1.FindByLastWriteTime(dt, null).ToList();
 
-        Check.That(hits.Count).IsEqualTo(14);
+        hits.Count.Should().Be(14);
     }
 
     [Test]
     public void ShouldFind1544EforeTimeStamp()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -841,13 +662,13 @@ internal class TestRegistryHive
         var dt = new DateTimeOffset(2014, 5, 20, 14, 19, 40, TimeSpan.FromSeconds(0));
         var hits = usrClass1.FindByLastWriteTime(null, dt).ToList();
 
-        Check.That(hits.Count).IsEqualTo(21);
+        hits.Count.Should().Be(21);
     }
 
     [Test]
     public void ShouldFind32HitsForFoodInKeyName()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -855,72 +676,72 @@ internal class TestRegistryHive
 
         var hits = usrClass1.FindInKeyName("food").ToList();
 
-        Check.That(hits.Count).IsEqualTo(32);
+        hits.Count.Should().Be(32);
     }
 
     [Test]
     public void ShouldFind4HitsFor320033003200InValueDataSlack()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueDataSlack("32-00-33-00-32-00", false, true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(6);
+        hits.Count.Should().Be(6);
     }
 
     [Test]
     public void ShouldFind4HitsForBinaryDataInValueData()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueData("43-74-53-83-24-55-30").ToList();
 
-        Check.That(hits.Count).IsEqualTo(6);
+        hits.Count.Should().Be(6);
 
         hits = usrClass1.FindInValueData("DeB").ToList();
 
-        Check.That(hits.Count).IsEqualTo(28);
+        hits.Count.Should().Be(28);
     }
 
     [Test]
     public void ShouldFind4HitsForBinaryDataInValueDataWithRegEx()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueData("04-00-EF-BE", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(56);
+        hits.Count.Should().Be(56);
 
         hits = usrClass1.FindInValueData("47-4F-4F-4E", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(4);
+        hits.Count.Should().Be(4);
 
         hits = usrClass1.FindInValueData("44-65-62", true).ToList(); //finds deb
 
-        Check.That(hits.Count).IsEqualTo(2);
+        hits.Count.Should().Be(2);
 
         hits = usrClass1.FindInValueData("44-65-73", true).ToList(); //finds des
 
-        Check.That(hits.Count).IsEqualTo(1);
+        hits.Count.Should().Be(1);
 
         hits = usrClass1.FindInValueData("44-65-(62|73)", true).ToList(); //finds deb or des
 
-        Check.That(hits.Count).IsEqualTo(3);
+        hits.Count.Should().Be(3);
     }
 
     [Test]
     public void ShouldFind4HitsForBingXInKeyNamesWithRegEx()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -928,135 +749,135 @@ internal class TestRegistryHive
 
         var hits = usrClass1.FindInKeyName("Microsoft.Bing[FHW]", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(44);
+        hits.Count.Should().Be(44);
 
         hits = usrClass1.FindInKeyName("Microsoft.Bing[FHW]o", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(11);
+        hits.Count.Should().Be(11);
     }
 
     [Test]
     public void ShouldFind4HitsForBingXInValueDataWithRegEx()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueData("URL:bing[mhs]", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(3);
+        hits.Count.Should().Be(3);
 
         hits = usrClass1.FindInValueData("URL:bing[mhts]", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(4);
+        hits.Count.Should().Be(4);
     }
 
     [Test]
     public void ShouldFind4HitsForPostboxUrlInValueData()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueData("Postbox URL").ToList();
 
-        Check.That(hits.Count).IsEqualTo(4);
+        hits.Count.Should().Be(4);
     }
 
     [Test]
     public void ShouldFindAKeyWithClassName()
     {
-        var systemOnDemand = new RegistryHiveOnDemand(@".\Hives\SYSTEM");
+        var systemOnDemand = new RegistryHiveOnDemand(TestHives.Path(@"SYSTEM"));
         var key =
             systemOnDemand.GetKey(
                 @"CsiTool-CreateHive-{00000000-0000-0000-0000-000000000000}\ControlSet001\Control\Lsa\Data");
 
-        Check.That(key.ClassName).IsNotEmpty();
+        key.ClassName.Should().NotBeEmpty();
     }
 
     [Test]
     public void ShouldFindAKeyWithoutRootKeyName()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
         var key = sam.GetKey(@"SAM\Domains");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldFindBase64()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindBase64(20).ToList();
 
-        Check.That(hits.Count).IsEqualTo(137);
+        hits.Count.Should().Be(137);
     }
 
     [Test]
     public void ShouldFindFiveValuesForSize4096()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var keys = usrClass1.FindByValueSize(4096).ToList();
 
-        Check.That(keys.Count).IsEqualTo(5);
+        keys.Count.Should().Be(5);
     }
 
     [Test]
     public void ShouldFindHitsValueNamesWithRegEx()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInValueName("(App|Display)Name", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(326);
+        hits.Count.Should().Be(326);
 
         hits = usrClass1.FindInValueName("Capability(Co|Si)", true).ToList();
 
-        Check.That(hits.Count).IsEqualTo(66);
+        hits.Count.Should().Be(66);
     }
 
     [Test]
     public void ShouldFindKeyWithMixedCaseName()
     {
-        var usrClassFtp = new RegistryHiveOnDemand(@".\Hives\UsrClass FTP.dat");
+        var usrClassFtp = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass FTP.dat"));
 
         var key =
             usrClassFtp.GetKey(
                 @"S-1-5-21-2417227394-2575385136-2411922467-1105_CLAsses\ActivAtableClasses\CLsID");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldFindKeyWithMixedCaseNameWithoutRootName()
     {
-        var usrClassFtp = new RegistryHiveOnDemand(@".\Hives\UsrClass FTP.dat");
+        var usrClassFtp = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass FTP.dat"));
 
         var key = usrClassFtp.GetKey(@"ActivAtableClasses\CLsID");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldFindNoHitsForZimmermanInKeyName()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -1064,26 +885,26 @@ internal class TestRegistryHive
 
         var hits = usrClass1.FindInKeyName("Zimmerman").ToList();
 
-        Check.That(hits.Count).IsEqualTo(0);
+        hits.Count.Should().Be(0);
     }
 
     [Test]
     public void ShouldFindThreeHitsForMuiCacheInKeyName()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var hits = usrClass1.FindInKeyName("MuiCache").ToList();
 
-        Check.That(hits.Count).IsEqualTo(3);
+        hits.Count.Should().Be(3);
     }
 
     [Test]
     public void ShouldFindTwoBetweenTimeStamp()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
@@ -1092,26 +913,26 @@ internal class TestRegistryHive
         var end = new DateTimeOffset(2014, 5, 20, 23, 59, 59, TimeSpan.FromSeconds(0));
         var hits = usrClass1.FindByLastWriteTime(start, end).ToList();
 
-        Check.That(hits.Count).IsEqualTo(2);
+        hits.Count.Should().Be(2);
     }
 
     [Test]
     public void ShouldFindTwoValuesForSize100000()
     {
-        var usrClass1 = new RegistryHive(@".\Hives\UsrClass 1.dat");
+        var usrClass1 = new RegistryHive(TestHives.Path(@"UsrClass 1.dat"));
         usrClass1.RecoverDeleted = true;
         usrClass1.FlushRecordListsAfterParse = false;
         usrClass1.ParseHive();
 
         var keys = usrClass1.FindByValueSize(100000).ToList();
 
-        Check.That(keys.Count).IsEqualTo(2);
+        keys.Count.Should().Be(2);
     }
 
     [Test]
     public void ShouldHaveGoodRegMultiSz()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
@@ -1123,84 +944,84 @@ internal class TestRegistryHive
 
         var val = key.Values.Single(t => t.ValueName == "LanguageList");
 
-        Check.That(val).IsNotNull();
+        val.Should().NotBeNull();
 
-        Check.That(val.ValueName).IsEqualTo("LanguageList");
-        Check.That(val.ValueData).IsEqualTo("en-US en");
+        val.ValueName.Should().Be("LanguageList");
+        val.ValueData.Should().Be("en-US en");
     }
 
     [Test]
     public void ShouldHaveHardAndSoftParsingValuesOfZero()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
-        Check.That(sam.HardParsingErrors).IsEqualTo(0);
-        Check.That(sam.SoftParsingErrors).IsEqualTo(0);
+        sam.HardParsingErrors.Should().Be(0);
+        sam.SoftParsingErrors.Should().Be(0);
     }
 
     [Test]
     public void ShouldHaveHeaderLengthEqualToReadDataSize()
     {
-        var usrclassDeleted = new RegistryHive(@".\Hives\UsrClassDeletedBags.dat");
+        var usrclassDeleted = new RegistryHive(TestHives.Path(@"UsrClassDeletedBags.dat"));
         usrclassDeleted.RecoverDeleted = true;
         usrclassDeleted.FlushRecordListsAfterParse = false;
         usrclassDeleted.ParseHive();
 
-        Check.That(usrclassDeleted.Header.Length).IsEqualTo(usrclassDeleted.HBinRecordTotalSize);
+        usrclassDeleted.Header.Length.Should().Be(usrclassDeleted.HBinRecordTotalSize);
     }
 
     [Test]
     public void ShouldReturnKeyBasedOnRelativePath()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
         var key =
             sam.GetKey(0x418);
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void ShouldReturnNullWhenKeyPathNotFound()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
         var key =
             sam.GetKey(@"SAM\Domains\DoesNotExist");
 
-        Check.That(key).IsNull();
+        key.Should().BeNull();
     }
 
     [Test]
     public void ShouldReturnNullWhenRelativeOffsetNotFound()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
         var key =
             sam.GetKey(0x999418);
 
-        Check.That(key).IsNull();
+        key.Should().BeNull();
     }
 
     [Test]
     public void ShouldTakeByteArrayInConstructor()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
-        var r = new RegistryHive(sam.FileBytes, @".\Hives\SAM");
+        var r = new RegistryHive(sam.FileBytes, TestHives.Path(@"SAM"));
 
-        Check.That(r.Header).IsNotNull();
-        Check.That(r.HivePath).IsEqualTo(@".\Hives\SAM");
-        Check.That(r.HiveType).IsEqualTo(HiveTypeEnum.Sam);
+        r.Header.Should().NotBeNull();
+        r.HivePath.Should().Be(TestHives.Path(@"SAM"));
+        r.HiveType.Should().Be(HiveTypeEnum.Sam);
     }
 
 //        [Test]
@@ -1208,7 +1029,7 @@ internal class TestRegistryHive
 //        {
 //            Check.ThatCode(() =>
 //            {
-//                var r = new RegistryHive(@".\Hives\SECURITYNoRoot");
+//                var r = new RegistryHive(TestHives.Path(@"SECURITYNoRoot"));
 //                r.ParseHive();
 //            }).Throws<KeyNotFoundException>();
 //        }
@@ -1216,48 +1037,46 @@ internal class TestRegistryHive
     [Test]
     public void ShouldThrowExceptionWhenCallingParseHiveTwice()
     {
-        Check.ThatCode(() =>
+        FluentActions.Invoking(() =>
             {
-                var r = new RegistryHive(@".\Hives\SAMBadHBinHeader");
+                var r = new RegistryHive(TestHives.Path(@"SAMBadHBinHeader"));
                 r.ParseHive();
                 r.ParseHive();
-            })
-            .Throws<Exception>();
+            }).Should().Throw<Exception>();
     }
 
     [Test]
     [Ignore("Doesn't throw as expected")]
     public void ShouldThrowExceptionWithBadHbinHeader()
     {
-        Check.ThatCode(() =>
+        FluentActions.Invoking(() =>
             {
-                var r = new RegistryHive(@".\Hives\SAMBadHBinHeader");
+                var r = new RegistryHive(TestHives.Path(@"SAMBadHBinHeader"));
                 r.ParseHive();
-            })
-            .Throws<Exception>();
+            }).Should().Throw<Exception>();
     }
 
     [Test]
     public void TestsListRecordsContinued3()
     {
-        var usrClassFtp = new RegistryHiveOnDemand(@".\Hives\UsrClass FTP.dat");
+        var usrClassFtp = new RegistryHiveOnDemand(TestHives.Path(@"UsrClass FTP.dat"));
 
         var key =
             usrClassFtp.GetKey(
                 @"S-1-5-21-2417227394-2575385136-2411922467-1105_Classes\ActivatableClasses\CLSID");
 
-        Check.That(key).IsNotNull();
+        key.Should().NotBeNull();
     }
 
     [Test]
     public void VerifyHiveTestShouldPass()
     {
-        var sam = new RegistryHive(@".\Hives\SAM");
+        var sam = new RegistryHive(TestHives.Path(@"SAM"));
         sam.FlushRecordListsAfterParse = false;
         sam.ParseHive();
 
         var m = sam.Verify();
 
-        Check.That(m.HasValidHeader).IsTrue();
+        m.HasValidHeader.Should().BeTrue();
     }
 }
