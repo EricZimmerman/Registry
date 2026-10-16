@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Registry.Other;
@@ -41,7 +41,7 @@ public class RiListRecord : IListTemplate, IRecordBase
 
             while (counter < NumberOfEntries)
             {
-                if (index >= RawBytes.Length)
+                if (index + 4 > RawBytes.Length)
                     //ncrunch: no coverage
                     // i have seen cases where there isnt enough data, so get what we can
                     break; //ncrunch: no coverage
@@ -70,7 +70,7 @@ public class RiListRecord : IListTemplate, IRecordBase
 
     public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;

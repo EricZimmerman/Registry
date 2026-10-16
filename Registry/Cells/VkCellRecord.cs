@@ -121,14 +121,24 @@ public class VkCellRecord : ICellTemplate, IRecordBase
     private readonly int _rawBytesLength;
 
     // Fields are read where they are in the hive, rather than from a copy of the record (RawBytes) per read, which
-    // was most of the time and allocations of a parse. A read past the record (or the file) uses RawBytes, as before
+    // was most of the time and allocations of a parse. A field past the end of a (damaged) record is 0: such a record
+    // used to stop the parse
     private bool InPlace(int offset, int length) => offset >= 0 && offset + length <= _rawBytesLength && AbsoluteOffset + offset + length <= _registryHive.FileBytes.Length;
-    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt16(RawBytes, offset);
-    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt16(RawBytes, offset);
-    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt32(RawBytes, offset);
-    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt32(RawBytes, offset);
-    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt64(RawBytes, offset);
-    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : RawBytes[offset];
+    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (ushort) Fallback(offset, 2);
+    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (short) Fallback(offset, 2);
+    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (uint) Fallback(offset, 4);
+    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (int) Fallback(offset, 4);
+    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : Fallback(offset, 8);
+    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : (byte) Fallback(offset, 1);
+
+    /// <summary>A field that isn't wholly in the record (or the file): the bytes that are there, the rest 0</summary>
+    private long Fallback(int offset, int length)
+    {
+        var raw = RawBytes;
+        long v = 0;
+        for (var i = length - 1; i >= 0; i--) v = (v << 8) | (offset + i >= 0 && offset + i < raw.Length ? raw[offset + i] : 0);
+        return v;
+    }
 
     private readonly IRegistry _registryHive;
 
@@ -246,7 +256,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                 if (datablockSizeRaw.Length == 4)
                     try
                     {
-                        dataBlockSize = Math.Abs(BitConverter.ToInt32(datablockSizeRaw, 0));
+                        dataBlockSize = Helpers.AbsSize(BitConverter.ToInt32(datablockSizeRaw, 0));
                     }
                     catch (Exception)
                     {
@@ -308,7 +318,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     }
 
                     datablockRaw = _registryHive.ReadBytesFromHive(4096 + db.OffsetToOffsets,
-                        Math.Abs(dataBlockSize));
+                        Helpers.AbsSize(dataBlockSize));
 
                     //data block Raw now contains our list of pointers to fragmented Data
 
@@ -331,7 +341,7 @@ public class VkCellRecord : ICellTemplate, IRecordBase
 
                             //get our data block
                             var tempDataRaw =
-                                _registryHive.ReadBytesFromHive(4096 + os, Math.Abs(tempdataBlockSize));
+                                _registryHive.ReadBytesFromHive(4096 + os, Helpers.AbsSize(tempdataBlockSize));
 
                             // since the data is prefixed with its length (4 bytes), skip that so we do not include it in the final data 
                             //we read 16344 bytes as the rest is padding and jacks things up if you use the whole range of bytes
@@ -881,7 +891,8 @@ public class VkCellRecord : ICellTemplate, IRecordBase
                     // An allocated record without the ASCII flag stores its name in UTF-16LE. The check below looks
                     // for a 0x00 byte, which a name made only of characters above U+00FF (Japanese, Chinese, Cyrillic, ...)
                     // does not have, so it is not applied here.
-                    valName = Encoding.Unicode.GetString(RawBytes, 0x18, NameLength);
+                    var raw = RawBytes;
+                    valName = Encoding.Unicode.GetString(raw, 0x18, Math.Max(0, Math.Min(NameLength, raw.Length - 0x18)) / 2 * 2);
                 }
                 else
                 {

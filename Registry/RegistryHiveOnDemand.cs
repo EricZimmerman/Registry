@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -190,7 +190,7 @@ public class RegistryHiveOnDemand : RegistryBase
         var dataLenBytes = ReadBytesFromHive(relativeOffset + 4096, 4);
         var dataLen = BitConverter.ToUInt32(dataLenBytes, 0);
         var size = (int) dataLen;
-        size = Math.Abs(size);
+        size = Helpers.AbsSize(size);
 
         var dn = new DataNode(ReadBytesFromHive(relativeOffset + 4096, size), relativeOffset);
 
@@ -204,7 +204,7 @@ public class RegistryHiveOnDemand : RegistryBase
         var rawSize = ReadBytesFromHive(absOffset, 4);
 
         var size = BitConverter.ToInt32(rawSize, 0);
-        size = Math.Abs(size);
+        size = Helpers.AbsSize(size);
 
         return ReadBytesFromHive(absOffset, size);
     }

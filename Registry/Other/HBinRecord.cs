@@ -135,7 +135,7 @@ public class HBinRecord
             }
 
             // if we get a negative number here the record is allocated, but we cant read negative bytes, so get absolute value
-            readSize = Math.Abs(readSize);
+            readSize = Helpers.AbsSize(readSize);
 
             if (readSize < 8 || offsetInHbin + (long) readSize > _rawBytes.Length)
             {
@@ -324,11 +324,11 @@ public class HBinRecord
 
                 var size = BitConverter.ToInt32(remainingData, actualStart);
 
-                if (Math.Abs(size) <= 3)
+                if (Helpers.AbsSize(size) <= 3)
                     //if its empty, move on
                     continue;
 
-                var declared = Math.Abs(size);
+                var declared = Helpers.AbsSize(size);
                 var pastCell = remainingData.Length - actualStart < declared;
                 if (pastCell)
                 {

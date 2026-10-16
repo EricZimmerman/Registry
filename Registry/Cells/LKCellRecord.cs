@@ -114,7 +114,7 @@ public class LkCellRecord : ICellTemplate, IRecordBase
             Name = Encoding.Unicode.GetString(rawBytes, 0x50, NameLength);
 
         var paddingOffset = 0x50 + NameLength;
-        var paddingLength = Math.Abs(Size) - paddingOffset;
+        var paddingLength = Helpers.AbsSize(Size) - paddingOffset;
 
         if (paddingLength > 0)
         {
@@ -227,7 +227,7 @@ public class LkCellRecord : ICellTemplate, IRecordBase
         set { }
     }
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public methods...
     public override string ToString()

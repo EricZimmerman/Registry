@@ -48,7 +48,7 @@ public class DataNode : IRecordBase
     /// </summary>
     public long RelativeOffset { get; }
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public properties...
     /// <summary>

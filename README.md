@@ -1,114 +1,52 @@
-# Registry #
+# Registry
 
-NOTE: This project uses C# version 6 features! You will need VS 2015 to compile it. Alternatively you can just use the DLL from the ExampleApp project.
+Full featured, offline Registry hive parser for .NET (`netstandard2.0`, NuGet package `Registry`): keys, values, value slack, deleted keys and values, transaction logs, and the underlying records with their raw bytes. It is what RECmd (and rla), Registry Explorer, ShellBags Explorer (and SBECmd), AmcacheParser, AppCompatCacheParser, the RECmd plugins and others use.
 
-Full featured, offline Registry parser in C#. 
-
-For discussion and design decisions, see http://binaryforay.blogspot.com/.
-
-## The goals of this project are:  ##
-
-1. Full parsing of all known Registry structures
-2. Make Registry value slack space accessible
-3. Deleted key/value support
-4. Easy access to underlying data structures and their raw data as byte arrays
-5. Performance
-6. Ability to compare results with other Registry parsers using a common format. So far [Willi Ballenthin](https://github.com/williballenthin "Willi Ballenthin") and [Erik Miyake](http://blog.erikmiyake.us/ "Erik Miyake") have implemented this to varying degrees
-
-## General usage  ##
-The main Registry class has a LoggingConfiguration propery, NlogConfig. This should be set to a valid NLog config after instantiating a Registry object in order for the class to actually log something. This let you use any of the targets Nlog supports vs anything I could come up with plus the code is a lot cleaner.
-
-If you look at ExampleApp source you can see an example of how to implement both a ColoredConsole and File target.
-
-If you use -v 1 or -v 2 with ExampleApp you will get a large volume of information as the parser does its work. Of course higher levels of verbosity slow things down, but if you run into a problem, its a nice thing to have.
-
-Registry will honor whatever LogLevels exist in your Nlog config.
-
-Once that is set, its as easy as creating a RegistryHive object, deciding on whether or not to recover deleted keys, and calling ParseHive:
+## Usage
 
 ```csharp
-var hive = new RegistryHive(pathToSomeFile);
-hive.RecoverDeleted = true;
+var hive = new RegistryHive(@"C:\Temp\SYSTEM");
+
+//a dirty hive (its sequence numbers differ): replay its transaction logs first
+if (hive.Header.PrimarySequenceNumber != hive.Header.SecondarySequenceNumber)
+{
+    hive.ProcessTransactionLogs(new List<string> { @"C:\Temp\SYSTEM.LOG1", @"C:\Temp\SYSTEM.LOG2" }, true);
+}
+
+hive.RecoverDeleted = true; //also find deleted keys and values (DeletedRegistryKeys, UnassociatedRegistryValues)
 hive.ParseHive();
+
+var key = hive.GetKey(@"ControlSet001\Services\Tcpip\Parameters"); //null when it isn't there; case doesn't matter
+foreach (var value in key.Values)
+{
+    Console.WriteLine($"{value.ValueName} ({value.ValueType}): {value.ValueData}");
+}
 ```
 
-There is also a RegistryOnDemand class that forgoes up front processing and only loads things as they are needed via FindKey method. This class can process hives significantly faster than Registry class as it does not handle deleted records and only gets the keys/values for the path specified.
-
-RegistryOnDemand handled several key lookups against a 129MB SOFTWARE hive in less than 2 seconds. The same hive would take approximately 25 seconds to load in Registry.
+`RegistryHiveOnDemand` reads only what a `GetKey` call needs (no deleted records, no transaction logs): much faster for a few lookups in a big hive. Only the values and subkeys of the key returned are filled in.
 
 ```csharp
-var hive = new RegistryHiveOnDemand(pathToSomeFile);
-//returns RegistryKey object
-var key = hive.GetKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion");
-//returns null when path not found
-var keyBad = hive.GetKey(@"Local Settings\Software\NoSuchKey");
+var hive = new RegistryHiveOnDemand(@"C:\Temp\SOFTWARE");
+var key = hive.GetKey(@"Microsoft\Windows NT\CurrentVersion");
 ```
 
-Since this is on demand, only the values and subkeys are populated for the retrieved key. If you want to get details on subkeys, be sure to call GetKey on the subkey's key path.
+### Transaction logs
 
-**Example application output**
+`ProcessTransactionLogs` applies a dirty hive's logs as Windows does (see [Maxim Suhanov's Windows registry file format specification](https://github.com/msuhanov/regf), CC BY 4.0):
 
-NTUser.dat hive is 9.74 MB in size. It contains 16,290 keys and 56,945 values. 3,369 deleted keys and 8,963 deleted values were recovered. Of the 8,963 deleted values, only 1,408 (approximately 15.7%) were not reassociated with a deleted key.
+- New format logs (Windows 8.1 and later, `.LOG1`/`.LOG2`): log entries from the sequence number in the log's base block on, each one more than the last, until one is out of sequence or invalid (hashes, size). Both logs are used, the one with the earlier entries first. The hive grows when an entry says the hive bins data is bigger.
+- Old format logs (`.LOG`, and `.LOG1`/`.LOG2` before Windows 8.1): the dirty pages of the newer log.
+- A hive whose base block is invalid gets it back from the log.
 
-All of this was done in 2.24 seconds. The full output from the example app is shown below: 
+The recovered hive is byte for byte what [yarp](https://github.com/msuhanov/yarp) recovers, for every dirty hive tested (a local corpus, the DFIR Artifact Museum and yarp's test hives).
 
+### Damaged hives
 
-    1/23/2015 8:52:56 AM -07:00: Processing 'D:\temp\re\NTUSER.DAT'
-	1/23/2015 8:52:57 AM -07:00: Initial processing complete. Building tree...
-	1/23/2015 8:52:57 AM -07:00: Found root node! Getting subkeys...
-	1/23/2015 8:52:57 AM -07:00: Processing complete! Call BuildDeletedRegistryKeys to rebuild deleted record structures
-	1/23/2015 8:52:57 AM -07:00: Associating deleted keys and values...
-	1/23/2015 8:52:58 AM -07:00: Finished processing 'D:\temp\re\NTUSER.DAT'
-	1/23/2015 8:52:58 AM -07:00: Results:
-	
-	Found 1,928 hbin records
-	Found 83,313 Cell records (nk: 18,823, vk: 64,391, sk: 99, lk: 0)
-	Found 3,779 List records
-	Found 48,863 Data records
-	
-	There are 70,981 cell records marked as being referenced (85.20 %)
-	There are 3,769 list records marked as being referenced (99.74 %)
-	There are 41,979 data records marked as being referenced (85.91 %)
-	
-	Free record info
-	12,332 free Cell records (nk: 3,369, vk: 8,963, sk: 0, lk: 0)
-	10 free List records
-	3,070 free Data records
-	
-	There were 0 hard parsing errors (a record marked 'in use' that didn't parse correctly.)
-	There were 0 soft parsing errors (a record marked 'free' that didn't parse correctly.)
-	
-	Cells: Free + referenced + marked as in use but not referenced == Total? True
-	Lists: Free + referenced + marked as in use but not referenced == Total? True
-	Data:  Free + referenced + marked as in use but not referenced == Total? True
-	
-	Processing took 2.2406 seconds
-	
-	
-	Press any key to continue to next file
+Damaged or truncated hives are parsed as far as they can be: a missing cell or list, a key referenced twice, a subkey list pointing back at a parent, or a cell or hive bin with an impossible size are logged and skipped. `HardParsingErrors` and `SoftParsingErrors` count the records that could not be read (in use and free).
 
+## Building and testing
 
-**Additional testing metrics**
-
-108 hives processed
-
-Total cell records: 5,200,557<br />
-Total free cell records: 6,448 (0.1239867191148948 % free)<br />
-	
-Total list records: 539,904<br />
-Total free list records: 3,495 (0.6473373044096728 % free)<br />
-	
-Total data records: 3,708,061<br />
-Total free data records: 206,423 (5.566871742401217 % free)<br />
-
-Total records: 9,448,522<br />
-
-Total hard parsing errors (record marked as in use): 	152 (0.0016087172152428 % errors)<br />
-Total soft parsing errors (record marked as free):	522 (0.0055246735944521 % errors)<br />
-
-***Parsing success rate: 99.99286660919031 %*** <br />
-
-
+The SDK is pinned in `global.json` (.NET 10). `dotnet test` runs the tests in `Registry.Test`, including the ones that use a local corpus of hives (`Corpus/Registry` next to the repository, or `REGISTRY_CORPUS`), which are skipped when it isn't there.
 
 ### Example data ###
 

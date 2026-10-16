@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using Registry.Other;
@@ -89,7 +89,7 @@ public class SkCellRecord : ICellTemplate, IRecordBase
 
     public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public methods...
     public override string ToString()

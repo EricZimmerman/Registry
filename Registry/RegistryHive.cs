@@ -119,7 +119,7 @@ public class RegistryHive : RegistryBase
         var dataLenBytes = ReadBytesFromHive(relativeOffset + 4096, 4);
         if (dataLenBytes.Length < 4) return null;
 
-        var size = Math.Abs(BitConverter.ToInt32(dataLenBytes, 0));
+        var size = Helpers.AbsSize(BitConverter.ToInt32(dataLenBytes, 0));
         if (size < 4) return null;
 
         var dn = new DataNode(ReadBytesFromHive(relativeOffset + 4096, size), relativeOffset);

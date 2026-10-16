@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Registry.Other;
 
@@ -49,7 +49,7 @@ public class DbListRecord : IListTemplate, IRecordBase
 
     public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;

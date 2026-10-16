@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Registry.Other;
@@ -32,9 +32,13 @@ public class LxListRecord : IListTemplate, IRecordBase
     ///     A dictionary of relative offsets and hashes to other records
     ///     <remarks>The offset is the key and the hash value is the value</remarks>
     /// </summary>
-    public Dictionary<uint, string> Offsets
+    public Dictionary<uint, string> Offsets => _offsets ??= ReadOffsets();
+
+    private Dictionary<uint, string> _offsets;
+
+    /// <summary>The entries (worked out once): up to the end of the data, an offset listed twice once</summary>
+    private Dictionary<uint, string> ReadOffsets()
     {
-        get
         {
             var offsets = new Dictionary<uint, string>();
 
@@ -43,7 +47,7 @@ public class LxListRecord : IListTemplate, IRecordBase
 
             while (counter < NumberOfEntries)
             {
-                if (index >= RawBytes.Length)
+                if (index + 8 > RawBytes.Length)
                     //ncrunch: no coverage
                     // i have seen cases where there isnt enough data, so get what we can
                     break; //ncrunch: no coverage
@@ -62,7 +66,8 @@ public class LxListRecord : IListTemplate, IRecordBase
 
                 index += 4;
 
-                offsets.Add(os, hash);
+                //a damaged list can name a cell twice
+                if (offsets.ContainsKey(os) == false) offsets.Add(os, hash);
 
                 counter += 1;
             }
@@ -82,7 +87,7 @@ public class LxListRecord : IListTemplate, IRecordBase
 
     public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;

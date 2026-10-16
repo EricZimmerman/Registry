@@ -62,14 +62,24 @@ public class NkCellRecord : ICellTemplate, IRecordBase
     private readonly int _rawBytesLength;
 
     // Fields are read where they are in the hive, rather than from a copy of the record (RawBytes) per read, which
-    // was most of the time and allocations of a parse. A read past the record (or the file) uses RawBytes, as before
+    // was most of the time and allocations of a parse. A field past the end of a (damaged) record is 0: such a record
+    // used to stop the parse
     private bool InPlace(int offset, int length) => offset >= 0 && offset + length <= _rawBytesLength && AbsoluteOffset + offset + length <= _registryHive.FileBytes.Length;
-    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt16(RawBytes, offset);
-    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt16(RawBytes, offset);
-    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToUInt32(RawBytes, offset);
-    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt32(RawBytes, offset);
-    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : BitConverter.ToInt64(RawBytes, offset);
-    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : RawBytes[offset];
+    private ushort U16(int offset) => InPlace(offset, 2) ? BitConverter.ToUInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (ushort) Fallback(offset, 2);
+    private short I16(int offset) => InPlace(offset, 2) ? BitConverter.ToInt16(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (short) Fallback(offset, 2);
+    private uint U32(int offset) => InPlace(offset, 4) ? BitConverter.ToUInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (uint) Fallback(offset, 4);
+    private int I32(int offset) => InPlace(offset, 4) ? BitConverter.ToInt32(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : (int) Fallback(offset, 4);
+    private long I64(int offset) => InPlace(offset, 8) ? BitConverter.ToInt64(_registryHive.FileBytes, (int) AbsoluteOffset + offset) : Fallback(offset, 8);
+    private byte B(int offset) => InPlace(offset, 1) ? _registryHive.FileBytes[AbsoluteOffset + offset] : (byte) Fallback(offset, 1);
+
+    /// <summary>A field that isn't wholly in the record (or the file): the bytes that are there, the rest 0</summary>
+    private long Fallback(int offset, int length)
+    {
+        var raw = RawBytes;
+        long v = 0;
+        for (var i = length - 1; i >= 0; i--) v = (v << 8) | (offset + i >= 0 && offset + i < raw.Length ? raw[offset + i] : 0);
+        return v;
+    }
     private readonly IRegistry _registryHive;
 
     // public fields...
@@ -182,7 +192,8 @@ public class NkCellRecord : ICellTemplate, IRecordBase
                 }
                 else
                 {
-                    name = Encoding.Unicode.GetString(RawBytes, 0x50, NameLength);
+                    var raw = RawBytes;
+                    name = Encoding.Unicode.GetString(raw, 0x50, Math.Max(0, Math.Min(NameLength, raw.Length - 0x50)) / 2 * 2);
                 }
             }
 
@@ -332,7 +343,7 @@ public class NkCellRecord : ICellTemplate, IRecordBase
 
     public string Signature => InPlace(4, 2) ? Encoding.ASCII.GetString(_registryHive.FileBytes, (int) AbsoluteOffset + 4, 2) : Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(I32(0));
+    public int Size => Helpers.AbsSize(I32(0));
 
     // public methods...
     public override string ToString()

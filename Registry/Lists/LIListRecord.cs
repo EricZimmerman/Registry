@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Registry.Other;
@@ -39,7 +39,7 @@ public class LiListRecord : IListTemplate, IRecordBase
             var index = 0x8;
             var counter = 0;
 
-            while (counter < NumberOfEntries)
+            while (counter < NumberOfEntries && index + 4 <= RawBytes.Length)
             {
                 var os = BitConverter.ToUInt32(RawBytes, index);
                 index += 4;
@@ -71,7 +71,7 @@ public class LiListRecord : IListTemplate, IRecordBase
 
     public string Signature => Encoding.ASCII.GetString(RawBytes, 4, 2);
 
-    public int Size => Math.Abs(_size);
+    public int Size => Helpers.AbsSize(_size);
 
     // public properties...
     public long AbsoluteOffset => RelativeOffset + 4096;

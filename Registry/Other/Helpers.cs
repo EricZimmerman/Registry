@@ -31,6 +31,9 @@ public static class Helpers
         return r;
     }
 
+    /// <summary>The size of a cell (negative when it is allocated); Math.Abs throws on int.MinValue</summary>
+    internal static int AbsSize(int value) => value == int.MinValue ? int.MaxValue : Math.Abs(value);
+
     internal static string Latin1(byte[] bytes, int offset, int length)
     {
         if (offset < 0 || length <= 0 || offset >= bytes.Length) return string.Empty;

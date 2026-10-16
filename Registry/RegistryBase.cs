@@ -83,7 +83,7 @@ public class RegistryBase : IRegistry
 
     public byte[] ReadBytesFromHive(long offset, int length)
     {
-        var readLength = Math.Abs(length);
+        var readLength = Helpers.AbsSize(length);
 
         var remaining = FileBytes.Length - offset;
 
