@@ -49,6 +49,22 @@ public class RobustnessTests
     }
 
     [Test]
+    public void AnInvalidBaseBlockTimeStampIsTheEpoch()
+    {
+        foreach (var ts in new[] { -1L, long.MaxValue })
+        {
+            var bytes = Sam();
+            //not a valid FILETIME: FromFileTime threw "Not a valid Win32 FileTime" from RegistryHeader's constructor
+            BitConverter.GetBytes(ts).CopyTo(bytes, 0xc);
+
+            var hive = Parse(bytes);
+
+            hive.Header.LastWriteTimestamp.Should().Be(new DateTimeOffset(1601, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            All(hive.Root).Count.Should().Be(All(Parse(Sam()).Root).Count);
+        }
+    }
+
+    [Test]
     public void ASubkeyListPointingBackAtTheRootDoesNotRecurseForever()
     {
         var bytes = Sam();

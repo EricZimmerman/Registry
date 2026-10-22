@@ -34,6 +34,15 @@ public static class Helpers
     /// <summary>The size of a cell (negative when it is allocated); Math.Abs throws on int.MinValue</summary>
     internal static int AbsSize(int value) => value == int.MinValue ? int.MaxValue : Math.Abs(value);
 
+    /// <summary>The FILETIME epoch (1601-01-01 UTC), for a time stamp that is not a valid FILETIME</summary>
+    internal static readonly DateTimeOffset FileTimeEpoch = new(1601, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>A FILETIME as UTC; a damaged one (negative, or past year 9999), which FromFileTime throws on, is the epoch</summary>
+    internal static DateTimeOffset FileTime(long ts) =>
+        ts < 0 || ts > MaxFileTime ? FileTimeEpoch : DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+
+    private static readonly long MaxFileTime = DateTimeOffset.MaxValue.ToFileTime();
+
     internal static string Latin1(byte[] bytes, int offset, int length)
     {
         if (offset < 0 || length <= 0 || offset >= bytes.Length) return string.Empty;

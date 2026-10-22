@@ -36,7 +36,7 @@ public class RegistryHeader
 
         var ts = BitConverter.ToInt64(rawBytes, 0xc);
 
-        LastWriteTimestamp = DateTimeOffset.FromFileTime(ts).ToUniversalTime();
+        LastWriteTimestamp = Helpers.FileTime(ts);
 
         MajorVersion = BitConverter.ToInt32(rawBytes, 0x14);
         MinorVersion = BitConverter.ToInt32(rawBytes, 0x18);
