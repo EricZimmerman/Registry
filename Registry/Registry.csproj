@@ -8,7 +8,7 @@
         <Product>Registry parser</Product>
         <LangVersion>10</LangVersion>
         <Description>Offline Registry hive parser, including transaction log support</Description>
-        <Copyright>Eric Zimmerman</Copyright>
+        <Copyright>Eric R. Zimmerman 2027</Copyright>
         <PackageProjectUrl>https://github.com/EricZimmerman/Registry</PackageProjectUrl>
         <RepositoryUrl>https://github.com/EricZimmerman/Registry</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
